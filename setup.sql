@@ -1845,4 +1845,69 @@ end $$;
 revoke all on function public.first_admin_open(), public.first_admin(text, text) from public, anon;
 grant execute on function public.first_admin_open(), public.first_admin(text, text) to authenticated;
 
+-- ################ from supabase-step35-purge-full.sql ################
+-- TF-Tracker : STEP 35 - NO fixed "2 years" limit any more.  Old data is deleted ONLY when the free storage of Supabase is almost full.
+-- Run ONCE in Supabase > SQL Editor.  Safe to run again.  It also SWITCHES OFF the old nightly delete jobs of step 12 / step 15 part C.
+--
+-- How it works (every SUNDAY):
+--   02:00 India time : if the database size is 90% (or more) of the free 500 MB, the OLDEST 10% of the PRs (by PR date) are deleted.
+--                      It NEVER deletes a PR that is newer than 14 months (the Comparison tab needs the same period of last year),
+--                      and never a PR that has no PR date.  If the storage is full but everything left is newer than 14 months, nothing is
+--                      deleted and a line is written to the table purge_log (you must then upgrade the plan or clean up by hand).
+--   03:00 India time : VACUUM FULL of the table "data" gives the freed space back to Supabase (without it the file size does not shrink).
+-- !! Deleted PRs can NOT be brought back (there is no backup on the free plan).  Download an Excel backup now and then. !!
+-- NOT run on a real Supabase by Claude (only on a local Postgres, without pg_cron): look at purge_log after the first Sunday.
+--
+-- To see what happened:      select * from public.purge_log order by id desc limit 10;
+-- To see the size now:       select pg_size_pretty(pg_database_size(current_database()));
+-- To stop it completely:     select cron.unschedule('tf-purge-full');  select cron.unschedule('tf-shrink');
+
+create table if not exists public.purge_log (
+  id       bigint generated always as identity primary key,
+  ts       timestamptz not null default now(),
+  db_mb    numeric,
+  limit_mb numeric,
+  deleted  bigint,
+  note     text
+);
+alter table public.purge_log enable row level security;
+revoke all on public.purge_log from anon, authenticated;
+
+create or replace function public.purge_if_full(p_limit_mb numeric default 500, p_pct numeric default 90, p_keep_months int default 14, p_step_pct numeric default 10)
+returns bigint language plpgsql security definer set search_path = public as
+$$
+declare sz numeric := pg_database_size(current_database()) / 1048576.0; cut date := (current_date - make_interval(months => p_keep_months))::date; tot bigint; n bigint; k bigint;
+begin
+  if p_keep_months < 14 then raise exception 'Safety: fewer than 14 months is not allowed.'; end if;
+  if sz < p_limit_mb * p_pct / 100.0 then return 0; end if;                       -- not full: nothing to do (no log line)
+  select count(*) into tot from public.data where pr_date is not null;
+  select count(*) into k from public.data where pr_date is not null and pr_date < cut;
+  if k = 0 then
+    insert into public.purge_log (db_mb, limit_mb, deleted, note) values (round(sz, 1), p_limit_mb, 0, 'Storage is ' || p_pct || '% full but there is no PR older than ' || p_keep_months || ' months to delete. Upgrade the plan or clean up by hand.');
+    return 0;
+  end if;
+  n := least(k, greatest(1, ceil(tot * p_step_pct / 100.0)));
+  delete from public.data where id in (select id from public.data where pr_date is not null and pr_date < cut order by pr_date, id limit n);
+  get diagnostics n = row_count;
+  insert into public.purge_log (db_mb, limit_mb, deleted, note) values (round(sz, 1), p_limit_mb, n, 'Deleted the oldest ' || n || ' PRs (storage was at or above ' || p_pct || '%).');
+  return n;
+end $$;
+revoke all on function public.purge_if_full(numeric, numeric, int, numeric) from public, anon, authenticated;
+
+-- the fixed-age deleting of step 12 / 15 is switched off
+drop function if exists public.purge_old_data(int);
+
+-- the weekly jobs (needs the pg_cron extension; if the next block says so, enable it:  Database > Extensions > pg_cron, then run this file again)
+do $$
+begin
+  create extension if not exists pg_cron;
+  begin perform cron.unschedule('tf-purge-old'); exception when others then null; end;
+  begin perform cron.unschedule('tf-purge-full'); exception when others then null; end;
+  begin perform cron.unschedule('tf-shrink'); exception when others then null; end;
+  perform cron.schedule('tf-purge-full', '30 20 * * 6', 'select public.purge_if_full()');   -- Sunday 02:00 India time (Saturday 20:30 UTC)
+  perform cron.schedule('tf-shrink',     '30 21 * * 6', 'VACUUM FULL public.data');          -- Sunday 03:00 India time
+exception when others then
+  raise notice 'pg_cron is not available: the weekly jobs were NOT created (%). Enable pg_cron and run this file again.', sqlerrm;
+end $$;
+
 -- DONE.  Next: create the first Admin (see the README), then add workshops in the Admin tab.
