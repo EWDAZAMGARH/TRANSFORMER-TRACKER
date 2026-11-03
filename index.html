@@ -1758,7 +1758,7 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
 .sgl{padding-left:22px;line-height:1.55;font-size:14.5px;color:#111}.sgl li{margin:0 0 14px}.sgl code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:13px}
 .sgn{background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:8px 10px;font-size:13.5px;margin:0 0 10px;color:#7c2d12}
 .sgf{display:grid;gap:6px;margin:8px 0 0}.sgf label{font-size:12px;font-weight:700;color:#334155}.sgf input{width:100%;box-sizing:border-box;padding:9px;border:1.5px solid #94a3b8;border-radius:8px;font-size:14px;color:#000;background:#fff}
-#sov,#fov,#fpo{align-items:center;justify-content:center;display:none}
+#sov,#fov,#fpo,#rov{align-items:center;justify-content:center;display:none}
 </style>
 </head>
 <body class="on-home">
@@ -1768,7 +1768,7 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
   <div class="hcard">
     <div class="hlogo"><span class="lgw"><img src="logo.png" alt="TF-Tracker - Tracking of Transformer"><i class="lg-glow"></i><i class="lg-bolt"></i><i class="lg-top"></i><i class="lg-pin"></i><i class="lg-shine"></i></span></div>
     <label class="hl">User ID</label>
-    <input type="text" id="lu" class="hin" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="Your ID">
+    <input type="text" id="lu" class="hin" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="Your ID (Admin: your e-mail)">
     <label class="hl">Password</label>
     <input type="password" id="lp" class="hin" autocomplete="current-password" placeholder="Your password">
     <div id="lmsg"></div>
@@ -2131,7 +2131,7 @@ function rpc(fn, args) {
 }
 
 /* ---------- login / logout ---------- */
-function idMail(id) { return String(id || '').trim().toLowerCase() + (ttConn().own ? '@tf.uppcl' : '@tf.puvvnl'); }   // own-workshop projects use @tf.uppcl; the default project keeps @tf.puvvnl
+function idMail(id) { var v = String(id || '').trim().toLowerCase(); if (v.indexOf('@') > 0) return v; return v + (ttConn().own ? '@tf.uppcl' : '@tf.puvvnl'); }   // a full e-mail (the project owner) is used as it is   // own-workshop projects use @tf.uppcl; the default project keeps @tf.puvvnl
 function showLogin(note) {
   ME = null; SUM = null; document.body.classList.add('on-home');
   $('app').classList.add('hide'); $('login').classList.remove('hide'); $('pov').classList.add('hide'); $('lov').classList.add('hide');
@@ -2825,13 +2825,15 @@ function ttConn() {
   try { var c = JSON.parse(localStorage.getItem('tt_conn') || 'null'); if (c && /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(c.u || '') && (c.k || '').length > 20) return { u: c.u, k: c.k, own: true }; } catch (e) { }
   return { u: window.TT_SB_URL, k: window.TT_SB_KEY, own: false };
 }
+var TT_REC = /type=recovery/.test(location.hash || '');   // opened from the 'reset password' mail
 function boot() {
   var C = ttConn();
   if (!window.supabase || !C.u || !C.k) { showLogin('The app is not connected to a database yet. Tap "Set up your own free account" below.'); return; }
   SB = window.supabase.createClient(C.u, C.k, { auth: { persistSession: true, autoRefreshToken: true } });
-  SB.auth.onAuthStateChange(function (ev) { if (ev === 'SIGNED_OUT' && ME) setTimeout(function () { showLogin(''); }, 0); });
+  SB.auth.onAuthStateChange(function (ev) { if (ev === 'PASSWORD_RECOVERY' && typeof ttRecovery === 'function') setTimeout(ttRecovery, 0); if (ev === 'SIGNED_OUT' && ME) setTimeout(function () { showLogin(''); }, 0); });
   SB.auth.getSession().then(function (r) {
     var s = r.data && r.data.session;
+    if (s && TT_REC && typeof ttRecovery === 'function') { ttRecovery(); return; }
     if (s) return enter(s.user).catch(function (e) { showLogin(friendly(e)); });
     showLogin('');
   }).catch(function () { showLogin(''); });
@@ -3904,14 +3906,14 @@ function sgOpen() {
     '<li><b>Make a new project.</b> Click "New project". Name: anything (example: <i>tf-workshop</i>). Database password: click "Generate a password" and save it in a safe place (do not share it). Region: <i>South Asia (Mumbai)</i>. Plan: <i>Free</i>. Click "Create new project" and wait 2 minutes.</li>' +
     '<li><b>Put the tables in.</b> <button class="btn sm" type="button" data-sgc="setup.sql">Copy setup SQL</button><br>Then in Supabase, left menu: <i>SQL Editor</i> &rarr; <i>New query</i> &rarr; paste (Ctrl+V) &rarr; click <i>Run</i>. You should see "Success. No rows returned". Run it only once.</li>' +
     '<li><b>Add the user-management function.</b> <button class="btn sm" type="button" data-sgc="admin-users.ts">Copy function code</button><br>In Supabase, left menu: <i>Edge Functions</i> &rarr; <i>Deploy a new function</i> (via Editor) &rarr; name it exactly <code>admin-users</code> &rarr; delete the sample code, paste &rarr; <i>Deploy</i>.</li>' +
-    '<li><b>Make your own first login.</b> In Supabase: <i>Authentication</i> &rarr; <i>Users</i> &rarr; <i>Add user</i> &rarr; <i>Create new user</i>. E-mail: <code>yourid@tf.uppcl</code> (write the User ID you want in place of "yourid", for example <code>anita@tf.uppcl</code>). Type a password and <b>tick "Auto Confirm User"</b>. Click Create.</li>' +
+    '<li><b>Make your own first login.</b> In Supabase: <i>Authentication</i> &rarr; <i>Users</i> &rarr; <i>Add user</i> &rarr; <i>Create new user</i>. E-mail: your <b>own real e-mail</b> (the same e-mail of your Supabase account, for example <code>anita@gmail.com</code>). You will login with this e-mail, and a forgotten password can be reset by mail. (Your employees get simple IDs like <code>anup@tf.uppcl</code>, made by you in the Admin tab.) Type a password and <b>tick "Auto Confirm User"</b>. Click Create.</li>' +
     '<li><b>Copy the two connection values</b> (their names in Supabase: <b>Project URL</b> and <b>Publishable key</b>, also called the <b>anon key</b>). Do this inside your new project.<br>' +
     '<u>Way 1:</u> click the <b>Connect</b> button on top of the project. A box opens with the <b>Project URL</b> and the <b>Publishable key</b>. Click the copy icon next to each.<br>' +
     '<u>Way 2:</u> left menu, at the bottom: <b>Project Settings</b> (gear icon) &rarr; <b>API Keys</b> &rarr; copy the <b>Publishable key</b> (starts with <code>sb_publishable_</code>; an old project may show the <code>anon</code> key, that is also fine). Then in Project Settings open <b>Data API</b> (or <b>API</b>) and copy the <b>Project URL</b>.<br>' +
     '<b>Last check - remove the extra part:</b> the Project URL must end with <code>.supabase.co</code>. If it ends with <code>/rest/v1/</code>, <u>delete <code>/rest/v1/</code></u> before you paste it.<br>' +
     '<b>Never</b> copy the <b>Secret key</b> (<code>sb_secret_...</code>) or the <b>service_role</b> key. Paste the two values below.' +
     '<div class="sgf"><label>Project URL</label><input id="sgu" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.u : '') + '"><label>Publishable key (anon key) - NOT the Secret key</label><input id="sgk" placeholder="eyJ... or sb_publishable_..." autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.k : '') + '"><button class="btn" id="sgc" type="button">Connect</button><div id="sgmsg"></div></div></li>' +
-    '<li><b>Login and finish.</b> After "Connected", login here with the ID (the part before @) and the password of step 5. A "First-time setup" box asks your name and division - fill it. Then open the <i>Admin</i> tab: add your workshops, then add your employees. <b>Also make a second Admin</b> as a backup, in case one Admin forgets the password.</li></ol>' +
+    '<li><b>Login and finish.</b> After "Connected", login here with your e-mail and the password of step 5. A "First-time setup" box asks your name and division - fill it. Then open the <i>Admin</i> tab: add your workshops, then add your employees. <b>Also make a second Admin</b> as a backup, in case one Admin forgets the password.</li></ol>' +
     (C.own ? '<div class="bar"><button class="btn sec" id="sgd" type="button">Go back to the default account</button><span class="muted">This device is using your own project now.</span></div>' : '') + '</div>';
   m.style.display = 'flex';
 }
@@ -3963,14 +3965,47 @@ document.addEventListener('click', function (e) {
     e.preventDefault();
     var m = document.getElementById('fpo'); if (!m) { m = document.createElement('div'); m.id = 'fpo'; m.className = 'ov'; document.body.appendChild(m); }
     m.innerHTML = '<div class="md sgm" style="max-width:520px"><div class="bar" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Forgot password?</h2><button class="btn sec" id="fpx" type="button">Close &#10005;</button></div>' +
+      '<p><b>Project owner (Admin who made this Supabase project):</b> type the e-mail you login with. A mail with a link to set a new password is sent.</p>' +
+      '<div class="sgf"><input id="fpe" type="email" placeholder="your e-mail" autocomplete="email" autocapitalize="off" spellcheck="false"><button class="btn" id="fps" type="button">Send reset mail</button><div id="fpm"></div></div><hr>' +
       '<p><b>If you are a JE / User or DISCOM head:</b> ask your <b>Admin</b>. In the Admin tab he opens your ID and sets a new password for you. After you login with it, the app asks you to change it.</p>' +
       '<p><b>If you are the Admin:</b> ask another Admin of your account to reset it (this is why every account should have <u>two Admins</u>).</p>' +
-      '<p><b>If there is no other Admin</b> (the owner of the Supabase project does this): open <i>supabase.com/dashboard</i> &rarr; your project &rarr; <b>Authentication</b> &rarr; <b>Users</b> &rarr; click the three dots (&hellip;) next to your login (for example <code>anita' + (ttConn().own ? '@tf.uppcl' : '@tf.puvvnl') + '</code>) &rarr; <b>Reset password</b> / <b>Update user</b> &rarr; type a new password and save. Then login here with the new password.</p>' +
-      '<p class="muted">A reset mail cannot be sent: the login e-mail is only a name, not a real mailbox.</p></div>';
+      '<p><b>Another Admin who forgot the password, and no other Admin is there</b> (the owner of the Supabase project does this): open <i>supabase.com/dashboard</i> &rarr; your project &rarr; <b>Authentication</b> &rarr; <b>Users</b> &rarr; click the three dots (&hellip;) next to your login (for example <code>anita' + (ttConn().own ? '@tf.uppcl' : '@tf.puvvnl') + '</code>) &rarr; <b>Reset password</b> / <b>Update user</b> &rarr; type a new password and save. Then login here with the new password.</p>' +
+      '<p class="muted">The reset mail works only for a login that is a real e-mail of the Supabase project owner. A JE / User ID (like anita@tf.uppcl) is only a name, not a real mailbox.</p></div>';
     m.style.display = 'flex'; return;
   }
   if (t.closest('#fpx') || t.id === 'fpo') document.getElementById('fpo').style.display = 'none';
 });
+
+document.addEventListener('click', function (e) {
+  var t = e.target; if (!t || !t.closest || !t.closest('#fps')) return;
+  var em = document.getElementById('fpe').value.trim().toLowerCase(), b = t.closest('#fps');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return msg('fpm', 'Type your full e-mail, like name@gmail.com', 'err');
+  if (!SB) return msg('fpm', 'The app is not connected to a database yet.', 'err');
+  b.disabled = true; msg('fpm', 'Please wait...', 'info');
+  SB.auth.resetPasswordForEmail(em, { redirectTo: location.origin + location.pathname }).then(function (r) {
+    b.disabled = false;
+    if (r.error) return msg('fpm', /rate|seconds|too many/i.test(r.error.message || '') ? 'Too many tries. Please wait one hour and try again.' : /not authorized|authorised/i.test(r.error.message || '') ? 'The mail service of Supabase sends mail only to the people of the project team. Use the Supabase dashboard (see below).' : esc(r.error.message || 'Could not send.'), 'err');
+    msg('fpm', 'If this e-mail is the login of the project owner, a mail has been sent. Open it and tap the link (check Spam too).', 'ok');
+  }).catch(function () { b.disabled = false; msg('fpm', 'Could not send. Check your internet.', 'err'); });
+});
+/* the owner opened the link of the reset mail: ask for the new password */
+function ttRecovery() {
+  var m = document.getElementById('rov'); if (m && m.style.display === 'flex') return;
+  if (!m) { m = document.createElement('div'); m.id = 'rov'; m.className = 'ov'; document.body.appendChild(m); }
+  m.innerHTML = '<div class="md sgm" style="max-width:440px"><h2 style="margin:0 0 6px">Set a new password</h2><p class="muted">Type a new password (at least 8 characters).</p><div class="sgf"><label>New password</label><input id="rp1" type="password" autocomplete="new-password"><label>Type it again</label><input id="rp2" type="password" autocomplete="new-password"><button class="btn" id="rpb" type="button">Save new password</button><div id="rpm"></div></div></div>';
+  m.style.display = 'flex';
+  document.getElementById('rpb').onclick = function () {
+    var p1 = document.getElementById('rp1').value, p2 = document.getElementById('rp2').value, b = this;
+    if (p1.length < 8) return msg('rpm', 'The password must have at least 8 characters.', 'err');
+    if (p1 !== p2) return msg('rpm', 'The two passwords are not the same.', 'err');
+    b.disabled = true; msg('rpm', 'Saving...', 'info');
+    SB.auth.updateUser({ password: p1 }).then(function (r) {
+      if (r.error) { b.disabled = false; return msg('rpm', esc(r.error.message || 'Could not save.'), 'err'); }
+      TT_REC = false; try { history.replaceState(null, '', location.pathname); } catch (x) { }
+      m.style.display = 'none'; SB.auth.signOut().then(function () { showLogin('Password changed. Please login with the new password.'); });
+    }).catch(function () { b.disabled = false; msg('rpm', 'Could not save. Check your internet.', 'err'); });
+  };
+}
 
 </script>
 <script>if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(function () {});</script>

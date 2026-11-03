@@ -1819,7 +1819,7 @@ grant execute on function public.emg_ok(), public.emg_workshops(), public.emg_js
 -- ################ from supabase-step34-first-admin.sql ################
 -- TF-Tracker : STEP 34 - FIRST-TIME ADMIN of a NEW project.  (Only needed on a new project; setup.sql already contains it.)
 -- A new project has no profile at all.  The person creates ONE login by hand (Supabase > Authentication > Users > Add user,
--- e-mail  yourid@tf.uppcl , tick "Auto Confirm User"), logs in on the site, and the site offers "First-time setup".
+-- e-mail = the project owner's own REAL e-mail (reset by mail works), tick "Auto Confirm User"), logs in on the site, and the site offers "First-time setup".
 -- It works ONLY while the profiles table is completely empty.  After the first Admin exists, nobody can use it again.
 create or replace function public.first_admin_open() returns boolean
 language sql stable security definer set search_path = public as
@@ -1838,7 +1838,7 @@ begin
   select lower(email) into em from auth.users where id = u;
   if em is null or position('@' in em) < 2 then raise exception 'This login has no valid e-mail.'; end if;
   insert into public.profiles (user_id, login_id, display, role, org_division, scope, can_edit, active, must_change)
-  values (u, split_part(em, '@', 1), nm, 'admin', dv, '{}', true, true, false);
+  values (u, case when em like '%@tf.%' then split_part(em, '@', 1) else em end, nm, 'admin', dv, '{}', true, true, false);   -- a real e-mail stays the login id (no clash with employee IDs)
   return true;
 end $$;
 
