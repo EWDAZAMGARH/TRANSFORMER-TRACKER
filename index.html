@@ -1755,6 +1755,7 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
 }
 .sgm{max-width:720px;width:94vw;max-height:90vh;overflow:auto;background:#fff;color:#111;border-radius:14px;padding:16px}
 .sgl .btn{white-space:nowrap;display:inline-block}
+.sgl code{word-break:break-all}
 .sgl{padding-left:22px;line-height:1.55;font-size:14.5px;color:#111}.sgl li{margin:0 0 14px}.sgl code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:13px}
 .sgn{background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:8px 10px;font-size:13.5px;margin:0 0 10px;color:#7c2d12}
 .sgf{display:grid;gap:6px;margin:8px 0 0}.sgf label{font-size:12px;font-weight:700;color:#334155}.sgf input{width:100%;box-sizing:border-box;padding:9px;border:1.5px solid #94a3b8;border-radius:8px;font-size:14px;color:#000;background:#fff}
@@ -3895,11 +3896,18 @@ function sgCopy(file, btn) {
     });
   }).then(function (n) { btn.textContent = 'Copied ✓ (' + Math.round(n / 1024) + ' KB)'; }).catch(function () { btn.textContent = 'Could not copy - tap to try again'; }).then(function () { btn.disabled = false; setTimeout(function () { btn.textContent = old; }, 5000); });
 }
+function sgSite() { return location.origin + location.pathname.replace(/[^\/]*$/, ''); }   // the address of THIS site, e.g. https://ewdazamgarh.github.io/TRANSFORMER-TRACKER/
+function sgCopyTxt(txt, btn) {
+  var old = btn.textContent;
+  function done(ok) { btn.textContent = ok ? 'Copied \u2713' : 'Could not copy - select and copy it by hand'; setTimeout(function () { btn.textContent = old; }, 4000); }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { done(true); }, function () { done(false); });
+  else { var t = document.createElement('textarea'); t.value = txt; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) { } t.remove(); done(ok); }
+}
 function sgOpen() {
   var m = document.getElementById('sov'); if (!m) { m = document.createElement('div'); m.id = 'sov'; m.className = 'ov'; document.body.appendChild(m); }
   var C = ttConn();
   m.innerHTML = '<div class="md sgm"><div class="bar" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Set up your own free account</h2><button class="btn sec" id="sgx" type="button">Close &#10005;</button></div>' +
-    '<p class="muted" style="margin:6px 0 10px">Do these 7 steps one by one. It takes about 15 minutes. You need only a computer with internet and an e-mail ID. Everything is free.</p>' +
+    '<p class="muted" style="margin:6px 0 10px">Do these steps one by one. It takes about 15 minutes. You need only a computer with internet and an e-mail ID. Everything is free.</p>' +
     '<div class="sgn"><b>Important:</b> never type or send anyone your <u>service_role / secret key</u> or your <u>database password</u>. This page needs only the <u>Project URL</u> and the <u>anon / publishable key</u>.</div>' +
     '<ol class="sgl">' +
     '<li><b>Make a free Supabase account.</b> <a class="btn sm" href="https://supabase.com/dashboard" target="_blank" rel="noopener">Open Supabase &rarr;</a><br>Click "Sign up" and use your e-mail (or GitHub). Open the mail Supabase sends and confirm it.</li>' +
@@ -3913,6 +3921,10 @@ function sgOpen() {
     '<b>Last check - remove the extra part:</b> the Project URL must end with <code>.supabase.co</code>. If it ends with <code>/rest/v1/</code>, <u>delete <code>/rest/v1/</code></u> before you paste it.<br>' +
     '<b>Never</b> copy the <b>Secret key</b> (<code>sb_secret_...</code>) or the <b>service_role</b> key. Paste the two values below.' +
     '<div class="sgf"><label>Project URL</label><input id="sgu" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.u : '') + '"><label>Publishable key (anon key) - NOT the Secret key</label><input id="sgk" placeholder="eyJ... or sb_publishable_..." autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.k : '') + '"><button class="btn" id="sgc" type="button">Connect</button><div id="sgmsg"></div></div></li>' +
+    '<li><b>Optional - only if you want to reset a forgotten Admin password by e-mail.</b> In Supabase: <i>Authentication</i> &rarr; <i>URL Configuration</i>.<br>' +
+    '<b>Site URL</b> - paste this: <code id="sgs1">' + sgSite() + '</code> <button class="btn sm" type="button" data-sgt="' + sgSite() + '">Copy</button><br>' +
+    '<b>Redirect URLs</b> - click <i>Add URL</i> and paste this: <code id="sgs2">' + sgSite() + '**</code> <button class="btn sm" type="button" data-sgt="' + sgSite() + '**">Copy</button><br>' +
+    'Click <i>Save changes</i>. If you skip this step, everything else works; only the reset mail link will not open correctly.</li>' +
     '<li><b>Login and finish.</b> After "Connected", login here with your e-mail and the password of step 5. A "First-time setup" box asks your name and division - fill it. Then open the <i>Admin</i> tab: add your workshops, then add your employees. <b>Also make a second Admin</b> as a backup, in case one Admin forgets the password.</li></ol>' +
     (C.own ? '<div class="bar"><button class="btn sec" id="sgd" type="button">Go back to the default account</button><span class="muted">This device is using your own project now.</span></div>' : '') + '</div>';
   m.style.display = 'flex';
@@ -3922,6 +3934,7 @@ document.addEventListener('click', function (e) {
   var t = e.target; if (!t || !t.closest) return;
   if (t.closest('#setuplink')) { e.preventDefault(); sgOpen(); return; }
   var c = t.closest('[data-sgc]'); if (c) { sgCopy(c.dataset.sgc, c); return; }
+  var ct = t.closest('[data-sgt]'); if (ct) { sgCopyTxt(ct.dataset.sgt, ct); return; }
   if (t.closest('#sgx') || t.id === 'sov') { document.getElementById('sov').style.display = 'none'; return; }
   if (t.closest('#sgd')) { try { localStorage.removeItem('tt_conn'); } catch (x) { } location.reload(); return; }
   if (t.closest('#sgc')) {
