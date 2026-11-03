@@ -1756,10 +1756,27 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
 .sgm{max-width:720px;width:94vw;max-height:90vh;overflow:auto;background:#fff;color:#111;border-radius:14px;padding:16px}
 .sgl .btn{white-space:nowrap;display:inline-block}
 .sgl code{word-break:break-all}
+.sgs{margin:8px 0 0;padding-left:20px;font-size:14px}.sgs li{margin:0 0 8px}
 .sgl{padding-left:22px;line-height:1.55;font-size:14.5px;color:#111}.sgl li{margin:0 0 14px}.sgl code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:13px}
 .sgn{background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:8px 10px;font-size:13.5px;margin:0 0 10px;color:#7c2d12}
 .sgf{display:grid;gap:6px;margin:8px 0 0}.sgf label{font-size:12px;font-weight:700;color:#334155}.sgf input{width:100%;box-sizing:border-box;padding:9px;border:1.5px solid #94a3b8;border-radius:8px;font-size:14px;color:#000;background:#fff}
 #sov,#fov,#fpo,#rov{align-items:center;justify-content:center;display:none}
+ .emrange{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:end;background:#fff;border:1px solid #e2d8c6;border-radius:10px;padding:8px 12px;margin:8px 0}
+ .emrange b{font-size:13px;color:#7c2d12;margin-right:6px;align-self:center}.emrange label{display:block;font-size:11px;font-weight:700;color:#475569}
+ .emrange input{border:1.5px solid #94a3b8;border-radius:6px;padding:6px;font-size:13px;color:#000;background:#fff}
+@media screen{
+ html.hs-t #sout .card table td,html.hs-t #sout .card table td.l{font-size:var(--tdfs,15px)!important;font-weight:800}
+ html.hs-t #sout .card table thead th,html.hs-t #sout .card table th{font-size:var(--thfs,11.5px)!important}
+ html.hs-t #skpi i{font-size:var(--kpifs,30px)!important}
+ html.hs-x #sout .card table td,html.hs-x #sout .card table td.l{font-size:14px!important}
+ html.hs-x #sout .card table thead th,html.hs-x #sout .card table th{font-size:11px!important}
+ html.hs-x #skpi i{font-size:32px!important}
+}
+ .stw{border:1.5px solid #f2b98a;background:#fffaf3;border-radius:12px;padding:10px 12px;margin:0 0 12px}.stw h4{margin:0 0 6px;color:#9a3412;font-size:15px}
+ .sth{font-size:11.5px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.4px;margin:6px 0 4px}
+ .strow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 6px}.strow .stn{flex:1 0 100%;font-size:12px;color:#b45309}
+ .stin{border:1.5px solid #94a3b8;border-radius:7px;padding:6px 8px;font-size:13.5px;color:#000;background:#fff;min-width:0;flex:1 1 200px}.stin.sm{flex:0 1 120px}.stin.big{flex:2 1 280px}.stin.sel{flex:0 1 190px}
+ .stb{border:0;background:#eef1fb;color:#3b5bdb;border-radius:6px;padding:5px 9px;font-weight:800;cursor:pointer}.stb.x{background:#fee2e2;color:#b91c1c}
 </style>
 </head>
 <body class="on-home">
@@ -1895,6 +1912,7 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
         <div class="bar"><input type="text" id="wn" placeholder="New workshop name" style="max-width:240px"><span id="wdw" class="hide"><input type="text" id="wd" list="dvl" placeholder="Division name" style="max-width:240px"></span><button class="btn" id="wadd">Add workshop</button></div>
         <div class="wrap"><table id="wlt" class="mt"></table></div>
       </div>
+      <div class="card acard hide" id="stcard"><h3>Structure: Circles and Divisions</h3><div id="stbox"></div></div>
       <div class="card acard"><h3>Create a new user</h3>
         <div class="bar" style="align-items:flex-end">
           <div><label>User ID</label><input type="text" id="nu" autocapitalize="off" spellcheck="false" placeholder="e.g. je.mau1"></div>
@@ -2149,6 +2167,7 @@ function enter(user) {
     if (r.error || !p || !p.active) { return SB.auth.signOut().then(function () { showLogin(r.error ? friendly(r.error) : 'This ID is not active. Please contact your Admin.'); }); }
     ME = { id: user.id, login: p.login_id, name: p.display || p.login_id, role: p.role, div: p.org_division, scope: p.scope || [], edit: !!p.can_edit, must: !!p.must_change, tabs: p.tabs || null };
     return SB.from('workshops').select('name,org_division').order('name').then(function (w) {
+      return structLoad().then(function () {
       WSDIV = {}; (w.data || []).forEach(function (x) { WSDIV[x.name] = x.org_division; });
       WSL = (w.data || []).map(function (x) { return x.name; });
       if (ME.role === 'je' && ME.scope.length) WSL = WSL.filter(function (x) { return ME.scope.indexOf(x) >= 0; });
@@ -2158,6 +2177,7 @@ function enter(user) {
       var first = ok[0] || 'sum'; showTab(first);
       if (ME.must) openPw(true);
       if (first === 'sum') loadSummary(); else if (first === 'adm') admLoad(); else if (first === 'drv') drvLoad(); else if (first === 'emg') emgLoad(); else loadData();
+      });
     });
   });
 }
@@ -2282,7 +2302,7 @@ function buildSummary(raw, p) {
   WS.slice().sort(function (x, y) { var i = WORD.indexOf(x), j = WORD.indexOf(y); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); }).forEach(function (w) {
     var keys = allDivs.filter(function (d) { return divWs[d] === w; }).sort(function (a, b) { return natural(divLbl[a], divLbl[b]); }), used = {};
     var prevKs = [];
-    (DIVORD[w] || []).forEach(function (f) {       // the fixed divisions always get a row (0 if no PR), in the fixed order
+    structDivOrd(w, DIVORD).forEach(function (f) {       // the fixed divisions always get a row (0 if no PR), in the fixed order
       var ks;
       if (f[2]) { ks = []; prevKs.splice(-f[2]).forEach(function (a) { ks = ks.concat(a); }); }     // EDC row = sub total of the divisions above it
       else { ks = keys.filter(function (d) { return nk(divLbl[d]) === nk(f[0]); }); prevKs.push(ks); }
@@ -2443,6 +2463,7 @@ function shortHeads() {
   });
 }
 function shortDiv(t) {
+  var ss = structShort(t); if (ss) return ss;      // the short name typed by the Admin (Admin tab > Structure)
   var m = /^(?:E\.?E\.?\s*)?(E\.?D\.?[DC])\.?\s*-?\s*([IVX]*)\s*(.*)$/i.exec(t); if (!m) return '';
   var typ = m[1].replace(/\./g, '').toUpperCase(), rn = m[2].toUpperCase(), rest = m[3].trim(), city = '', place = '';
   var cs = { AZAMGARH: 'AZH', AZAMGAR: 'AZH', MAU: 'MAU', BALLIA: 'BALLIA' };
@@ -3037,7 +3058,7 @@ function admLoad() {
   $('nrw').classList.toggle('hide', !cr); $('nvw').classList.toggle('hide', !cr); $('wdw').classList.toggle('hide', !cr);
   $('nrole').innerHTML = cr ? '<option value="admin">Admin (can create users)</option><option value="discom">DISCOM head (view only)</option><option value="je">User</option>' : '<option value="je">User</option>';
   $('dvl').innerHTML = uniq(Object.keys(WSDIV).map(function (w) { return WSDIV[w]; })).map(function (d) { return '<option value="' + esc(d) + '">'; }).join('');
-  newUserForm(); admWsDraw();
+  newUserForm(); admWsDraw(); if (typeof stLoad === 'function') stLoad();
   return SB.from('profiles').select('user_id,login_id,display,role,org_division,scope,can_edit,active,tabs').order('login_id').then(function (r) {
     if (r.error) return msg('amsg', esc(friendly(r.error)), 'err');
     ADM = r.data || []; admUsersDraw();
@@ -3414,7 +3435,7 @@ function cmpBuild(raw, yc, yp) {
     return r;
   }
   CMPW().forEach(function (ws) {
-    var g = CGROUPS.filter(function (x) { return x.ws === ws; })[0] || { ws: ws, total: ws, parts: [] };
+    var g = structCmpGroup(ws, CGROUPS);
     var used = {}, seen = {}; (idx.c[ws] ? Object.keys(idx.c[ws]) : []).concat(idx.p[ws] ? Object.keys(idx.p[ws]) : []).forEach(function (k) { seen[k] = 1; });
     var gsum = mk('w', g.total || ws), extras = [];
     g.parts.forEach(function (pt) { pt.keys = pt.divs.map(function (d) { var k = nk(d); used[k] = 1; return k; }); });
@@ -3629,6 +3650,7 @@ function hsApply(k) {
   if (d) {
     el.classList.add('hs-t'); if (d.top) el.classList.add('hs-top'); if (d.v.rail) el.classList.add('hs-rail'); el.classList.add('hs-an-' + d.v.anim);
     HS_VARS = Object.keys(d.v); HS_VARS.forEach(function (n) { el.style.setProperty('--' + n, d.v[n]); });
+    var big = d.no === '03' || d.no === '04'; HS_VARS.push('tdfs', 'thfs', 'kpifs'); el.style.setProperty('--tdfs', big ? '16.5px' : '15px'); el.style.setProperty('--thfs', big ? '12.5px' : '11.5px'); el.style.setProperty('--kpifs', big ? '32px' : '30px');   // text size of the Summary (the page is shrunk to fit, so these two looks need more)
   } else if (k) el.classList.add('hs-' + k);
 }
 hsApply(hsGet());
@@ -3779,8 +3801,10 @@ window.addEventListener('load', function () { var on = ''; try { on = localStora
  * Red = issue date not given yet, green = issue date given, gone = replaced (the line leaves the tab 2 days after the replacement date). */
 var EMG = [], EMGWS = [], EMGT = 0, EMGSAVE = {};
 function emgTab() { return typeof allowedTabs === 'function' && ME && allowedTabs().indexOf('emg') >= 0; }
-function emgFetch() {
-  return Promise.all([rpc('emg_json'), rpc('emg_workshops')]).then(function (a) { EMG = a[0] || []; EMGWS = a[1] || []; return EMG; });
+var EMGR = null;   // {f, t} = the "solved between" list is shown (DD.MM.YYYY -> yyyy-mm-dd done by the date boxes)
+function emgFetch(plain) {
+  var rg = !plain && EMGR ? { p_from: EMGR.f || null, p_to: EMGR.t || null } : {};
+  return Promise.all([rpc('emg_json', rg), rpc('emg_workshops')]).then(function (a) { EMG = a[0] || []; EMGWS = a[1] || []; return EMG; });
 }
 function emgState(r) { return r.st === 'D' ? 'o' : r.st === 'G' ? 'g' : 'r'; }
 function emgBadge() {
@@ -3792,7 +3816,7 @@ function emgBadge() {
 function emgSiren() {
   var el = $('siren'); if (!el) return;
   if (!ME || !emgTab()) { el.classList.add('hide'); return; }
-  emgFetch().then(function () {
+  emgFetch(true).then(function () {
     emgBadge();
     var mine = EMG.filter(function (r) { return r.can_edit && r.st !== 'D'; }),
         red = mine.filter(function (r) { return r.st === 'R0' || r.st === 'R1'; }), grn = mine.filter(function (r) { return r.st === 'G'; });
@@ -3817,7 +3841,7 @@ document.addEventListener('click', function (e) { if (e.target.closest && e.targ
 setInterval(function () { if (ME && !document.hidden) { if (CURTAB === 'sum') emgSiren(); else if (CURTAB === 'emg') emgLoad(true); } }, 60000);
 
 /* ---------- the tab ---------- */
-var EMGH = ['Status', 'Refer by', 'Village', 'Mobile / complaint no.', 'Other detail', 'Refer to workshop', 'JE/AE remark', 'PR NO', 'PR date', 'Division', 'Substation', 'Feeder', 'Place of damage', 'Capacity', 'Complain no.', 'JE', 'JE mobile', 'Firm', 'Issue date', 'Driver', 'Driver mobile', 'Replacement date', ''];
+var EMGH = ['Status', 'Refer by', 'Village', 'Mobile no.', 'Complaint no.', 'Other detail', 'Refer to workshop', 'JE/AE remark', 'PR NO', 'PR date', 'Division', 'Substation', 'Feeder', 'Place of damage', 'Capacity', 'Complain no. (Data Sheet)', 'JE', 'JE mobile', 'Firm', 'Issue date', 'Driver', 'Driver mobile', 'Replacement date', ''];
 function emgTel(m) { var d = String(m || '').replace(/\D/g, ''); return d.length === 10 ? d : ''; }
 function emgPerson(name, m) { var d = emgTel(m); return esc(name || '-') + (d ? ' <a class="ecall" href="tel:' + d + '">&#128222; ' + d + '</a>' : ''); }
 function emgStatus(r) {
@@ -3826,25 +3850,27 @@ function emgStatus(r) {
 }
 function emgCell(r, f, val, lab) {
   var ed = r.can_edit;
-  return '<td class="gc' + (ed ? ' ein' : ' lk') + '" data-l="' + lab + '"><input type="text" data-f="' + f + '" data-id="' + r.id + '" value="' + esc(val || '') + '"' + (ed ? '' : ' readonly tabindex="-1"') + (f === 'pr' ? ' inputmode="numeric" placeholder="type PR no."' : f === 'remark' ? ' placeholder="remark"' : '') + '></td>';
+  return '<td class="gc' + (ed ? ' ein' : ' lk') + '" data-l="' + lab + '"><input type="text" data-f="' + f + '" data-id="' + r.id + '" value="' + esc(val || '') + '"' + (ed ? '' : ' readonly tabindex="-1"') + (f === 'pr' ? ' autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="type PR no."' : f === 'remark' ? ' placeholder="remark"' : '') + '></td>';
 }
 function emgRender() {
   var o = $('emgout'); if (!o) return;
   var frm = '';
   if (EMGWS.length) frm = '<div class="emform"><div><label>Refer by</label><input id="ef_by" placeholder="who refers (name / office)"></div><div><label>Name of village</label><input id="ef_vil"></div>' +
-    '<div><label>Mobile / complaint no.</label><input id="ef_mob" inputmode="tel"></div><div><label>Other detail</label><input id="ef_det"></div>' +
+    '<div><label>Mobile no.</label><input id="ef_mob" inputmode="tel"></div><div><label>Complaint no.</label><input id="ef_cmp" autocapitalize="characters" autocomplete="off"></div><div><label>Other detail</label><input id="ef_det"></div>' +
     '<div><label>Refer to workshop</label><select id="ef_ws">' + EMGWS.map(function (w) { return '<option>' + esc(w) + '</option>'; }).join('') + '</select></div><button class="btn" id="ef_add" type="button">+ Add emergency</button></div>';
-  var h = frm + '<div class="muted" style="font-size:12px;margin:6px 2px">' + EMG.length + ' emergency line' + (EMG.length === 1 ? '' : 's') + ' &middot; <span id="emstat"></span></div>';
-  if (!EMG.length) h += '<div class="card" style="text-align:center;color:#8a7e6e">No emergency now.</div>';
+  var hist = !!EMGR; if (hist) frm = '';
+  var rb = '<div class="emrange"><b>Solved emergencies</b><div><label>From</label><input type="date" id="er_f" value="' + esc(EMGR ? EMGR.f || '' : '') + '"></div><div><label>To</label><input type="date" id="er_t" value="' + esc(EMGR ? EMGR.t || '' : '') + '"></div><button class="btn" id="er_go" type="button">Show list</button>' + (hist ? '<button class="btn sec" id="er_x" type="button">Back to running emergencies</button>' : '') + '</div>';
+  var h = rb + frm + '<div class="muted" style="font-size:12px;margin:6px 2px">' + (hist ? '<b>' + EMG.length + '</b> emergenc' + (EMG.length === 1 ? 'y' : 'ies') + ' solved (replaced) in this period' : EMG.length + ' emergency line' + (EMG.length === 1 ? '' : 's')) + ' &middot; <span id="emstat"></span></div>';
+  if (!EMG.length) h += '<div class="card" style="text-align:center;color:#8a7e6e">' + (hist ? 'No solved emergency in this period.' : 'No emergency now.') + '</div>';
   else {
-    h += '<div class="gwrap"><table class="gt gt2 mt" id="emt"><thead><tr>' + EMGH.map(function (x, i) { return '<th class="' + (i >= 1 && i <= 5 ? 'ec' : i >= 8 && i <= 21 ? 'ea' : '') + '">' + x + '</th>'; }).join('') + '</tr></thead><tbody>';
+    h += '<div class="gwrap"><table class="gt gt2 mt" id="emt"><thead><tr>' + EMGH.map(function (x, i) { return '<th class="' + (i >= 1 && i <= 6 ? 'ec' : i >= 9 && i <= 22 ? 'ea' : '') + '">' + x + '</th>'; }).join('') + '</tr></thead><tbody>';
     EMG.forEach(function (r) {
       var s = emgState(r), none = '<td class="gc lk" data-l="';
       h += '<tr class="e' + s + '" data-id="' + r.id + '"><td class="rn est" data-l="Status">' + emgStatus(r) + '</td>' +
-        '<td class="gc lk" data-l="Refer by">' + esc(r.by) + '</td><td class="gc lk" data-l="Village">' + esc(r.village) + '</td><td class="gc lk" data-l="Mobile / complaint no.">' + esc(r.mobile) + '</td><td class="gc lk" data-l="Other detail">' + esc(r.detail) + '</td><td class="gc lk" data-l="Refer to workshop">' + esc(r.ws) + '</td>' +
+        '<td class="gc lk" data-l="Refer by">' + esc(r.by) + '</td><td class="gc lk" data-l="Village">' + esc(r.village) + '</td><td class="gc lk" data-l="Mobile no.">' + esc(r.mobile) + '</td><td class="gc lk" data-l="Complaint no.">' + esc(r.complaint) + '</td><td class="gc lk" data-l="Other detail">' + esc(r.detail) + '</td><td class="gc lk" data-l="Refer to workshop">' + esc(r.ws) + '</td>' +
         emgCell(r, 'remark', r.remark, 'JE/AE remark') + emgCell(r, 'pr', r.pr, 'PR NO') +
         none + 'PR date">' + esc(r.pr_date) + '</td>' + none + 'Division">' + esc(r.division) + '</td>' + none + 'Substation">' + esc(r.substation) + '</td>' + none + 'Feeder">' + esc(r.feeder) + '</td>' +
-        none + 'Place of damage">' + esc(r.place) + '</td>' + none + 'Capacity">' + esc(r.cap) + '</td>' + none + 'Complain no.">' + esc(r.complain) + '</td>' +
+        none + 'Place of damage">' + esc(r.place) + '</td>' + none + 'Capacity">' + esc(r.cap) + '</td>' + none + 'Complain no. (Data Sheet)">' + esc(r.complain) + '</td>' +
         none + 'JE">' + (r.found ? emgPerson(r.je, r.je_mob).split(' <a')[0] : '') + '</td>' + none + 'JE mobile">' + (emgTel(r.je_mob) ? '<a class="ecall" href="tel:' + emgTel(r.je_mob) + '">&#128222; ' + emgTel(r.je_mob) + '</a>' : '') + '</td>' +
         none + 'Firm">' + esc(r.firm) + '</td>' + none + 'Issue date"><b>' + esc(r.issue) + '</b></td>' + none + 'Driver">' + esc(r.drv) + '</td>' +
         none + 'Driver mobile">' + (emgTel(r.drv_mob) ? '<a class="ecall" href="tel:' + emgTel(r.drv_mob) + '">&#128222; ' + emgTel(r.drv_mob) + '</a>' : '') + '</td>' + none + 'Replacement date"><b>' + esc(r.repl) + '</b></td>' +
@@ -3869,7 +3895,7 @@ document.addEventListener('click', function (e) {
   if (t && t.id === 'ef_add') {
     var v = function (i) { return $(i).value.trim(); };
     t.disabled = true;
-    rpc('emg_add', { p_by: v('ef_by'), p_village: v('ef_vil'), p_mob: v('ef_mob'), p_detail: v('ef_det'), p_ws: $('ef_ws').value }).then(function () { return emgFetch(); }).then(function () { emgRender(); emgMsg('Added.'); })
+    rpc('emg_add', { p_by: v('ef_by'), p_village: v('ef_vil'), p_mob: v('ef_mob'), p_complaint: v('ef_cmp'), p_detail: v('ef_det'), p_ws: $('ef_ws').value }).then(function () { return emgFetch(); }).then(function () { emgRender(); emgMsg('Added.'); })
       .catch(function (x) { t.disabled = false; emgMsg(x.message, 1); });
   }
   var d = t.closest && t.closest('[data-del]');
@@ -3877,12 +3903,23 @@ document.addEventListener('click', function (e) {
 });
 document.addEventListener('input', function (e) {
   var i = e.target; if (!i.dataset || !i.dataset.id || !i.dataset.f || !i.closest('#emt')) return;
-  var id = i.dataset.id; clearTimeout(EMGSAVE[id]); emgMsg('Typing...');
+  var id = i.dataset.id; if (i.dataset.f === 'pr') { var sp = i.selectionStart; i.value = i.value.toUpperCase(); try { i.setSelectionRange(sp, sp); } catch (x) { } } clearTimeout(EMGSAVE[id]); emgMsg('Typing...');
   EMGSAVE[id] = setTimeout(function () {
     var tr = i.closest('tr'), pr = tr.querySelector('input[data-f="pr"]').value, rm = tr.querySelector('input[data-f="remark"]').value;
     emgMsg('Saving...');
     rpc('emg_set', { p_id: +id, p_remark: rm, p_pr: pr }).then(function () { return emgFetch(); }).then(function () { emgRender(); emgMsg('Saved.'); }).catch(function (x) { emgMsg(x.message, 1); });
   }, 900);
+});
+
+document.addEventListener('click', function (e) {
+  var t = e.target; if (!t || !t.closest) return;
+  if (t.closest('#er_go')) {
+    var f = $('er_f').value, to = $('er_t').value;
+    if (!f && !to) return emgMsg('Choose the From and To dates.', 1);
+    if (f && to && f > to) return emgMsg('From date is after To date.', 1);
+    EMGR = { f: f, t: to }; emgLoad();
+  }
+  if (t.closest('#er_x')) { EMGR = null; emgLoad(); }
 });
 
 /* =====================  OWN WORKSHOP: setup guide, connect, first-time Admin  =====================
@@ -3921,11 +3958,13 @@ function sgOpen() {
     '<b>Last check - remove the extra part:</b> the Project URL must end with <code>.supabase.co</code>. If it ends with <code>/rest/v1/</code>, <u>delete <code>/rest/v1/</code></u> before you paste it.<br>' +
     '<b>Never</b> copy the <b>Secret key</b> (<code>sb_secret_...</code>) or the <b>service_role</b> key. Paste the two values below.' +
     '<div class="sgf"><label>Project URL</label><input id="sgu" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.u : '') + '"><label>Publishable key (anon key) - NOT the Secret key</label><input id="sgk" placeholder="eyJ... or sb_publishable_..." autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.k : '') + '"><button class="btn" id="sgc" type="button">Connect</button><div id="sgmsg"></div></div></li>' +
-    '<li><b>Optional - only if you want to reset a forgotten Admin password by e-mail.</b> In Supabase: <i>Authentication</i> &rarr; <i>URL Configuration</i>.<br>' +
-    '<b>Site URL</b> - paste this: <code id="sgs1">' + sgSite() + '</code> <button class="btn sm" type="button" data-sgt="' + sgSite() + '">Copy</button><br>' +
-    '<b>Redirect URLs</b> - click <i>Add URL</i> and paste this: <code id="sgs2">' + sgSite() + '**</code> <button class="btn sm" type="button" data-sgt="' + sgSite() + '**">Copy</button><br>' +
-    'Click <i>Save changes</i>. If you skip this step, everything else works; only the reset mail link will not open correctly.</li>' +
-    '<li><b>Login and finish.</b> After "Connected", login here with your e-mail and the password of step 5. A "First-time setup" box asks your name and division - fill it. Then open the <i>Admin</i> tab: add your workshops, then add your employees. <b>Also make a second Admin</b> as a backup, in case one Admin forgets the password.</li></ol>' +
+    '<li><b>Optional: allow the "forgot password" mail.</b> <span class="muted">(Do this only if you want to reset a forgotten Admin password by e-mail. If you skip it, everything else works.)</span>' +
+    '<ol class="sgs"><li>In Supabase, in the <b>left menu</b>, click <b>Authentication</b>.</li>' +
+    '<li>In the list that opens, click <b>URL Configuration</b> (it is under the heading "Configuration").</li>' +
+    '<li>You will see a box named <b>Site URL</b>. Delete what is written there (it says <code>http://localhost:3000</code>). Then click the <b>Copy</b> button below and paste (Ctrl+V) in that box.<br><code>' + sgSite() + '</code> <button class="btn sm" type="button" data-sgt="' + sgSite() + '">Copy</button></li>' +
+    '<li>Below it is <b>Redirect URLs</b>. Click the button <b>Add URL</b>. A new empty box appears. Click the <b>Copy</b> button below and paste in that box.<br><code>' + sgSite() + '**</code> <button class="btn sm" type="button" data-sgt="' + sgSite() + '**">Copy</button></li>' +
+    '<li>Click the green <b>Save changes</b> button. Done.</li></ol></li>' +
+    '<li><b>Login and finish.</b> After "Connected", login here with your e-mail and the password of step 5. A "First-time setup" box asks your name and division - fill it. Then open the <i>Admin</i> tab: (1) add your workshops, (2) after you have put your PRs in the Data Sheet, open <i>Structure</i> and tap <b>Fill from my data</b>, then arrange the circles, order and short names, (3) add your employees. <b>Also make a second Admin</b> as a backup, in case one Admin forgets the password.</li></ol>' +
     (C.own ? '<div class="bar"><button class="btn sec" id="sgd" type="button">Go back to the default account</button><span class="muted">This device is using your own project now.</span></div>' : '') + '</div>';
   m.style.display = 'flex';
 }
@@ -4019,6 +4058,145 @@ function ttRecovery() {
     }).catch(function () { b.disabled = false; msg('rpm', 'Could not save. Check your internet.', 'err'); });
   };
 }
+
+/* =====================  STRUCTURE: Workshop > Circle > Division  (Admin tab)  =====================
+ * Needs step 37 SQL.  The Comparison tab and the Division wise table of the Summary follow it: same circles, same order, short names. */
+var STRUCT = [], STRUCT_OK = false;
+function structLoad() {
+  return rpc('struct_json').then(function (r) { STRUCT = r || []; STRUCT_OK = true; }).catch(function () { STRUCT = []; STRUCT_OK = false; });
+}
+function structShort(t) {
+  var k = nk(t); if (!k || !STRUCT.length) return '';
+  for (var i = 0; i < STRUCT.length; i++) if (nk(STRUCT[i].div) === k && STRUCT[i].short) return STRUCT[i].short;
+  return '';
+}
+function structCircles(ws) {          // [{name, cs, divs:[division names]}] in the order the Admin chose
+  var out = [], idx = {};
+  STRUCT.filter(function (r) { return r.ws === ws; }).forEach(function (r) {
+    var c = idx[r.circle]; if (!c) { c = idx[r.circle] = { name: r.circle, cs: r.cs || '', divs: [] }; out.push(c); }
+    c.divs.push(r.div);
+  });
+  return out;
+}
+function structCmpGroup(ws, hard) {
+  var cs = structCircles(ws);
+  if (cs.length) return { ws: ws, total: cs.length > 1 ? ws : null, parts: cs.map(function (c) { return { label: c.cs || c.name, divs: c.divs }; }) };
+  var h = !ttConn().own ? hard.filter(function (x) { return x.ws === ws; })[0] : null;      // the original project keeps its old fixed list until step 38 is run
+  return h || { ws: ws, total: ws, parts: [] };
+}
+function structDivOrd(w, hard) {
+  var cs = structCircles(w);
+  if (!cs.length) return ttConn().own ? [] : (hard[w] || []);
+  var out = [];
+  cs.forEach(function (c) { c.divs.forEach(function (d) { out.push([d]); }); if (cs.length > 1) out.push([c.name, 1, c.divs.length]); });
+  return out;
+}
+
+/* ---------- the Admin screen ---------- */
+var ST = {}, STW = [], STDIRTY = false, STID = 0;
+function stList() { return ME && ME.role === 'admin' ? WSL.slice().sort() : Object.keys(WSDIV).sort(); }
+function stBuild() {
+  ST = {}; STW = stList();
+  STW.forEach(function (w) {
+    var s = ST[w] = { circles: [], divs: [] }, idx = {};
+    STRUCT.filter(function (r) { return r.ws === w; }).forEach(function (r) {
+      var c = idx[r.circle]; if (!c) { c = idx[r.circle] = { id: ++STID, name: r.circle, cs: r.cs || '' }; s.circles.push(c); }
+      s.divs.push({ cid: c.id, name: r.div, short: r.short || '', old: r.div });
+    });
+  });
+}
+function stLoad() {
+  var card = $('stcard'); if (!card) return;
+  var on = ME && (ME.role === 'admin' || ME.role === 'creator');
+  card.classList.toggle('hide', !on); if (!on) return;
+  $('stbox').innerHTML = '<div class="muted">Loading...</div>';
+  return structLoad().then(function () { stBuild(); STDIRTY = false; stDraw(); });
+}
+function stMsg(t, k) { var e = $('stmsg'); if (e) e.innerHTML = t ? '<div class="msg ' + (k || 'info') + '">' + t + '</div>' : ''; }
+function stDraw() {
+  var b = $('stbox'); if (!b) return;
+  if (!STW.length) { b.innerHTML = '<div class="muted">Add a workshop first (Workshops box above).</div>'; return; }
+  if (!STRUCT_OK) { b.innerHTML = '<div class="msg err">The Structure is not switched on yet: the owner must run SQL step 37 (supabase-step37-structure.sql).</div>'; return; }
+  var h = '<div class="muted" style="font-size:12.5px;margin:0 0 8px">Make your Circles, then put every Division in a Circle. The order here is the order in the Comparison tab and in the Division wise table. Write the <b>division name exactly as it is in your PRs</b> (if you change it here, it is changed in all PRs too). The <b>short name</b> is what is shown on the screen. Tip: tap <b>Fill from my data</b> to bring the divisions that are already in your PRs.</div><div id="stmsg"></div>';
+  STW.forEach(function (w, wi) {
+    var s = ST[w];
+    h += '<div class="stw" data-w="' + wi + '"><h4>' + esc(w) + '</h4>' +
+      '<div class="sth">Circles</div>' + (s.circles.length ? '' : '<div class="muted" style="font-size:12px">No circle yet.</div>');
+    s.circles.forEach(function (c, ci) {
+      h += '<div class="strow" data-ci="' + ci + '"><input class="stin" data-f="cname" placeholder="Circle name (example: EDC-I AZAMGARH)" value="' + esc(c.name) + '"><input class="stin sm" data-f="cs" placeholder="short name" value="' + esc(c.cs) + '">' +
+        '<button class="stb" data-a="cup" title="Move up">&uarr;</button><button class="stb" data-a="cdn" title="Move down">&darr;</button><button class="stb x" data-a="cdel" title="Remove this circle">&#10005;</button></div>';
+    });
+    h += '<button class="btn sec sm" data-a="cadd" type="button">+ Add circle</button><div class="sth" style="margin-top:12px">Divisions</div>' + (s.divs.length ? '' : '<div class="muted" style="font-size:12px">No division yet.</div>');
+    s.divs.forEach(function (d, di) {
+      h += '<div class="strow" data-di="' + di + '"><select class="stin sel" data-f="dcid">' + s.circles.map(function (c) { return '<option value="' + c.id + '"' + (c.id === d.cid ? ' selected' : '') + '>' + esc(c.name || '(circle without name)') + '</option>'; }).join('') + '</select>' +
+        '<input class="stin big" data-f="dname" placeholder="Division name as in the PRs" value="' + esc(d.name) + '"><input class="stin sm" data-f="dshort" placeholder="short name" value="' + esc(d.short) + '">' +
+        '<button class="stb" data-a="dup" title="Move up">&uarr;</button><button class="stb" data-a="ddn" title="Move down">&darr;</button><button class="stb x" data-a="ddel" title="Remove">&#10005;</button>' +
+        (d.old && d.name.trim() !== d.old.trim() ? '<div class="stn">Was: ' + esc(d.old) + ' &rarr; all its PRs will be renamed when you save.</div>' : '') + '</div>';
+    });
+    h += '<button class="btn sec sm" data-a="dadd" type="button">+ Add division</button> <button class="btn sec sm" data-a="dfill" type="button">Fill from my data</button></div>';
+  });
+  h += '<div class="bar" style="margin-top:12px"><button class="btn" id="stsave" type="button">Save structure</button><span class="muted" id="stst">' + (STDIRTY ? 'Not saved yet.' : '') + '</span></div>' +
+    '<div class="muted" style="font-size:12px;margin-top:4px">A circle with no division is not saved. Workshops that have no circle keep showing their divisions in the order of the names.</div>';
+  b.innerHTML = h;
+}
+function stMove(arr, i, d) { var j = i + d; if (j < 0 || j >= arr.length) return; var t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+document.addEventListener('input', function (e) {
+  var i = e.target; if (!i.classList || !i.classList.contains('stin')) return;
+  var w = ST[STW[+i.closest('.stw').dataset.w]], f = i.dataset.f; STDIRTY = true; var st = $('stst'); if (st) st.textContent = 'Not saved yet.';
+  if (f === 'cname' || f === 'cs') { var c = w.circles[+i.closest('.strow').dataset.ci]; if (f === 'cname') c.name = i.value; else c.cs = i.value; }
+  else { var d = w.divs[+i.closest('.strow').dataset.di]; if (f === 'dname') d.name = i.value; else if (f === 'dshort') d.short = i.value; }
+});
+document.addEventListener('change', function (e) {
+  var i = e.target; if (!i.classList || !i.classList.contains('stin')) return;
+  var w = ST[STW[+i.closest('.stw').dataset.w]], f = i.dataset.f;
+  if (f === 'dcid') { w.divs[+i.closest('.strow').dataset.di].cid = +i.value; STDIRTY = true; stDraw(); }
+  else if (f === 'cname' || f === 'dname') stDraw();                       // the circle list in the division rows and the "Was:" note are drawn again
+});
+document.addEventListener('click', function (e) {
+  var t = e.target; if (!t || !t.closest) return;
+  var bt = t.closest('#stbox [data-a]'), sv = t.closest('#stsave');
+  if (bt) {
+    var wb = bt.closest('.stw'), wn = STW[+wb.dataset.w], w = ST[wn], a = bt.dataset.a, row = bt.closest('.strow'), ci = row ? +row.dataset.ci : -1, di = row ? +row.dataset.di : -1;
+    STDIRTY = true;
+    if (a === 'cadd') w.circles.push({ id: ++STID, name: '', cs: '' });
+    else if (a === 'cup') stMove(w.circles, ci, -1); else if (a === 'cdn') stMove(w.circles, ci, 1);
+    else if (a === 'cdel') { var c = w.circles[ci]; if (w.divs.some(function (d) { return d.cid === c.id; })) { STDIRTY = false; return stMsg('First move or remove the divisions of this circle.', 'err'); } w.circles.splice(ci, 1); }
+    else if (a === 'dadd') { if (!w.circles.length) w.circles.push({ id: ++STID, name: '', cs: '' }); w.divs.push({ cid: w.circles[w.circles.length - 1].id, name: '', short: '', old: '' }); }
+    else if (a === 'dup') stMove(w.divs, di, -1); else if (a === 'ddn') stMove(w.divs, di, 1);
+    else if (a === 'ddel') w.divs.splice(di, 1);
+    else if (a === 'dfill') {
+      bt.disabled = true;
+      return rpc('struct_found', { p_ws: [wn] }).then(function (r) {
+        var have = {}; w.divs.forEach(function (d) { have[nk(d.name)] = 1; });
+        var add = (r || []).filter(function (x) { return !have[nk(x.div)]; }).sort(function (x, y) { return natural(x.div, y.div); });
+        if (!add.length) { bt.disabled = false; STDIRTY = false; return stMsg('Nothing new: every division of your PRs is already in the list.', 'info'); }
+        if (!w.circles.length) w.circles.push({ id: ++STID, name: 'CIRCLE 1', cs: '' });
+        add.forEach(function (x) { w.divs.push({ cid: w.circles[0].id, name: x.div, short: '', old: x.div }); });
+        stDraw(); stMsg(add.length + ' division(s) added from your PRs to the first circle. Move them to the right circle, set the order and short names, then Save.', 'ok');
+      }).catch(function (x) { bt.disabled = false; stMsg(esc(x.message), 'err'); });
+    }
+    return stDraw();
+  }
+  if (sv) {
+    var rows = [], bad = '';
+    STW.forEach(function (wn) {
+      var w = ST[wn];
+      w.circles.forEach(function (c, ci) {
+        var ds = w.divs.filter(function (d) { return d.cid === c.id && d.name.trim(); });
+        if (ds.length && !c.name.trim()) bad = 'Give a name to every circle that has divisions (' + wn + ').';
+        ds.forEach(function (d, k) { rows.push({ ws: wn, circle: c.name.trim(), cs: c.cs.trim(), csort: ci + 1, div: d.name.trim(), short: d.short.trim(), sort: k + 1, old: d.old || '' }); });
+      });
+    });
+    if (bad) return stMsg(bad, 'err');
+    sv.disabled = true; stMsg('Saving...', 'info');
+    rpc('struct_save', { p_ws: STW, p_rows: rows }).then(function (r) {
+      sv.disabled = false; return structLoad().then(function () {
+        if (typeof cclear === 'function') cclear(); SKEY = ''; SUM = null; CMP = null; stBuild(); STDIRTY = false; stDraw();
+        stMsg('Saved ✓ ' + r.saved + ' division(s)' + (r.renamed_prs ? ', ' + r.renamed_prs + ' PR(s) renamed' : '') + '. The Comparison and the Summary now follow this order.', 'ok');
+      });
+    }).catch(function (x) { sv.disabled = false; stMsg(esc(x.message), 'err'); });
+  }
+});
 
 </script>
 <script>if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(function () {});</script>

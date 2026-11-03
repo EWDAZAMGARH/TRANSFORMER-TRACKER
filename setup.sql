@@ -1910,4 +1910,190 @@ exception when others then
   raise notice 'pg_cron is not available: the weekly jobs were NOT created (%). Enable pg_cron and run this file again.', sqlerrm;
 end $$;
 
+-- ################ from supabase-step36-emergency2.sql ################
+-- TF-Tracker : STEP 36 - Emergency tab changes.   Run ONCE in Supabase > SQL Editor (after step 33).  Safe to run again.  No data is lost.
+--   * Only an Admin of the workshop (or the App Creator) can DELETE an emergency line. The Nodal who added it can not.
+--   * A replaced emergency leaves the Emergency tab 1 DAY after the replacement date (before: 2 days).
+--   * New: a From - To date range = the list of emergencies SOLVED (replaced) in that period, even the hidden ones.
+--   * The Nodal now has two boxes: Mobile no. and Complaint no.  (new column "complaint").
+--   * PR no. can be letters + digits; it is saved in capital letters.
+
+alter table public.emergency add column if not exists complaint text;
+
+drop function if exists public.emg_json();
+create or replace function public.emg_json(p_from date default null, p_to date default null) returns jsonb language plpgsql stable security definer set search_path = public as
+$$
+declare
+  mine  text[]  := coalesce(public.my_workshops(), '{}');
+  ed    boolean := public.my_can_edit() and public.my_role() in ('admin', 'je');
+  adm   boolean := public.my_role() in ('admin', 'creator');
+  me    uuid    := auth.uid();
+  today date    := (now() at time zone 'Asia/Kolkata')::date;
+  hist  boolean := p_from is not null or p_to is not null;
+begin
+  if not public.emg_ok() then return '[]'::jsonb; end if;
+  return coalesce((
+    select jsonb_agg(x order by x->>'sort' desc) from (
+      select jsonb_build_object(
+        'sort', case when hist then to_char(d.repl_date, 'YYYYMMDD') || lpad(e.id::text, 10, '0') else to_char(e.created_at, 'YYYYMMDDHH24MISS') || lpad(e.id::text, 10, '0') end,
+        'id', e.id, 'by', e.refer_by, 'village', e.village, 'mobile', e.mobile, 'complaint', e.complaint, 'detail', e.detail, 'ws', e.workshop,
+        'remark', e.remark, 'pr', e.pr_no,
+        'created', to_char(e.created_at at time zone 'Asia/Kolkata', 'DD.MM.YYYY HH24:MI'),
+        'can_edit', ed and e.workshop = any (mine),
+        'can_del',  adm and e.workshop = any (mine),
+        'found', d.id is not null, 'dup', coalesce(d.dup, false),
+        'st', case when d.id is null or coalesce(d.dup, false) then 'R0'
+                   when d.repl_date is not null then 'D'
+                   when d.issue_date is not null then 'G'
+                   else 'R1' end,
+        'left', case when d.repl_date is not null then d.repl_date + 1 - today end,
+        'pr_date', to_char(d.pr_date, 'DD.MM.YYYY'), 'division', d.division, 'substation', d.substation, 'feeder', d.feeder,
+        'place', d.place_of_damage, 'cap', d.capacity, 'complain', d.complain_no,
+        'je', d.je_name, 'je_mob', d.je_mobile, 'firm', d.firm,
+        'issue', to_char(d.issue_date, 'DD.MM.YYYY'), 'drv', d.driver_name, 'drv_mob', d.driver_mobile,
+        'repl', to_char(d.repl_date, 'DD.MM.YYYY')
+      ) as x
+      from public.emergency e
+      left join lateral (
+        select d0.* from public.data d0
+         where btrim(coalesce(e.pr_no, '')) <> '' and d0.workshop = e.workshop and upper(btrim(d0.pr_no)) = upper(btrim(e.pr_no))
+         limit 1) d on true
+      where (e.workshop = any (mine) or e.created_by = me)
+        and case when hist then d.repl_date is not null and not coalesce(d.dup, false)
+                            and d.repl_date >= coalesce(p_from, date '0001-01-01') and d.repl_date <= coalesce(p_to, date '9999-12-31')
+                 else not (d.repl_date is not null and d.repl_date + 1 <= today) end
+    ) s), '[]'::jsonb);
+end
+$$;
+
+drop function if exists public.emg_add(text, text, text, text, text);
+create or replace function public.emg_add(p_by text, p_village text, p_mob text, p_detail text, p_ws text, p_complaint text default '') returns bigint
+language plpgsql security definer set search_path = public as
+$$
+declare nid bigint;
+begin
+  if not public.emg_ok() then raise exception 'You cannot use the Emergency tab.'; end if;
+  if not (p_ws = any (public.emg_workshops())) then raise exception 'Choose the workshop this emergency is referred to.'; end if;
+  if btrim(coalesce(p_village, '')) = '' and btrim(coalesce(p_mob, '')) = '' and btrim(coalesce(p_complaint, '')) = '' and btrim(coalesce(p_detail, '')) = '' then
+    raise exception 'Write the village, the mobile no., the complaint no. or some detail.'; end if;
+  insert into public.emergency (refer_by, village, mobile, complaint, detail, workshop, created_by)
+  values (left(btrim(coalesce(p_by, '')), 120), left(btrim(coalesce(p_village, '')), 120), left(btrim(coalesce(p_mob, '')), 60),
+          left(btrim(coalesce(p_complaint, '')), 60), left(btrim(coalesce(p_detail, '')), 400), p_ws, auth.uid())
+  returning id into nid;
+  return nid;
+end
+$$;
+
+create or replace function public.emg_set(p_id bigint, p_remark text, p_pr text) returns boolean
+language plpgsql security definer set search_path = public as
+$$
+declare w text;
+begin
+  select workshop into w from public.emergency where id = p_id;
+  if w is null then raise exception 'This emergency was not found.'; end if;
+  if not (public.emg_ok() and public.my_can_edit() and public.my_role() in ('admin', 'je') and w = any (coalesce(public.my_workshops(), '{}'))) then
+    raise exception 'Only the JE / Admin of % can fill this.', w; end if;
+  update public.emergency set remark = left(btrim(coalesce(p_remark, '')), 400), pr_no = upper(left(btrim(coalesce(p_pr, '')), 40)), updated_at = now() where id = p_id;
+  return true;
+end
+$$;
+
+create or replace function public.emg_del(p_id bigint) returns boolean
+language plpgsql security definer set search_path = public as
+$$
+declare e public.emergency;
+begin
+  select * into e from public.emergency where id = p_id;
+  if e.id is null then return false; end if;
+  if not (public.emg_ok() and public.my_role() in ('admin', 'creator') and e.workshop = any (coalesce(public.my_workshops(), '{}'))) then
+    raise exception 'Only an Admin can delete an emergency.'; end if;
+  delete from public.emergency where id = p_id;
+  return true;
+end
+$$;
+
+revoke all on function public.emg_json(date, date), public.emg_add(text, text, text, text, text, text), public.emg_set(bigint, text, text), public.emg_del(bigint) from public, anon;
+grant execute on function public.emg_json(date, date), public.emg_add(text, text, text, text, text, text), public.emg_set(bigint, text, text), public.emg_del(bigint) to authenticated;
+
+-- ################ from supabase-step37-structure.sql ################
+-- TF-Tracker : STEP 37 - STRUCTURE: Workshop > Circle > Division, with short names and your own order.
+-- Run ONCE in Supabase > SQL Editor.  Safe to run again.  No PR data is changed by this file.
+-- The Admin makes it in  Admin tab > Structure.  The Comparison tab and the Division wise table of the Summary follow it
+-- (same circles, same order, short names).  Renaming a division there also renames it in the PRs of the Data Sheet.
+-- One row = one division.  "division" is the name exactly as written in the PRs of the Data Sheet.
+
+create table if not exists public.divmap (
+  id           bigint generated always as identity primary key,
+  workshop     text not null,
+  circle       text not null,
+  circle_short text,
+  circle_sort  int  not null default 0,
+  division     text not null,
+  short        text,
+  sort         int  not null default 0,
+  unique (workshop, division)
+);
+alter table public.divmap enable row level security;
+revoke all on public.divmap from anon, authenticated;
+
+-- everybody who is logged in reads the structure (the Comparison is the same for every login)
+create or replace function public.struct_json() returns jsonb language sql stable security definer set search_path = public as
+$$
+  select case when auth.uid() is null or not exists (select 1 from public.profiles p where p.user_id = auth.uid() and p.active) then '[]'::jsonb
+    else coalesce((select jsonb_agg(jsonb_build_object('ws', workshop, 'circle', circle, 'cs', circle_short, 'csort', circle_sort, 'div', division, 'short', short, 'sort', sort)
+                                    order by workshop, circle_sort, sort, division) from public.divmap), '[]'::jsonb) end
+$$;
+
+-- the divisions that exist in the PRs of the Admin's workshops but are not in the structure yet (for the button "Fill from my data")
+create or replace function public.struct_found(p_ws text[]) returns jsonb language plpgsql stable security definer set search_path = public as
+$$
+declare ok text[];
+begin
+  if public.my_role() not in ('admin', 'creator') then raise exception 'Only an Admin can do this.'; end if;
+  ok := array(select name from public.workshops where name = any (coalesce(p_ws, '{}'))
+                and (public.my_role() = 'creator' or name = any (coalesce(public.my_workshops(), '{}'))));
+  return coalesce((select jsonb_agg(jsonb_build_object('ws', d.workshop, 'div', d.division, 'n', d.n) order by d.workshop, d.division)
+                   from (select workshop, btrim(division) as division, count(*) n from public.data
+                          where workshop = any (ok) and btrim(coalesce(division, '')) <> ''
+                          group by workshop, btrim(division)) d
+                   where not exists (select 1 from public.divmap m where m.workshop = d.workshop and upper(regexp_replace(m.division, '[^A-Za-z0-9]', '', 'g')) = upper(regexp_replace(d.division, '[^A-Za-z0-9]', '', 'g')))), '[]'::jsonb);
+end $$;
+
+-- save the structure of the given workshops (replaces what was there for those workshops).
+-- p_rows = [{ "ws","circle","cs","csort","div","short","sort","old" }]   "old" = the division name before the Admin changed it (then the PRs are renamed too)
+create or replace function public.struct_save(p_ws text[], p_rows jsonb) returns jsonb language plpgsql security definer set search_path = public as
+$$
+declare ok text[]; r jsonb; n int := 0; ren int := 0; k int; seen text[] := '{}'; key text;
+begin
+  if public.my_role() not in ('admin', 'creator') or not public.my_can_edit() then raise exception 'Only an Admin can change the structure.'; end if;
+  ok := array(select name from public.workshops where name = any (coalesce(p_ws, '{}'))
+                and (public.my_role() = 'creator' or name = any (coalesce(public.my_workshops(), '{}'))));
+  if coalesce(array_length(ok, 1), 0) = 0 then raise exception 'No workshop to save.'; end if;
+  for r in select * from jsonb_array_elements(coalesce(p_rows, '[]'::jsonb)) loop
+    if not ((r->>'ws') = any (ok)) then raise exception 'The workshop % is not yours.', r->>'ws'; end if;
+    if btrim(coalesce(r->>'div', '')) = '' or btrim(coalesce(r->>'circle', '')) = '' then raise exception 'Every division needs a name and a circle.'; end if;
+    key := (r->>'ws') || '|' || upper(regexp_replace(r->>'div', '[^A-Za-z0-9]', '', 'g'));
+    if key = any (seen) then raise exception 'The division "%" is written twice in %.', r->>'div', r->>'ws'; end if;
+    seen := seen || key;
+  end loop;
+  -- renamed divisions: change the PRs of the Data Sheet first
+  for r in select * from jsonb_array_elements(coalesce(p_rows, '[]'::jsonb)) loop
+    if btrim(coalesce(r->>'old', '')) <> '' and btrim(r->>'old') <> btrim(r->>'div') then
+      update public.data set division = btrim(r->>'div') where workshop = r->>'ws' and btrim(division) = btrim(r->>'old');
+      get diagnostics k = row_count; ren := ren + k;
+    end if;
+  end loop;
+  delete from public.divmap where workshop = any (ok);
+  for r in select * from jsonb_array_elements(coalesce(p_rows, '[]'::jsonb)) loop
+    insert into public.divmap (workshop, circle, circle_short, circle_sort, division, short, sort)
+    values (r->>'ws', left(btrim(r->>'circle'), 80), nullif(left(btrim(coalesce(r->>'cs', '')), 40), ''), coalesce((r->>'csort')::int, 0),
+            left(btrim(r->>'div'), 120), nullif(left(btrim(coalesce(r->>'short', '')), 40), ''), coalesce((r->>'sort')::int, 0));
+    n := n + 1;
+  end loop;
+  return jsonb_build_object('saved', n, 'renamed_prs', ren);
+end $$;
+
+revoke all on function public.struct_json(), public.struct_found(text[]), public.struct_save(text[], jsonb) from public, anon;
+grant execute on function public.struct_json(), public.struct_found(text[]), public.struct_save(text[], jsonb) to authenticated;
+
 -- DONE.  Next: create the first Admin (see the README), then add workshops in the Admin tab.
