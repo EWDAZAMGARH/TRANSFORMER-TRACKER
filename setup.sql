@@ -135,17 +135,17 @@ grant execute on function public.my_role(), public.my_division(), public.my_can_
 -- =====================================================================
 -- TEST USERS (do these by hand, after running the part above)
 -- 1) Supabase > Authentication > Users > Add user > Create new user:
---      email  admin1@tf.puvvnl   password (your choice)   tick "Auto Confirm User"
---      email  je_mau@tf.puvvnl   password (your choice)   tick "Auto Confirm User"
---      email  head1@tf.puvvnl    password (your choice)   tick "Auto Confirm User"
+--      email  admin1@tf.uppcl   password (your choice)   tick "Auto Confirm User"
+--      email  je_mau@tf.uppcl   password (your choice)   tick "Auto Confirm User"
+--      email  head1@tf.uppcl    password (your choice)   tick "Auto Confirm User"
 -- 2) Then run these three inserts:
 --
 -- insert into public.profiles (user_id, login_id, display, role, org_division, scope, can_edit)
---   select id, 'admin1', 'Test Admin', 'admin', 'EWD AZAMGARH', '{}', true  from auth.users where email = 'admin1@tf.puvvnl';
+--   select id, 'admin1', 'Test Admin', 'admin', 'EWD AZAMGARH', '{}', true  from auth.users where email = 'admin1@tf.uppcl';
 -- insert into public.profiles (user_id, login_id, display, role, org_division, scope, can_edit)
---   select id, 'je_mau', 'Test JE Mau', 'je', null, '{MAU}', true     from auth.users where email = 'je_mau@tf.puvvnl';
+--   select id, 'je_mau', 'Test JE Mau', 'je', null, '{MAU}', true     from auth.users where email = 'je_mau@tf.uppcl';
 -- insert into public.profiles (user_id, login_id, display, role, org_division, scope, can_edit)
---   select id, 'head1', 'Test DISCOM head', 'discom', null, '{}', false from auth.users where email = 'head1@tf.puvvnl';
+--   select id, 'head1', 'Test DISCOM head', 'discom', null, '{}', false from auth.users where email = 'head1@tf.uppcl';
 --
 -- CHECKS the test page must show:  admin1 sees AZAMGARH + BALLIA + MAU;  je_mau sees ONLY MAU;
 --   head1 sees all but cannot insert/update/delete;  a person with no profile row sees NOTHING;  the anon key alone sees NOTHING.
@@ -444,15 +444,15 @@ grant execute on function
 -- ################ from supabase-step9-add-user.sql ################
 -- STEP 9: one-line helper to give a login its profile.  Run this file ONCE in the SQL Editor.
 -- Use:  select public.add_profile('mau2', 'Ramesh Kumar', 'je', 'EWD AZAMGARH', array['MAU'], true);
--- The login (Authentication > Users > Add user, e-mail  mau2@tf.puvvnl ) must exist first.  Running it again for the same ID just updates it.
+-- The login (Authentication > Users > Add user, e-mail  mau2@tf.uppcl ) must exist first.  Running it again for the same ID just updates it.
 create or replace function public.add_profile(p_login text, p_name text, p_role text, p_div text, p_scope text[] default '{}', p_edit boolean default false)
 returns text language plpgsql security definer set search_path = public, auth as
 $$
 declare uid uuid; lid text := lower(btrim(p_login));
 begin
   if p_role not in ('creator','discom','admin','je') then raise exception 'role must be creator, discom, admin or je'; end if;
-  select id into uid from auth.users where lower(email) = lid || '@tf.puvvnl';
-  if uid is null then raise exception 'First create the login % in Authentication > Users > Add user', lid || '@tf.puvvnl'; end if;
+  select id into uid from auth.users where lower(email) = lid || '@tf.uppcl';
+  if uid is null then raise exception 'First create the login % in Authentication > Users > Add user', lid || '@tf.uppcl'; end if;
   insert into public.profiles (user_id, login_id, display, role, org_division, scope, can_edit, active, must_change)
   values (uid, lid, p_name, p_role, p_div, coalesce(p_scope,'{}'), p_edit, true, false)
   on conflict (user_id) do update set login_id = excluded.login_id, display = excluded.display, role = excluded.role,
@@ -1819,7 +1819,7 @@ grant execute on function public.emg_ok(), public.emg_workshops(), public.emg_js
 -- ################ from supabase-step34-first-admin.sql ################
 -- TF-Tracker : STEP 34 - FIRST-TIME ADMIN of a NEW project.  (Only needed on a new project; setup.sql already contains it.)
 -- A new project has no profile at all.  The person creates ONE login by hand (Supabase > Authentication > Users > Add user,
--- e-mail  yourid@tf.puvvnl , tick "Auto Confirm User"), logs in on the site, and the site offers "First-time setup".
+-- e-mail  yourid@tf.uppcl , tick "Auto Confirm User"), logs in on the site, and the site offers "First-time setup".
 -- It works ONLY while the profiles table is completely empty.  After the first Admin exists, nobody can use it again.
 create or replace function public.first_admin_open() returns boolean
 language sql stable security definer set search_path = public as

@@ -68,7 +68,7 @@ async function handle(req) {
   if (action === "create") {
     const pw = tempPass(), role = String(body.role || "je");
     const div = caller.role === "admin" ? caller.org_division : String(body.div || "").trim() || null;
-    const { data: cu, error: ce } = await sb.auth.admin.createUser({ email: login + "@tf.puvvnl", password: pw, email_confirm: true });
+    const { data: cu, error: ce } = await sb.auth.admin.createUser({ email: login + "@tf.uppcl", password: pw, email_confirm: true });
     if (ce) return { ok: false, error: /already|exists|registered/i.test(ce.message) ? "This User ID already exists." : ce.message };
     const tabs = body.tabs == null ? null : body.tabs;
     const edit = role === "je" || role === "admin" ? !!body.edit && (!tabs || tabs.includes("data")) : false;

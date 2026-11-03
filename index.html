@@ -2130,7 +2130,7 @@ function rpc(fn, args) {
 }
 
 /* ---------- login / logout ---------- */
-function idMail(id) { return String(id || '').trim().toLowerCase() + '@tf.puvvnl'; }
+function idMail(id) { return String(id || '').trim().toLowerCase() + (ttConn().own ? '@tf.uppcl' : '@tf.puvvnl'); }   // own-workshop projects use @tf.uppcl; the default project keeps @tf.puvvnl
 function showLogin(note) {
   ME = null; SUM = null; document.body.classList.add('on-home');
   $('app').classList.add('hide'); $('login').classList.remove('hide'); $('pov').classList.add('hide'); $('lov').classList.add('hide');
@@ -3903,9 +3903,13 @@ function sgOpen() {
     '<li><b>Make a new project.</b> Click "New project". Name: anything (example: <i>tf-workshop</i>). Database password: click "Generate a password" and save it in a safe place (do not share it). Region: <i>South Asia (Mumbai)</i>. Plan: <i>Free</i>. Click "Create new project" and wait 2 minutes.</li>' +
     '<li><b>Put the tables in.</b> <button class="btn sm" type="button" data-sgc="setup.sql">Copy setup SQL</button><br>Then in Supabase, left menu: <i>SQL Editor</i> &rarr; <i>New query</i> &rarr; paste (Ctrl+V) &rarr; click <i>Run</i>. You should see "Success. No rows returned". Run it only once.</li>' +
     '<li><b>Add the user-management function.</b> <button class="btn sm" type="button" data-sgc="admin-users.ts">Copy function code</button><br>In Supabase, left menu: <i>Edge Functions</i> &rarr; <i>Deploy a new function</i> (via Editor) &rarr; name it exactly <code>admin-users</code> &rarr; delete the sample code, paste &rarr; <i>Deploy</i>.</li>' +
-    '<li><b>Make your own first login.</b> In Supabase: <i>Authentication</i> &rarr; <i>Users</i> &rarr; <i>Add user</i> &rarr; <i>Create new user</i>. E-mail: <code>yourid@tf.puvvnl</code> (write the User ID you want in place of "yourid", for example <code>anita@tf.puvvnl</code>). Type a password and <b>tick "Auto Confirm User"</b>. Click Create.</li>' +
-    '<li><b>Copy the two connection values.</b> In Supabase: <i>Project Settings</i> (gear) &rarr; <i>API</i> (if you do not see it, click the <i>Connect</i> button on top of the project). Copy <b>Project URL</b> (looks like https://abcd.supabase.co) and the <b>anon / publishable key</b> (a long text). Paste them below.' +
-    '<div class="sgf"><label>Project URL</label><input id="sgu" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.u : '') + '"><label>anon / publishable key</label><input id="sgk" placeholder="eyJ... or sb_publishable_..." autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.k : '') + '"><button class="btn" id="sgc" type="button">Connect</button><div id="sgmsg"></div></div></li>' +
+    '<li><b>Make your own first login.</b> In Supabase: <i>Authentication</i> &rarr; <i>Users</i> &rarr; <i>Add user</i> &rarr; <i>Create new user</i>. E-mail: <code>yourid@tf.uppcl</code> (write the User ID you want in place of "yourid", for example <code>anita@tf.uppcl</code>). Type a password and <b>tick "Auto Confirm User"</b>. Click Create.</li>' +
+    '<li><b>Copy the two connection values</b> (their names in Supabase: <b>Project URL</b> and <b>Publishable key</b>, also called the <b>anon key</b>). Do this inside your new project.<br>' +
+    '<u>Way 1:</u> click the <b>Connect</b> button on top of the project. A box opens with the <b>Project URL</b> and the <b>Publishable key</b>. Click the copy icon next to each.<br>' +
+    '<u>Way 2:</u> left menu, at the bottom: <b>Project Settings</b> (gear icon) &rarr; <b>API Keys</b> &rarr; copy the <b>Publishable key</b> (starts with <code>sb_publishable_</code>; an old project may show the <code>anon</code> key, that is also fine). Then in Project Settings open <b>Data API</b> (or <b>API</b>) and copy the <b>Project URL</b>.<br>' +
+    '<b>Last check - remove the extra part:</b> the Project URL must end with <code>.supabase.co</code>. If it ends with <code>/rest/v1/</code>, <u>delete <code>/rest/v1/</code></u> before you paste it.<br>' +
+    '<b>Never</b> copy the <b>Secret key</b> (<code>sb_secret_...</code>) or the <b>service_role</b> key. Paste the two values below.' +
+    '<div class="sgf"><label>Project URL</label><input id="sgu" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.u : '') + '"><label>Publishable key (anon key) - NOT the Secret key</label><input id="sgk" placeholder="eyJ... or sb_publishable_..." autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.k : '') + '"><button class="btn" id="sgc" type="button">Connect</button><div id="sgmsg"></div></div></li>' +
     '<li><b>Login and finish.</b> After "Connected", login here with the ID (the part before @) and the password of step 5. A "First-time setup" box asks your name and division - fill it. Then open the <i>Admin</i> tab: add your workshops, then add your employees.</li></ol>' +
     (C.own ? '<div class="bar"><button class="btn sec" id="sgd" type="button">Go back to the default account</button><span class="muted">This device is using your own project now.</span></div>' : '') + '</div>';
   m.style.display = 'flex';
@@ -3918,8 +3922,8 @@ document.addEventListener('click', function (e) {
   if (t.closest('#sgx') || t.id === 'sov') { document.getElementById('sov').style.display = 'none'; return; }
   if (t.closest('#sgd')) { try { localStorage.removeItem('tt_conn'); } catch (x) { } location.reload(); return; }
   if (t.closest('#sgc')) {
-    var u = document.getElementById('sgu').value.trim().replace(/\/+$/, ''), k = document.getElementById('sgk').value.trim();
-    if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(u)) return sgMsg('The Project URL must look like https://abcdefgh.supabase.co (no extra words, no /rest/v1).', 'err');
+    var u = document.getElementById('sgu').value.trim().replace(/\/+$/, '').replace(/\/rest\/v1$/i, '').replace(/\/+$/, ''), k = document.getElementById('sgk').value.trim();
+    if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(u)) return sgMsg('The Project URL must end with .supabase.co, like https://abcdefgh.supabase.co. Delete anything after .supabase.co (for example /rest/v1/).', 'err');
     if (/service_role/i.test(k) || k.length < 20) return sgMsg('This does not look like the anon / publishable key. Never use the service_role or secret key.', 'err');
     try { var pl = JSON.parse(atob(k.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); if (pl && pl.role && pl.role !== 'anon') return sgMsg('This is NOT the public key (its role is "' + pl.role + '"). Do not use it. Copy the anon / publishable key.', 'err'); } catch (x) { }
     if (/^sb_secret_/i.test(k)) return sgMsg('This is a SECRET key. Do not use it. Copy the key that starts with sb_publishable_ (or the anon key).', 'err');
