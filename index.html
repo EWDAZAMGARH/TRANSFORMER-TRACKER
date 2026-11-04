@@ -1832,7 +1832,6 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
           <div><label>To</label><div class="dt"><input type="text" class="dtx" id="st" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="st"></span></div></div>
           <button class="btn" id="sbtn">Show Summary</button><button class="btn sec" id="sxl">&#11015; Excel</button><button class="btn sec" id="spr">Print</button><button class="btn sec gico" id="sgr" title="Graph dashboard" aria-label="Graph dashboard"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg> Graph</button>
         </div>
-        <details class="dtl"><summary>How it works</summary>By default the summary shows this month: <b>From</b> = 1st of the month, <b>To</b> = today. Pick another <b>Date</b> and the TODAY columns show that day, while the TILL columns show the 1st of that month up to that date (From / To can still be changed). Tap any number to see its records. The last answer is kept for 5 minutes; tap <b>Show Summary</b> to get fresh figures at once.</details>
       </div>
       <div id="skpi" class="skpi"></div>
       <div id="smsg"></div>
@@ -1861,7 +1860,6 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
           </div>
         </div>
         <div class="muted" style="font-size:12px"><span id="dcnt"></span> &middot; <span id="dstat" class="muted"></span> <span id="dro" class="hide">&middot; View only: you cannot change data.</span></div>
-        <details class="dtl"><summary>How it works</summary>Pick the <b>PR date</b> to see that day's PRs (or tick <b>All dates</b> for the newest 6000). Type in any cell: the row is <b>saved automatically</b> a moment after you stop typing. <b>Delete:</b> click the row number (Shift = a range, the # heading = all) and press <b>Delete selected</b>. <b>Like Excel:</b> arrow keys / Enter move between cells; drag (or Shift+click, Shift+Up/Down) selects a block; <b>Ctrl+C</b> copies it; <b>Ctrl+V</b> pastes a small block at the cell (or one value into all selected cells); <b>Delete</b> clears the selected cells; <b>Ctrl+D</b> fills down, <b>Ctrl+R</b> fills right; <b>Ctrl+Z / Ctrl+Y</b> undo / redo. Locked cells are skipped. <b>Pending issue / replacement / return:</b> tap that number in the Summary to fill firm, driver and dates on cards. <b>New PRs:</b> type in the empty rows at the top, or copy rows from Excel and press <b>Ctrl+V</b> in any cell (up to 300 rows; use the <b>Paste from Excel</b> button for more). A <b>new row</b> is saved by itself once Workshop, Division, Capacity, PR NO and PR DATE are filled (the Save button saves it at once). PR NO, PR DATE and Workshop are compulsory. <b>Workshop, Division, Substation, Feeder, Place, Capacity, Complain no, PR NO and PR DATE</b> of a saved PR are locked; to correct them delete the row and add it again. Choose the firm <b>DUPLICATE/WRONG PR</b> for a wrong or duplicate PR: the issue date, driver name / mobile, replacement and return dates are cleared and locked (only the Remark can be written). <b>Paste from Excel</b> (button) adds many PRs at once: a PR that already exists only gets its empty cells filled.</details>
       </div>
       <div id="dmsg"></div>
       <div class="gwrap"><table class="gt gt2 mt" id="dt"></table></div>
@@ -1883,7 +1881,6 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
           <div class="tg r"><button class="btn sec sm" id="vxl">&#11015; Excel</button><button class="btn sec sm" id="vadd">+ Add driver</button></div>
         </div>
         <div class="muted" style="font-size:12px"><span id="vcnt"></span> <span id="vro" class="hide">&middot; View only: you cannot change the Driver Master.</span></div>
-        <details class="dtl"><summary>How it works</summary>Write each firm, its driver, mobile no., vehicle no. and GPS link once, workshop wise. In the <b>Data Sheet</b>, when you choose the firm / driver, the list comes from here and the driver's mobile no. is filled by itself. Every change is saved as soon as you leave the box. The entry <b>DUPLICATE/WRONG PR</b> (driver JE(D)) is a default entry of every workshop and cannot be changed.</details>
       </div>
       <div id="vmsg"></div>
       <div class="gwrap"><table class="gt gt2 mt" id="vt"></table></div>
@@ -1898,7 +1895,6 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
           <div><label>Workshop</label><select id="cws"><option value="">All workshops</option></select></div>
           <button class="btn" id="cbtn">Show Comparison</button><button class="btn sec" id="cxl">&#11015; Excel</button><button class="btn sec" id="cpr">Print</button>
         </div>
-        <details class="dtl"><summary>How it works</summary>Pick <b>From</b> and <b>To</b> (by default this month up to today). The table counts the PRs of these dates capacity wise and division wise, and compares them with the <b>same dates of last year</b>. Type the <b>Install on 01.04.YYYY</b> numbers once in the boxes: Damage % and the increase / decrease columns are worked out for you. Only the Admin sees this tab.</details>
       </div>
       <div id="cmsg"></div>
       <div id="cmpout"></div>
@@ -1911,6 +1907,10 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
         <div class="muted" style="font-size:12px;margin-bottom:6px">Write the names of your own workshops here. Then give each user the workshops he works for.</div>
         <div class="bar"><input type="text" id="wn" placeholder="New workshop name" style="max-width:240px"><span id="wdw" class="hide"><input type="text" id="wd" list="dvl" placeholder="Division name" style="max-width:240px"></span><button class="btn" id="wadd">Add workshop</button></div>
         <div class="wrap"><table id="wlt" class="mt"></table></div>
+      </div>
+      <div class="card acard hide" id="slcard"><h3>Staff link</h3>
+        <div class="muted" style="font-size:12.5px;margin-bottom:6px">Send this link to your employees (WhatsApp). Each employee opens it <b>once</b> on his phone or computer. After that he only types his ID and password. The link holds only the public connection values, no password.</div>
+        <div class="bar"><input type="text" id="slu" readonly style="flex:1;min-width:220px"><button class="btn" id="slc" type="button">Copy staff link</button></div>
       </div>
       <div class="card acard hide" id="stcard"><h3>Structure: Circles and Divisions</h3><div id="stbox"></div></div>
       <div class="card acard"><h3>Create a new user</h3>
@@ -2857,9 +2857,24 @@ function boot() {
     var s = r.data && r.data.session;
     if (s && TT_REC && typeof ttRecovery === 'function') { ttRecovery(); return; }
     if (s) return enter(s.user).catch(function (e) { showLogin(friendly(e)); });
-    showLogin('');
-  }).catch(function () { showLogin(''); });
+    showLogin(TT_LNOTE);
+  }).catch(function () { showLogin(TT_LNOTE); });
 }
+/* staff link: https://site/#tt=... connects this browser to the workshop project (public URL + publishable key only) */
+function ttHashConn() {
+  var m = /[#&]tt=([A-Za-z0-9_-]+)/.exec(location.hash || ''); if (!m) return '';
+  var r = 'bad';
+  try {
+    var o = JSON.parse(atob(m[1].replace(/-/g, '+').replace(/_/g, '/'))), k = String(o.k || ''), u = String(o.u || '');
+    var okk = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(u) && k.length > 20 && !/service_role|^sb_secret_/i.test(k);
+    if (okk && k.indexOf('.') > 0) { try { var pl = JSON.parse(atob(k.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); if (pl && pl.role && pl.role !== 'anon') okk = false; } catch (x) { } }
+    if (okk) { localStorage.setItem('tt_conn', JSON.stringify({ u: u, k: k })); r = 'ok'; }
+  } catch (e) { r = 'bad'; }
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { }
+  return r;
+}
+var TT_LINK = ttHashConn();
+var TT_LNOTE = TT_LINK === 'ok' ? 'Connected to your workshop. Now login with your ID and password.' : (TT_LINK === 'bad' ? 'This link is not valid. Ask your Admin for the staff link again.' : '');
 boot();
 
 /* desktop: hide / show the left menu (remembered on this computer) */
@@ -3502,9 +3517,7 @@ function cmpHtml(edit) {
 function cmpDraw() {
   if (!CMP) return;
   var isAd = ME && ME.role === 'admin';
-  $('cmpout').innerHTML = '<div class="card"><div class="wrap cmpw">' + cmpHtml(isAd) + '</div>' +
-    '<div class="muted" style="font-size:12px;margin-top:8px">' + (isAd ? 'Type the <b>Install on 01.04.YYYY</b> numbers in the boxes of each division (they are saved automatically, and Damage % is worked out from them). ' : 'The <b>Install on 01.04.YYYY</b> numbers are typed by the Admin. ') +
-    'Counts are PRs by PR date (wrong / duplicate PRs not counted). Capacities that have no column (for example 5 or 40) are inside BELOW 100 KVA / 100 AND ABOVE and TOTAL PR. An empty – means there is no last-year figure to compare with.</div></div>';
+  $('cmpout').innerHTML = '<div class="card"><div class="wrap cmpw">' + cmpHtml(isAd) + '</div></div>';
 }
 function cmpFill(raw) {                      // the workshop filter: every workshop found in the numbers
   var raws = {}; raw.forEach(function (r) { raws[r[1]] = 1; });
@@ -3952,10 +3965,12 @@ function sgOpen() {
     '<li><b>Put the tables in.</b> <button class="btn sm" type="button" data-sgc="setup.sql">Copy setup SQL</button><br>Then in Supabase, left menu: <i>SQL Editor</i> &rarr; <i>New query</i> &rarr; paste (Ctrl+V) &rarr; click <i>Run</i>. You should see "Success. No rows returned". Run it only once.</li>' +
     '<li><b>Add the user-management function.</b> <button class="btn sm" type="button" data-sgc="admin-users.ts">Copy function code</button><br>In Supabase, left menu: <i>Edge Functions</i> &rarr; <i>Deploy a new function</i> (via Editor) &rarr; name it exactly <code>admin-users</code> &rarr; delete the sample code, paste &rarr; <i>Deploy</i>.</li>' +
     '<li><b>Make your own first login.</b> In Supabase: <i>Authentication</i> &rarr; <i>Users</i> &rarr; <i>Add user</i> &rarr; <i>Create new user</i>. E-mail: your <b>own real e-mail</b> (the same e-mail of your Supabase account, for example <code>anita@gmail.com</code>). You will login with this e-mail, and a forgotten password can be reset by mail. (Your employees get simple IDs like <code>anup@tf.uppcl</code>, made by you in the Admin tab.) Type a password and <b>tick "Auto Confirm User"</b>. Click Create.</li>' +
-    '<li><b>Copy the two connection values</b> (their names in Supabase: <b>Project URL</b> and <b>Publishable key</b>, also called the <b>anon key</b>). Do this inside your new project.<br>' +
-    '<u>Way 1:</u> click the <b>Connect</b> button on top of the project. A box opens with the <b>Project URL</b> and the <b>Publishable key</b>. Click the copy icon next to each.<br>' +
-    '<u>Way 2:</u> left menu, at the bottom: <b>Project Settings</b> (gear icon) &rarr; <b>API Keys</b> &rarr; copy the <b>Publishable key</b> (starts with <code>sb_publishable_</code>; an old project may show the <code>anon</code> key, that is also fine). Then in Project Settings open <b>Data API</b> (or <b>API</b>) and copy the <b>Project URL</b>.<br>' +
-    '<b>Last check - remove the extra part:</b> the Project URL must end with <code>.supabase.co</code>. If it ends with <code>/rest/v1/</code>, <u>delete <code>/rest/v1/</code></u> before you paste it.<br>' +
+    '<li><b>Copy the two connection values</b> from your Supabase project. Open your project first (supabase.com/dashboard &rarr; click your project). You need <b>two</b> things:<br>' +
+    '<b>(A) Project URL</b> - it looks like <code>https://abcdefgh.supabase.co</code>.<br>' +
+    '&nbsp;&nbsp;1. In the <b>left menu</b>, at the very bottom, click <b>Project Settings</b> (gear icon).<br>&nbsp;&nbsp;2. Click <b>Data API</b> (in some projects it is named <b>API</b>).<br>&nbsp;&nbsp;3. Copy the <b>Project URL</b> shown at the top.<br>' +
+    '&nbsp;&nbsp;<i>If you cannot find it:</i> look at the address bar of the browser. It is <code>supabase.com/dashboard/project/<b>abcdefgh</b></code>. Your Project URL is <code>https://<b>abcdefgh</b>.supabase.co</code> (the same letters). It must end with <code>.supabase.co</code>; delete anything after that, for example <code>/rest/v1/</code>.<br>' +
+    '<b>(B) Publishable key</b> - a long text that starts with <code>sb_publishable_</code> (an older project may show an <code>anon</code> key starting with <code>eyJ</code>; that is also fine).<br>' +
+    '&nbsp;&nbsp;1. Again <b>Project Settings</b> (gear icon, bottom of the left menu).<br>&nbsp;&nbsp;2. Click <b>API Keys</b>.<br>&nbsp;&nbsp;3. Under <b>Publishable key</b> click the copy icon (for an old project: <b>anon public</b> key).<br>' +
     '<b>Never</b> copy the <b>Secret key</b> (<code>sb_secret_...</code>) or the <b>service_role</b> key. Paste the two values below.' +
     '<div class="sgf"><label>Project URL</label><input id="sgu" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.u : '') + '"><label>Publishable key (anon key) - NOT the Secret key</label><input id="sgk" placeholder="eyJ... or sb_publishable_..." autocomplete="off" autocapitalize="off" spellcheck="false" value="' + (C.own ? C.k : '') + '"><button class="btn" id="sgc" type="button">Connect</button><div id="sgmsg"></div></div></li>' +
     '<li><b>Optional: allow the "forgot password" mail.</b> <span class="muted">(Do this only if you want to reset a forgotten Admin password by e-mail. If you skip it, everything else works.)</span>' +
@@ -3964,7 +3979,8 @@ function sgOpen() {
     '<li>You will see a box named <b>Site URL</b>. Delete what is written there (it says <code>http://localhost:3000</code>). Then click the <b>Copy</b> button below and paste (Ctrl+V) in that box.<br><code>' + sgSite() + '</code> <button class="btn sm" type="button" data-sgt="' + sgSite() + '">Copy</button></li>' +
     '<li>Below it is <b>Redirect URLs</b>. Click the button <b>Add URL</b>. A new empty box appears. Click the <b>Copy</b> button below and paste in that box.<br><code>' + sgSite() + '**</code> <button class="btn sm" type="button" data-sgt="' + sgSite() + '**">Copy</button></li>' +
     '<li>Click the green <b>Save changes</b> button. Done.</li></ol></li>' +
-    '<li><b>Login and finish.</b> After "Connected", login here with your e-mail and the password of step 5. A "First-time setup" box asks your name and division - fill it. Then open the <i>Admin</i> tab: (1) add your workshops, (2) after you have put your PRs in the Data Sheet, open <i>Structure</i> and tap <b>Fill from my data</b>, then arrange the circles, order and short names, (3) add your employees. <b>Also make a second Admin</b> as a backup, in case one Admin forgets the password.</li></ol>' +
+    '<li><b>Login and finish.</b> After "Connected", login here with your e-mail and the password of step 5. A "First-time setup" box asks your name and division - fill it. Then open the <i>Admin</i> tab: (1) add your workshops, (2) after you have put your PRs in the Data Sheet, open <i>Structure</i> and tap <b>Fill from my data</b>, then arrange the circles, order and short names, (3) add your employees. <b>Also make a second Admin</b> as a backup, in case one Admin forgets the password.</li>' +
+    '<li><b>Give your employees their link.</b> Employees do <u>not</u> need the Project URL or the key. In the <i>Admin</i> tab open the box <b>Staff link</b>, tap <b>Copy staff link</b> and send it on WhatsApp. Each employee opens it <u>once</u> on his phone or computer; after that he only types his ID and password.</li></ol>' +
     (C.own ? '<div class="bar"><button class="btn sec" id="sgd" type="button">Go back to the default account</button><span class="muted">This device is using your own project now.</span></div>' : '') + '</div>';
   m.style.display = 'flex';
 }
@@ -4059,6 +4075,20 @@ function ttRecovery() {
   };
 }
 
+/* STAFF LINK: the Admin copies one link; an employee opens it once and this browser is connected to the workshop project (only the public URL + publishable key are inside) */
+function slB64(o) { return btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+function slLink() { var C = ttConn(); return C.own ? sgSite() + '#tt=' + slB64({ u: C.u, k: C.k }) : ''; }
+function slLoad() {
+  var card = document.getElementById('slcard'); if (!card) return;
+  var on = ME && (ME.role === 'admin' || ME.role === 'creator') && ttConn().own;
+  card.classList.toggle('hide', !on); if (!on) return;
+  document.getElementById('slu').value = slLink();
+}
+document.addEventListener('click', function (e) {
+  var t = e.target; if (!t || !t.closest || !t.closest('#slc')) return;
+  var b = t.closest('#slc'), u = document.getElementById('slu'); sgCopyTxt(u.value, b);
+});
+
 /* =====================  STRUCTURE: Workshop > Circle > Division  (Admin tab)  =====================
  * Needs step 37 SQL.  The Comparison tab and the Division wise table of the Summary follow it: same circles, same order, short names. */
 var STRUCT = [], STRUCT_OK = false;
@@ -4106,6 +4136,7 @@ function stBuild() {
   });
 }
 function stLoad() {
+  if (typeof slLoad === 'function') slLoad();
   var card = $('stcard'); if (!card) return;
   var on = ME && (ME.role === 'admin' || ME.role === 'creator');
   card.classList.toggle('hide', !on); if (!on) return;
