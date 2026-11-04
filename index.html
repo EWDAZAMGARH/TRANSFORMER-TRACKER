@@ -1799,7 +1799,7 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
     <div class="psr"><input type="text" id="psq" autocomplete="off" placeholder="PR no, complaint no or place of damage"><button type="button" id="psb">Search</button></div>
     <div id="pso"></div>
   </div>
-  <div class="hfoot"><a href="#" id="setuplink" style="font-weight:600;border:0;color:#b9c6f2;font-size:12.5px">Own workshop? Set up your own free account</a><br><a href="privacy.html" style="font-weight:400;border:0;color:#8fa0d6;font-size:11.5px">Privacy Policy</a></div>
+  <div class="hfoot"><a href="#" id="wclink" style="font-weight:600;border:0;color:#b9c6f2;font-size:12.5px">First time on this phone or computer? Enter your workshop code</a><br><a href="#" id="setuplink" style="font-weight:600;border:0;color:#b9c6f2;font-size:12.5px">Own workshop? Set up your own free account</a><br><a href="privacy.html" style="font-weight:400;border:0;color:#8fa0d6;font-size:11.5px">Privacy Policy</a></div>
 </div>
 
 <!-- APP -->
@@ -1911,6 +1911,10 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
       <div class="card acard hide" id="slcard"><h3>Staff link</h3>
         <div class="muted" style="font-size:12.5px;margin-bottom:6px">Send this link to your employees (WhatsApp). Each employee opens it <b>once</b> on his phone or computer. After that he only types his ID and password. The link holds only the public connection values, no password.</div>
         <div class="bar"><input type="text" id="slu" readonly style="flex:1;min-width:220px"><button class="btn" id="slc" type="button">Copy staff link</button></div>
+        <h4 style="margin:14px 0 4px">Workshop code</h4>
+        <div class="muted" style="font-size:12.5px;margin-bottom:6px">A short code instead of a link. An employee taps "First time on this phone?" on the login page, types the code once and is connected. Give the code only to your employees.</div>
+        <div class="bar"><input type="text" id="wcn" placeholder="Short name, e.g. azamgarh" autocapitalize="off" spellcheck="false" style="max-width:240px"><button class="btn" id="wcr" type="button">Get workshop code</button></div>
+        <div id="wcshow"></div>
       </div>
       <div class="card acard hide" id="stcard"><h3>Structure: Circles and Divisions</h3><div id="stbox"></div></div>
       <div class="card acard"><h3>Create a new user</h3>
@@ -2874,6 +2878,7 @@ function ttHashConn() {
   return r;
 }
 var TT_LINK = ttHashConn();
+if (!TT_LINK) { try { if (sessionStorage.getItem('tt_note')) { sessionStorage.removeItem('tt_note'); TT_LINK = 'ok'; } } catch (e) { } }
 var TT_LNOTE = TT_LINK === 'ok' ? 'Connected to your workshop. Now login with your ID and password.' : (TT_LINK === 'bad' ? 'This link is not valid. Ask your Admin for the staff link again.' : '');
 boot();
 
@@ -3122,11 +3127,18 @@ $('ncreate').onclick = function () {
   var body = { action: 'create', login: id, name: $('nn').value.trim() || id, role: role, div: divOf(), scope: chkGet($('ns')), edit: $('ne').value === '1', tabs: role === 'discom' || all ? null : tabs };
   if (role === 'je' && !body.scope.length) return msg('amsg', 'Choose at least one workshop for this user.', 'err');
   busy(b, true, 'Creating...');
-  fnCall(body).then(function (r) { busy(b, false); showPw('User created', id, r.password); newUserForm(); return admLoad(); }).catch(function (e) { busy(b, false); msg('amsg', esc(e.message), 'err'); });
+  fnCall(body).then(function (r) { busy(b, false); showPw('User created', id, r.password); newUserForm(); return admLoad(); }).catch(function (e) { busy(b, false); msg('amsg', esc(e.message), 'err'); try { $('amsg').scrollIntoView({ block: 'center' }); } catch (x) { } });
 };
 function fnCall(body) {
   return SB.functions.invoke('admin-users', { body: body }).then(function (r) {
-    if (r.error && !r.data) throw new Error('The user service is not set up yet (Edge Function "admin-users" is missing). Ask the App Creator.');
+    if (r.error && !r.data) {
+      var ctx = r.error.context, st = ctx && ctx.status;
+      if (ctx && typeof ctx.text === 'function') return ctx.text().then(function (tx) {
+        var m = ''; try { var j = JSON.parse(tx); m = j.error || j.message || ''; } catch (x) { m = (tx || '').slice(0, 200); }
+        throw new Error('The user service answered' + (st ? ' (code ' + st + ')' : '') + (m ? ': ' + String(m).replace(/\.+$/, '') : '') + '. If it says the function is missing or failed, check Supabase > Edge Functions > admin-users > Logs.');
+      });
+      throw new Error('Could not reach the user service (Edge Function "admin-users"). Check that it is deployed with exactly this name, then try again.');
+    }
     var d = r.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (x) { d = null; } }
     if (!d || !d.ok) throw new Error((d && d.error) || 'Could not complete this. Please try again.');
     return d;
@@ -3980,7 +3992,7 @@ function sgOpen() {
     '<li>Below it is <b>Redirect URLs</b>. Click the button <b>Add URL</b>. A new empty box appears. Click the <b>Copy</b> button below and paste in that box.<br><code>' + sgSite() + '**</code> <button class="btn sm" type="button" data-sgt="' + sgSite() + '**">Copy</button></li>' +
     '<li>Click the green <b>Save changes</b> button. Done.</li></ol></li>' +
     '<li><b>Login and finish.</b> After "Connected", login here with your e-mail and the password of step 5. A "First-time setup" box asks your name and division - fill it. Then open the <i>Admin</i> tab: (1) add your workshops, (2) after you have put your PRs in the Data Sheet, open <i>Structure</i> and tap <b>Fill from my data</b>, then arrange the circles, order and short names, (3) add your employees. <b>Also make a second Admin</b> as a backup, in case one Admin forgets the password.</li>' +
-    '<li><b>Give your employees their link.</b> Employees do <u>not</u> need the Project URL or the key. In the <i>Admin</i> tab open the box <b>Staff link</b>, tap <b>Copy staff link</b> and send it on WhatsApp. Each employee opens it <u>once</u> on his phone or computer; after that he only types his ID and password.</li></ol>' +
+    '<li><b>Give your employees their link.</b> Employees do <u>not</u> need the Project URL or the key. In the <i>Admin</i> tab open the box <b>Staff link</b>, tap <b>Copy staff link</b> and send it on WhatsApp. Each employee opens it <u>once</u> on his phone or computer; after that he only types his ID and password. <br><i>Or give a short code:</i> in the same box tap <b>Get workshop code</b> and tell the code to your employees. On a new phone an employee taps <b>First time on this phone or computer?</b> on the login page and types it once.</li></ol>' +
     (C.own ? '<div class="bar"><button class="btn sec" id="sgd" type="button">Go back to the default account</button><span class="muted">This device is using your own project now.</span></div>' : '') + '</div>';
   m.style.display = 'flex';
 }
@@ -4083,11 +4095,67 @@ function slLoad() {
   var on = ME && (ME.role === 'admin' || ME.role === 'creator') && ttConn().own;
   card.classList.toggle('hide', !on); if (!on) return;
   document.getElementById('slu').value = slLink();
+  try { var st = JSON.parse(localStorage.getItem('tt_wc') || 'null'); if (st && st.u === ttConn().u && st.c) wcShow(st.c); else wcShow(''); } catch (x) { }
 }
 document.addEventListener('click', function (e) {
   var t = e.target; if (!t || !t.closest || !t.closest('#slc')) return;
   var b = t.closest('#slc'), u = document.getElementById('slu'); sgCopyTxt(u.value, b);
 });
+
+/* WORKSHOP CODE: the Admin gets a short code (kept in the list of the default project); an employee types it once on a new phone */
+function wcDefault() { return window.supabase.createClient(window.TT_SB_URL, window.TT_SB_KEY, { auth: { persistSession: false } }); }
+function wcOk(u, k) {
+  u = String(u || ''); k = String(k || '');
+  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(u) || k.length < 20 || /service_role|^sb_secret_/i.test(k)) return false;
+  if (k.indexOf('.') > 0) { try { var pl = JSON.parse(atob(k.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); if (pl && pl.role && pl.role !== 'anon') return false; } catch (x) { } }
+  return true;
+}
+function wcErr(m) { return /Could not find the function|schema cache|does not exist/i.test(m || '') ? 'Workshop codes are not switched on yet (the App Creator must run SQL step 39 in the default project). Use the staff link instead.' : esc(m || 'Something went wrong. Try again.'); }
+function wcMsg(id, t, k) { var e = document.getElementById(id); if (e) e.innerHTML = t ? '<div class="msg ' + (k || 'info') + '">' + t + '</div>' : ''; }
+function wcOpen() {
+  var m = document.getElementById('wco'); if (!m) { m = document.createElement('div'); m.id = 'wco'; m.className = 'ov'; document.body.appendChild(m); }
+  m.innerHTML = '<div class="md sgm" style="max-width:440px"><div class="bar" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Workshop code</h2><button class="btn sec" id="wcx" type="button">Close &#10005;</button></div>' +
+    '<p class="muted">Your Admin gives you a code like <b>azamgarh-3f9a1c</b>. Type it once on this phone. After that you only type your ID and password.</p>' +
+    '<div class="sgf"><input id="wcc" placeholder="workshop code" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn" id="wcb" type="button">Connect</button><div id="wcm"></div></div></div>';
+  m.style.display = 'flex';
+}
+document.addEventListener('click', function (e) {
+  var t = e.target; if (!t || !t.closest) return;
+  if (t.closest('#wclink')) { e.preventDefault(); wcOpen(); return; }
+  if (t.closest('#wcx') || t.id === 'wco') { document.getElementById('wco').style.display = 'none'; return; }
+  if (t.closest('#wcb')) {
+    var code = document.getElementById('wcc').value.trim().toLowerCase(), b = t.closest('#wcb');
+    if (!/^[a-z0-9]{3,20}-[a-z0-9]{6}$/.test(code)) return wcMsg('wcm', 'The code looks like azamgarh-3f9a1c. Check it and try again.', 'err');
+    b.disabled = true; wcMsg('wcm', 'Checking...', 'info');
+    wcDefault().rpc('registry_lookup', { p_code: code }).then(function (r) {
+      b.disabled = false;
+      if (r.error) return wcMsg('wcm', wcErr(r.error.message), 'err');
+      var d = r.data; if (!d || !wcOk(d.u, d.k)) return wcMsg('wcm', 'This code was not found. Check it with your Admin.', 'err');
+      try { localStorage.setItem('tt_conn', JSON.stringify({ u: d.u, k: d.k })); sessionStorage.setItem('tt_note', '1'); } catch (x) { return wcMsg('wcm', 'This browser does not allow saving. Try another browser.', 'err'); }
+      wcMsg('wcm', '<b>Connected \u2713</b> Opening the login...', 'ok'); setTimeout(function () { location.reload(); }, 700);
+    }).catch(function () { b.disabled = false; wcMsg('wcm', 'Could not reach the server. Check your internet.', 'err'); });
+    return;
+  }
+  if (t.closest('#wcr')) {
+    var C = ttConn(), nm = document.getElementById('wcn').value.trim(), bb = t.closest('#wcr');
+    if (!C.own) return;
+    if (nm.replace(/[^a-zA-Z0-9]/g, '').length < 3) return wcShow('', 'Write a short name of 3 or more letters, for example azamgarh.');
+    bb.disabled = true; wcShow('', 'Please wait...', 1);
+    wcDefault().rpc('registry_add', { p_name: nm, p_url: C.u, p_key: C.k }).then(function (r) {
+      bb.disabled = false;
+      if (r.error) return wcShow('', wcErr(r.error.message));
+      try { localStorage.setItem('tt_wc', JSON.stringify({ u: C.u, c: r.data })); } catch (x) { }
+      wcShow(r.data);
+    }).catch(function () { bb.disabled = false; wcShow('', 'Could not reach the server. Check your internet.'); });
+    return;
+  }
+  var cp = t.closest('[data-wcc]'); if (cp) sgCopyTxt(cp.dataset.wcc, cp);
+});
+function wcShow(code, err, info) {
+  var e = document.getElementById('wcshow'); if (!e) return;
+  if (code) e.innerHTML = '<div class="msg ok">Your workshop code: <b style="font-size:17px;letter-spacing:.5px">' + esc(code) + '</b> <button class="btn sm" type="button" data-wcc="' + esc(code) + '">Copy</button><br><span class="muted">Give it only to your employees. They type it on the login page: "First time on this phone or computer? Enter your workshop code".</span></div>';
+  else e.innerHTML = err ? '<div class="msg ' + (info ? 'info' : 'err') + '">' + err + '</div>' : '';
+}
 
 /* =====================  STRUCTURE: Workshop > Circle > Division  (Admin tab)  =====================
  * Needs step 37 SQL.  The Comparison tab and the Division wise table of the Summary follow it: same circles, same order, short names. */
