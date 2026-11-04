@@ -1,0 +1,23 @@
+# Builds the Windows app TF-Tracker.exe (portable: no install, no admin password needed).
+# GitHub > Actions > "Build Windows exe" > Run workflow. When it is green, open the run and download "TF-Tracker-exe" at the bottom.
+name: Build Windows exe
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: exe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TF-Tracker-exe
+          path: exe/dist/TF-Tracker.exe
+          if-no-files-found: error
