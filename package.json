@@ -1,0 +1,29 @@
+{
+  "name": "tf-tracker-desktop",
+  "version": "1.0.0",
+  "description": "TF-Tracker (Tracking of Transformer) - Windows app",
+  "main": "main.js",
+  "author": "EWD Azamgarh",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "in.uppcl.tftracker",
+    "productName": "TF-Tracker",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "offline.html", "app-config.json", "package.json"],
+    "win": {
+      "target": [{ "target": "portable", "arch": ["x64"] }],
+      "icon": "build/icon.png",
+      "artifactName": "TF-Tracker.exe"
+    },
+    "portable": { "artifactName": "TF-Tracker.exe" }
+  }
+}
