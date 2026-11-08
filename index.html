@@ -1964,6 +1964,39 @@ table.dwt td.dwd{font-weight:700;text-align:left}
 table.dwt td.dwtt{font-weight:800;font-size:15px}
 table.dwt td.dwdf{font-weight:800}table.dwt td.dwdf.neg{color:#c00}
 table.dwt tr.dwT td{background:#ffff00;font-weight:800;font-size:14px}
+
+/* M&R: pending DTC pop-up */
+.pdk{cursor:pointer;text-decoration:underline;text-underline-offset:2px}.pdk:hover{filter:brightness(.9)}
+#pdov{position:fixed;inset:0;z-index:300;background:rgba(20,16,10,.55);display:flex;align-items:flex-start;justify-content:center;padding:3vh 10px;overflow:auto;animation:mrFade .25s both}
+#pdov.hide{display:none}
+#pdov .box{background:#fff;border-radius:14px;max-width:1700px;width:100%;padding:12px 14px 16px;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:mrPop .4s cubic-bezier(.2,.8,.2,1) both}
+#pdov .hd{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;font-size:16px}
+#pdt{border-collapse:collapse;width:100%;font-size:12.5px;background:#fff}
+#pdt th{background:#eef0fb;color:#2c3a8c;padding:7px 6px;border:1px solid #cfd6f3;font-size:11px;text-align:left;white-space:nowrap;position:sticky;top:0;z-index:1}
+#pdt th.ed{background:#fff1e3;color:#c2410c;border-color:#f2c9a5}
+#pdt td{padding:5px 6px;border:1px solid #e6e6ef}#pdt td.lk{background:#f6f6fa;color:#555}#pdt td.ed{background:#fffaf4}
+#pdt input{width:100%;min-width:100px;border:1.5px solid #e8a672;border-radius:6px;padding:5px 7px;font-size:13px;background:#fff;color:#222}
+#pdt tr.dirty td.ed{background:#ffe9c7}
+
+/* Repair tab: everything on one screen, and the Repair summary pop-up */
+.rrt.xg td>input{height:calc(var(--rh,33px) - 2px)!important;padding-top:0!important;padding-bottom:0!important;line-height:1}
+.rrt.xg td{height:var(--rh,33px)!important;padding-top:0!important;padding-bottom:0!important}.rrt.xg td>input{box-sizing:border-box;font-size:12.5px}
+.rrt.xg td.bl,.rrt.xg td.tt{line-height:1.1}
+.rrt.xg td.x button{width:min(26px,calc(var(--rh,33px) - 2px))!important;height:min(26px,calc(var(--rh,33px) - 2px))!important;padding:0!important;font-size:12px;line-height:1}
+@media(min-width:901px){
+ .rrk{margin-bottom:8px}.rrkc{flex-direction:row;align-items:baseline;gap:10px;padding:6px 14px}.rrkc small{display:none}.rrkc b{font-size:22px}
+ .rrc{margin-bottom:8px}.rrh{padding:5px 14px 0}.rrc .wrap{padding:2px 10px 8px}
+ #mpout.cmp .rrt.xg th{padding:2px 4px!important;font-size:11.5px!important}#mpout.cmp .rrt.xg td{font-size:12.5px}
+}
+#rsov{position:fixed;inset:0;z-index:300;background:rgba(20,16,10,.55);display:flex;align-items:flex-start;justify-content:center;padding:3vh 10px;overflow:auto;animation:mrFade .25s both}
+#rsov.hide{display:none}
+#rsov .box{background:#fff;border-radius:14px;max-width:1500px;width:100%;padding:12px 14px 16px;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:mrPop .4s cubic-bezier(.2,.8,.2,1) both}
+#rsov .hd{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;font-size:16px}
+table.rst{border-collapse:collapse;font-size:13px;background:#fff;color:#000;margin:6px 0 14px}
+table.rst th,table.rst td{border:1px solid #c9cfdb;padding:4px 10px;text-align:center;white-space:nowrap}
+table.rst th{background:#e4f6ea;color:#15803d;font-weight:700}table.rst td.l,table.rst th.l{text-align:left;font-weight:700}
+table.rst td.tt{background:#f1f5ff;font-weight:800}table.rst tr.T td{background:#cfe89a;font-weight:800}
+table.rst td.z{color:#b6bcc9}
 nav button#tmr{margin-top:auto}
 #mrnav button#mrr{margin-top:auto;border:2px solid #c2410c!important;color:#c2410c!important}
 @media (max-width:700px){nav button#tmr{margin-top:0}#mrnav button#mrr{margin-top:0;border:0!important;background:linear-gradient(135deg,#7a3bd8,#3b4fd8)!important;color:#fff!important}}
@@ -2204,6 +2237,8 @@ nav button#tmr{margin-top:auto}
     <!-- CHAMBER ASSEMBLY -->
 
     <div id="dwov" class="hide"><div class="box"><div class="hd"><b>Day-wise PR &amp; Repair comparison</b><span class="muted" id="dwsub" style="flex:1"></span><button class="btn sec sm" id="dwxl" type="button">&#11015; Excel</button><button class="btn sec sm" id="dwx" type="button">Close &#10005;</button></div><div id="dwmsg"></div><div id="dwb"></div></div></div>
+    <div id="pdov" class="hide"><div class="box"><div class="hd"><b>Pending for DTC</b><span class="muted" id="pdsub" style="flex:1"></span><button class="btn sm" id="pdsave" type="button" disabled>Save DTC</button><button class="btn sec sm" id="pdx" type="button">Close &#10005;</button></div><div id="pdmsg"></div><div class="wrap mrtb"><table id="pdt"></table></div></div></div>
+    <div id="rsov" class="hide"><div class="box"><div class="hd"><b>Repair summary</b><span class="muted" style="flex:1">transformers from date to date - firm &amp; capacity wise</span><button class="btn sec sm" id="rsxl" type="button">&#11015; Excel</button><button class="btn sec sm" id="rsx" type="button">Close &#10005;</button></div><div id="rsbar"></div><div id="rsmsg"></div><div id="rsout"></div></div></div>
     <div id="chmov" class="hide"><div class="box"><div class="hd"><b id="chmt">Chamber Assembly Report</b><button class="btn sec sm" id="chmpr" type="button">&#128424; Print</button><button class="btn sec sm" id="chmxl" type="button">&#11015; Excel</button><button class="btn sec sm hide" id="chmbase" type="button">Start figures (Admin)</button><button class="btn sec sm" id="chmx" type="button">Close &#10005;</button></div><div class="muted" style="font-size:12px;margin:-2px 0 6px">Select cells like in Excel (drag with the mouse, Shift+click, or Ctrl+A), press Ctrl+C and paste in Excel.</div><div id="chmmsg"></div><div id="chmbw" class="hide"></div><div id="chmb"></div></div></div>
     <!-- SCRAP -->
     <section id="t-mrsc" class="hide">
@@ -2224,7 +2259,7 @@ nav button#tmr{margin-top:auto}
       <div class="card">
         <div class="bar sbar">
           <div class="ptitle"><b>Repair</b><span>repair, assembly and oven - firm-wise</span></div>
-          <div class="mpchm"><button class="btn sec" id="mpchmb" type="button" title="Open the Chamber Assembly Report">&#128295; Chamber Assembly Report</button></div>
+          <div class="mpchm"><button class="btn sec" id="mpchmb" type="button" title="Open the Chamber Assembly Report">&#128295; Chamber Assembly Report</button> <button class="btn sec" id="mprs" type="button" title="Repair summary from date to date">&#128202; Repair summary</button></div>
           <div><label>Workshop</label><select id="mpw"></select></div>
           <div><label>Date</label><div class="tg"><button class="ib" id="mpprev" title="Previous day">&#9664;</button><div class="dt"><input type="text" class="dtx" id="mpd" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="mpd"></span></div><button class="ib" id="mpnext" title="Next day">&#9654;</button><button class="btn sec sm" id="mptoday" type="button">Today</button></div></div>
         </div>
@@ -4138,7 +4173,7 @@ function renderRingCard(s) {
 var HS_FZ = 1, HS_T = 0;
 function hsFit() {
   var t = document.getElementById('t-sum'); if (!t || t.classList.contains('hide') || t.offsetParent === null) return;
-  var phone = window.innerWidth <= 900, floor = phone ? 0.86 : 0.62, nav = 0;
+  var phone = window.innerWidth <= 900, floor = 1, nav = 0;   // floor = 1: the Summary keeps its full (100%) size, the page scrolls
   if (phone) { HS_FZ = 1; document.documentElement.style.setProperty('--fz', 1); return; }   // phone: full size, the page scrolls
   if (phone) { var nv = document.querySelector('nav'); nav = nv && nv.getBoundingClientRect().top > window.innerHeight / 2 ? nv.offsetHeight : 0; }
   document.documentElement.style.setProperty('--fz', 1);
@@ -4815,12 +4850,12 @@ function mrSumDraw() {
   r.ws.forEach(function (x) { W[x[0]] = x; });
   var tot = [0, 0, 0, 0, 0]; ws.forEach(function (w) { for (i = 0; i < 5; i++) tot[i] += W[w][i + 1]; });
   $('mrkpi').innerHTML = [['a1', 'Total PR', tot[2], S.f + ' to ' + S.t], ['a2', 'Total DTC', tot[3], 'DTC no entered'], ['a4', 'Pending for DTC', tot[4], 'PR without DTC']]
-    .map(function (k) { return '<div class="' + k[0] + '"><b>' + k[1] + '</b><i>' + k[2] + '</i><u>' + esc(k[3]) + '</u></div>'; }).join('');
+    .map(function (k) { var pd = k[0] === 'a4'; return '<div class="' + k[0] + (pd && k[2] ? ' pdk' : '') + '"' + (pd ? ' data-w="" data-c="" title="Click to open the pending DTC list"' : '') + '><b>' + k[1] + '</b><i>' + k[2] + '</i><u>' + esc(k[3]) + '</u></div>'; }).join('');
   $('mrsub').textContent = S.d + ' · from ' + S.f + ' to ' + S.t;
   h += '<div class="card k-ws"><h3>Workshop wise summary</h3><div class="wrap tbl11d"><table><thead><tr><th class="l" rowspan="2">WORKSHOP NAME</th><th class="g1" colspan="2">TODAY (' + esc(S.d) + ')</th><th class="g2" colspan="3">TILL TODAY (' + esc(S.f) + ' - ' + esc(S.t) + ')</th></tr>' +
     '<tr><th class="g1">TODAY PR</th><th class="g1">TODAY DTC</th><th class="g2">TOTAL PR</th><th class="g2">TOTAL DTC</th><th class="g2 pe">PENDING FOR DTC</th></tr></thead><tbody>';
-  ws.forEach(function (w) { var x = W[w]; h += '<tr><td class="l">' + esc(w) + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td><td>' + x[3] + '</td><td>' + x[4] + '</td><td class="pe">' + x[5] + '</td></tr>'; });
-  if (ws.length > 1) h += '<tr class="t"><td class="l">TOTAL</td><td>' + tot[0] + '</td><td>' + tot[1] + '</td><td>' + tot[2] + '</td><td>' + tot[3] + '</td><td class="pe">' + tot[4] + '</td></tr>';
+  ws.forEach(function (w) { var x = W[w]; h += '<tr><td class="l">' + esc(w) + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td><td>' + x[3] + '</td><td>' + x[4] + '</td><td class="pe' + (x[5] ? ' pdk' : '') + '" data-w="' + esc(w) + '" data-c="">' + x[5] + '</td></tr>'; });
+  if (ws.length > 1) h += '<tr class="t"><td class="l">TOTAL</td><td>' + tot[0] + '</td><td>' + tot[1] + '</td><td>' + tot[2] + '</td><td>' + tot[3] + '</td><td class="pe' + (tot[4] ? ' pdk' : '') + '" data-w="" data-c="">' + tot[4] + '</td></tr>';
   h += '</tbody></table></div></div>';
   // capacity wise: PR received, DTC done, pending DTC
   var capSet = {}; STD_CAPS.forEach(function (c) { capSet[c] = 1; }); r.cap.forEach(function (x) { if (x[1]) capSet[x[1]] = 1; });
@@ -4835,17 +4870,148 @@ function mrSumDraw() {
     h += '<tr><td class="l"><b>' + c + '</b></td>';
     G.forEach(function (g, gi) {
       var row = 0;
-      ws.forEach(function (w, j) { var v = C[c] && C[c][w] ? C[c][w][g[1]] : 0; row += v; GT[gi][j] += v; h += '<td class="' + (j === 0 ? 'gs ' : '') + (v ? g[3] : '') + '">' + (v ? v : '<span class="z">0</span>') + '</td>'; });
-      if (nw > 1) h += '<td class="sub"><b>' + (row ? row : '<span class="z">0</span>') + '</b></td>';
+      ws.forEach(function (w, j) { var v = C[c] && C[c][w] ? C[c][w][g[1]] : 0; row += v; GT[gi][j] += v; h += '<td class="' + (j === 0 ? 'gs ' : '') + (v ? g[3] : '') + (gi === 2 && v ? ' pdk' : '') + '"' + (gi === 2 && v ? ' data-w="' + esc(w) + '" data-c="' + c + '"' : '') + '>' + (v ? v : '<span class="z">0</span>') + '</td>'; });
+      if (nw > 1) h += '<td class="sub' + (gi === 2 && row ? ' pdk' : '') + '"' + (gi === 2 && row ? ' data-w="" data-c="' + c + '"' : '') + '><b>' + (row ? row : '<span class="z">0</span>') + '</b></td>';
     });
     h += '</tr>';
   });
   h += '<tr class="t"><td class="l">TOTAL</td>';
-  G.forEach(function (g, gi) { var all = 0; GT[gi].forEach(function (v) { all += v; h += '<td>' + (v ? v : '<span class="z">0</span>') + '</td>'; }); if (nw > 1) h += '<td>' + (all ? all : '<span class="z">0</span>') + '</td>'; });
+  G.forEach(function (g, gi) { var all = 0; GT[gi].forEach(function (v, j) { all += v; h += '<td' + (gi === 2 && v ? ' class="pdk" data-w="' + esc(ws[j]) + '" data-c=""' : '') + '>' + (v ? v : '<span class="z">0</span>') + '</td>'; }); if (nw > 1) h += '<td' + (gi === 2 && all ? ' class="pdk" data-w="" data-c=""' : '') + '>' + (all ? all : '<span class="z">0</span>') + '</td>'; });
   h += '</tr></tbody></table></div></div>';
   $('mrout').innerHTML = h;
 }
 $('mrbtn').onclick = mrSumLoad;
+
+/* ---- Repair tab: shrink the rows so that all firms of the three blocks are seen on one screen (desktop) ---- */
+function repFit() {
+  var o = $('mpout'); if (!o) return; o.classList.add('cmp');
+  if (window.innerWidth <= 900 || o.offsetParent === null) { o.style.removeProperty('--rh'); return; }
+  var firms = Math.max(1, o.querySelectorAll('table.rrt[data-b="REPAIR"] tbody tr[data-b]').length), top = o.getBoundingClientRect().top;
+  var bar = 50, kpi = 46, blocks = 3 * 42, avail = window.innerHeight - top - bar - kpi - blocks - 8;
+  var rh = Math.floor(avail / (3 * (firms + 2))); rh = Math.max(20, Math.min(33, rh));
+  o.style.setProperty('--rh', rh + 'px');
+  for (var k = 0; k < 4 && rh > 20; k++) {   // measure the real height and tighten until the Save bar is inside the window
+    var br = o.querySelector('.bar'), need = br ? br.getBoundingClientRect().bottom + 10 - window.innerHeight : 0;
+    if (need <= 0) break; rh = Math.max(20, rh - Math.ceil(need / (3 * (firms + 2)))); o.style.setProperty('--rh', rh + 'px');
+  }
+}
+window.addEventListener('resize', function () { setTimeout(repFit, 60); });
+(function () { var o = mrRepDraw; mrRepDraw = function () { var r = o.apply(this, arguments); repFit(); setTimeout(repFit, 120); return r; }; })();
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#rradd,.rrdel')) setTimeout(repFit, 60); });
+
+/* ---- Repair summary: from date to date, firm & capacity wise ---- */
+var RS = null;
+function rsLbl(c) { return (typeof RR_LBL !== 'undefined' && RR_LBL[c]) || c; }
+function rsOpen() {
+  var ws = mrWs(), td = fmt(new Date()), B = $('rsbar');
+  if (!RS) RS = { f: '01.' + td.slice(3), t: td, w: '', b: 'REPAIR' };
+  B.innerHTML = '<div class="bar" style="align-items:flex-end;margin-bottom:8px"><div><label>From date</label>' + mrDt('rsf', RS.f) + '</div><div><label>To date</label>' + mrDt('rst', RS.t) + '</div>' +
+    '<div><label>Workshop</label><select id="rsw"><option value="">All workshops</option>' + ws.map(function (w) { return '<option' + (w === RS.w ? ' selected' : '') + '>' + esc(w) + '</option>'; }).join('') + '</select></div>' +
+    '<button class="btn" id="rsgo" type="button">Show summary</button></div>';
+  $('rsov').classList.remove('hide'); rsLoad();
+}
+function rsLoad() {
+  var f = $('rsf').value.trim(), t = $('rst').value.trim(), w = $('rsw').value, b = 'REPAIR';
+  if (!validD(f) || !validD(t)) return msg('rsmsg', 'Enter both dates in DD.MM.YYYY format.', 'err');
+  if (parseD(f) > parseD(t)) return msg('rsmsg', 'The "From" date cannot be later than the "To" date.', 'err');
+  RS.f = f; RS.t = t; RS.w = w; RS.b = b; msg('rsmsg', 'Loading...', 'info'); var seq = RS.seq = (RS.seq || 0) + 1;
+  rpc('rr_summary_json', { p_from: mrIso(f), p_to: mrIso(t), p_ws: w || null, p_block: b }).then(function (r) { if (seq !== RS.seq) return; msg('rsmsg', ''); RS.r = r; rsDraw(); })
+    .catch(function (e) { if (seq === RS.seq) { $('rsout').innerHTML = ''; msg('rsmsg', esc(e.message), 'err'); } });
+}
+function rsBuild() {
+  var rows = RS.r.rows || [], F = {}, W = {}, ct = {}, gt = 0;
+  rows.forEach(function (x) { var w = x[0], f = x[1], c = x[2], q = x[3]; (F[f] = F[f] || {})[c] = (F[f][c] || 0) + q; (W[w] = W[w] || {})[c] = (W[w][c] || 0) + q; ct[c] = (ct[c] || 0) + q; gt += q; });
+  return { F: F, W: W, ct: ct, gt: gt };
+}
+function rsTable(first, M, keys, ct, gt) {
+  var h = '<table class="rst"><thead><tr><th class="l">' + first + '</th>' + RR_CAPS.map(function (c) { return '<th>' + rsLbl(c) + '</th>'; }).join('') + '<th>TOTAL</th></tr></thead><tbody>';
+  keys.forEach(function (k) { var t = 0; h += '<tr><td class="l">' + esc(k) + '</td>' + RR_CAPS.map(function (c) { var v = M[k][c] || 0; t += v; return v ? '<td>' + v + '</td>' : '<td class="z">-</td>'; }).join('') + '<td class="tt">' + t + '</td></tr>'; });
+  h += '<tr class="T"><td class="l">TOTAL</td>' + RR_CAPS.map(function (c) { return '<td>' + (ct[c] || 0) + '</td>'; }).join('') + '<td>' + gt + '</td></tr></tbody></table>';
+  return h;
+}
+function rsDraw() {
+  var B = rsBuild(), firms = Object.keys(B.F).sort(), wss = Object.keys(B.W).sort(), nm = { REPAIR: 'repaired', ASSEMBLY: 'sent to assembly', OVEN: 'sent to oven' }[RS.b];
+  var h = '<div class="muted" style="font-size:12.5px;margin-bottom:4px"><b>' + B.gt + '</b> transformers ' + nm + ' from <b>' + esc(RS.f) + '</b> to <b>' + esc(RS.t) + '</b> - ' + esc(RS.w || 'All workshops') + '</div>';
+  if (!firms.length) h += '<div class="msg info">Nothing was entered in the Repair tab for this period.</div>';
+  else {
+    h += '<div style="overflow:auto"><b style="font-size:12px;color:#1c3d7a">FIRM &amp; CAPACITY WISE</b>' + rsTable('NAME OF FIRM', B.F, firms, B.ct, B.gt);
+    if (wss.length > 1) h += '<b style="font-size:12px;color:#1c3d7a">WORKSHOP &amp; CAPACITY WISE</b>' + rsTable('NAME OF WORKSHOP', B.W, wss, B.ct, B.gt);
+    h += '</div>';
+  }
+  $('rsout').innerHTML = h;
+}
+$('mprs').onclick = rsOpen;
+$('rsx').onclick = function () { $('rsov').classList.add('hide'); };
+$('rsov').addEventListener('mousedown', function (e) { if (e.target === this) this.classList.add('hide'); });
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#rsgo')) rsLoad(); });
+$('rsxl').onclick = function () {
+  if (!RS || !RS.r) return; var B = rsBuild(), rows = [[{ v: 'Repair summary - ' + RS.f + ' to ' + RS.t + ' - ' + (RS.w || 'All workshops') + ' - ' + ({ REPAIR: 'repaired', ASSEMBLY: 'sent to assembly', OVEN: 'sent to oven' }[RS.b]), s: 0 }], []];
+  function put(first, M, keys) {
+    rows.push([{ v: first, s: 6 }].concat(RR_CAPS.map(function (c) { return { v: rsLbl(c), s: 5 }; }), [{ v: 'TOTAL', s: 7 }]));
+    keys.forEach(function (k) { var t = 0; rows.push([{ v: k, s: 11 }].concat(RR_CAPS.map(function (c) { var v = M[k][c] || 0; t += v; return { v: v || '', s: 4 }; }), [{ v: t, s: 7 }])); });
+    rows.push([{ v: 'TOTAL', s: 7 }].concat(RR_CAPS.map(function (c) { return { v: B.ct[c] || 0, s: 7 }; }), [{ v: B.gt, s: 7 }])); rows.push([]);
+  }
+  var firms = Object.keys(B.F).sort(), wss = Object.keys(B.W).sort(); put('NAME OF FIRM', B.F, firms); if (wss.length > 1) put('NAME OF WORKSHOP', B.W, wss);
+  var cw = [26]; RR_CAPS.forEach(function () { cw.push(8); }); cw.push(9);
+  xlsxDownload('Repair_summary_' + mrFile(RS.f) + '_to_' + mrFile(RS.t) + '.xlsx', [{ name: 'Repair summary', rows: rows, cw: cw }]);
+};
+
+
+/* ---- M&R: click on a "pending for DTC" figure -> the list of those PRs, only DTC NO and DTC DATE are typed, then Save ---- */
+var PD = { rows: [], dirty: {}, w: '', c: '' };
+function pdOpen(w, c) {
+  var S = MR.sum; if (!S) return; PD = { rows: [], dirty: {}, w: w, c: c };
+  $('pdov').classList.remove('hide'); $('pdsub').textContent = (w || 'All workshops') + (c ? ' - ' + c + ' KVA' : '') + ' - PR date ' + S.f + ' to ' + S.t; $('pdt').innerHTML = ''; pdShowSave(); pdLoad();
+}
+function pdLoad(flash) {
+  var S = MR.sum; msg('pdmsg', 'Loading...', 'info');
+  rpc('mr_pending_json', { p_from: mrIso(S.f), p_to: mrIso(S.t), p_ws: PD.w || null, p_cap: PD.c ? +PD.c : null }).then(function (r) { PD.rows = r.rows || []; PD.total = r.total || 0; msg('pdmsg', flash || '', flash ? 'ok' : ''); pdDraw(); })
+    .catch(function (er) { msg('pdmsg', esc(er.message), 'err'); });
+}
+function pdDraw() {
+  var H = ['WORKSHOP', 'SUBSTATION', 'PLACE OF DAMAGE', 'CAP', 'COMPLAIN NO', 'PR NO', 'PR DATE', 'RETURN DATE', 'ISSUED TO FIRM', 'DRIVER NAME'], h = '<thead><tr>' + H.map(function (x) { return '<th>' + x + '</th>'; }).join('') + '<th class="ed">DTC NO &#9998;</th><th class="ed">DTC DATE &#9998;</th></tr></thead><tbody>';
+  PD.rows.forEach(function (r) {
+    var id = r[0], d = PD.dirty[id], no = d ? d.no : (r[14] || ''), dt = d ? d.date : mrDmy(r[15]), can = r[16] === 1;
+    var cells = [r[1], r[3], r[5], r[6] || '', r[7], r[8], mrDmy(r[9]), mrDmy(r[13]), r[11] || '', r[12] || ''];
+    h += '<tr data-id="' + id + '" class="' + (d ? 'dirty' : '') + '">' + cells.map(function (v) { return '<td class="lk">' + esc(v) + '</td>'; }).join('');
+    h += can ? '<td class="ed"><input type="text" class="pdn" maxlength="40" value="' + esc(no) + '" placeholder="DTC no" autocomplete="off"></td><td class="ed"><input type="text" class="dtx pdd" inputmode="numeric" value="' + esc(dt) + '" placeholder="DD.MM.YYYY" autocomplete="off"></td>' : '<td class="lk">' + esc(no) + '</td><td class="lk">' + esc(dt) + '</td>';
+    h += '</tr>';
+  });
+  if (!PD.rows.length) h += '<tr><td colspan="12" class="muted" style="text-align:center;padding:18px">No PR is pending for DTC here.</td></tr>';
+  $('pdt').innerHTML = h + '</tbody>';
+  if (PD.total > PD.rows.length) msg('pdmsg', 'First ' + PD.rows.length + ' of ' + PD.total + ' PRs are shown. Save these, then open again for the rest.', 'info');
+}
+function pdN() { return Object.keys(PD.dirty).length; }
+function pdShowSave() { var n = pdN(), b = $('pdsave'); b.textContent = n ? 'Save DTC (' + n + ')' : 'Save DTC'; b.disabled = !n; }
+document.addEventListener('click', function (e) {
+  var t = e.target; if (!t.closest) return;
+  var k = t.closest('.pdk'); if (k && k.closest('#mrout,#mrkpi')) { pdOpen(k.dataset.w || '', k.dataset.c || ''); return; }
+  if (t.closest('#pdx') || t === $('pdov')) { if (!pdN() || confirm('You have unsaved DTC entries. Close without saving?')) $('pdov').classList.add('hide'); }
+});
+document.addEventListener('input', function (e) {
+  var t = e.target; if (!t.classList || !(t.classList.contains('pdn') || t.classList.contains('pdd'))) return;
+  var tr = t.closest('tr'), id = tr.dataset.id, r = PD.rows.filter(function (x) { return String(x[0]) === id; })[0]; if (!r) return;
+  var no = tr.querySelector('.pdn').value.trim(), dt = tr.querySelector('.pdd').value.trim();
+  if (no === (r[14] || '') && dt === mrDmy(r[15])) { delete PD.dirty[id]; tr.classList.remove('dirty'); } else { PD.dirty[id] = { no: no, date: dt }; tr.classList.add('dirty'); }
+  pdShowSave();
+});
+$('pdsave').onclick = function () {
+  var ids = Object.keys(PD.dirty), job = [], i;
+  for (i = 0; i < ids.length; i++) {
+    var d = PD.dirty[ids[i]], pr = (PD.rows.filter(function (x) { return String(x[0]) === ids[i]; })[0] || [])[8];
+    if (d.no && !d.date) return msg('pdmsg', 'PR ' + esc(pr) + ': enter the DTC date also.', 'err');
+    if (d.date && !d.no) return msg('pdmsg', 'PR ' + esc(pr) + ': enter the DTC no also.', 'err');
+    if (d.date && !validD(d.date)) return msg('pdmsg', 'PR ' + esc(pr) + ': the DTC date must be DD.MM.YYYY.', 'err');
+    job.push([+ids[i], d.no, d.date ? mrIso(d.date) : null]);
+  }
+  if (!job.length) return; var b = $('pdsave'), n = 0; busy(b, true, 'Saving...');
+  (function next() {
+    if (n >= job.length) { PD.dirty = {}; busy(b, false); pdShowSave(); pdLoad('Saved ' + n + ' row' + (n > 1 ? 's' : '') + '.'); mrSumLoad(); return; }
+    var j = job[n]; rpc('mr_dtc_set', { p_id: j[0], p_no: j[1], p_date: j[2] }).then(function () { n++; next(); })
+      .catch(function (er) { busy(b, false); pdShowSave(); msg('pdmsg', (n ? 'Saved ' + n + ' row(s). ' : '') + esc(er.message), 'err'); });
+  })();
+};
+
 $('mrpr').onclick = function () { if (!MR.sum) return; printHtml('M&R Summary - ' + MR.sum.d + '  (From ' + MR.sum.f + ' to ' + MR.sum.t + ')', '<div class="ps soutp noanim"><div class="skpi">' + $('mrkpi').innerHTML + '</div>' + $('mrout').innerHTML + '</div>'); };
 function mrTbl(t) { var rows = []; [].forEach.call(t.querySelectorAll('tr'), function (tr) { rows.push([].map.call(tr.children, function (c) { var v = c.textContent.trim(); return /^\d+$/.test(v) ? +v : v; })); }); return rows; }
 $('mrxl').onclick = function () {
@@ -5913,6 +6079,17 @@ function dtcFlush() {
     });
   }, Promise.resolve()).then(function () { DTCBUSY = false; dstat(bad ? 'DTC: ' + bad + ' not saved' : (n ? 'DTC saved (' + n + ')' : ''), bad ? 'bad' : 'ok'); });
 }
+
+
+/* Data Sheet: the grid grows down to the bottom of the screen (no empty space under it) */
+function dataFit() {
+  var g = document.querySelector('#t-data .gwrap'); if (!g || g.offsetParent === null) return;
+  g.style.maxHeight = 'none'; g.style.height = 'auto'; var top = g.getBoundingClientRect().top, bar = window.innerWidth <= 900 ? 74 : 16;
+  var hh = Math.max(260, window.innerHeight - top - bar) + 'px'; g.style.maxHeight = hh; g.style.height = hh;
+}
+window.addEventListener('resize', function () { setTimeout(dataFit, 50); }); window.addEventListener('load', function () { setTimeout(dataFit, 300); });
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('nav button,.btn')) { setTimeout(dataFit, 150); setTimeout(dataFit, 700); } });
+(function () { var o = drawData; drawData = function () { var r = o.apply(this, arguments); dataFit(); return r; }; })();
 
 /* Home screen: grows with the screen (big monitors) - phones keep the normal size */
 function homeFit() {

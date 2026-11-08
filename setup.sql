@@ -3136,3 +3136,55 @@ end $$;
 revoke all on function public.daywise_json(date, date) from public, anon;
 grant execute on function public.daywise_json(date, date) to authenticated;
 notify pgrst, 'reload schema';
+
+-- ================================================================================================================
+-- STEP 85 : M&R - click on "Pending for DTC" opens the list of those PRs (same columns as the old DTC sheet)
+-- p_from / p_to = PR date range of the M&R Summary, p_ws = one workshop (or null = all), p_cap = one capacity (or null = all)
+-- Safe to run again.
+-- ================================================================================================================
+create or replace function public.mr_pending_json(p_from date, p_to date, p_ws text default null, p_cap int default null) returns jsonb
+language plpgsql stable set search_path = public as $$
+declare r jsonb;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  with b as (select x.*, t.dtc_no, t.dtc_date
+               from public.data x left join public.dtc t on t.data_id = x.id
+              where not x.dup and x.workshop = any (public.my_workshops()) and x.pr_date between p_from and p_to
+                and nullif(btrim(t.dtc_no), '') is null
+                and (p_ws is null or x.workshop = p_ws) and (p_cap is null or coalesce(x.capacity, 0) = p_cap))
+  select jsonb_build_object('total', (select count(*) from b),
+    'rows', coalesce((select jsonb_agg(jsonb_build_array(z.id, z.workshop, z.division, z.substation, z.feeder, z.place_of_damage, z.capacity, z.complain_no, z.pr_no, z.pr_date, z.je_name, z.firm, z.driver_name, z.return_date, z.dtc_no, z.dtc_date,
+                        case when public.mr_edit_ok(z.workshop) then 1 else 0 end) order by z.pr_date, z.pr_no collate "C")
+                        from (select * from b order by pr_date, pr_no collate "C" limit 500) z), '[]'::jsonb))
+    into r;
+  return r;
+end $$;
+revoke all on function public.mr_pending_json(date, date, text, int) from public, anon;
+grant execute on function public.mr_pending_json(date, date, text, int) to authenticated;
+notify pgrst, 'reload schema';
+
+-- ================================================================================================================
+-- STEP 86 : Repair summary from date to date (firm and capacity wise)
+-- p_block = 'REPAIR' (transformers repaired) / 'ASSEMBLY' / 'OVEN'. Rows come back as [workshop, firm, cap, qty].
+-- Safe to run again.
+-- ================================================================================================================
+create or replace function public.rr_summary_json(p_from date, p_to date, p_ws text default null, p_block text default 'REPAIR') returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if p_from is null or p_to is null or p_from > p_to then raise exception 'Choose the From and To dates (From must not be after To).'; end if;
+  if p_to - p_from > 1100 then raise exception 'Choose a period of up to 3 years.'; end if;
+  if coalesce(p_ws, '') <> '' and not (p_ws = any (public.my_workshops())) then raise exception 'This workshop is not yours.'; end if;
+  if p_block not in ('REPAIR', 'ASSEMBLY', 'OVEN') then raise exception 'Unknown block.'; end if;
+  return jsonb_build_object('rows', coalesce((
+    select jsonb_agg(jsonb_build_array(q.workshop, q.firm, q.cap, q.qty) order by q.firm, q.workshop, q.cap)
+      from (select e.workshop, e.firm, e.cap, sum(e.qty)::int as qty
+              from public.rr_entry e
+             where e.block = p_block and e.day between p_from and p_to
+               and e.workshop = any (public.my_workshops())
+               and (coalesce(p_ws, '') = '' or e.workshop = p_ws)
+             group by e.workshop, e.firm, e.cap having sum(e.qty) > 0) q), '[]'::jsonb));
+end $$;
+revoke all on function public.rr_summary_json(date, date, text, text) from public, anon;
+grant execute on function public.rr_summary_json(date, date, text, text) to authenticated;
+notify pgrst, 'reload schema';
