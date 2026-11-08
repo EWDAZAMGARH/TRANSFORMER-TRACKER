@@ -1997,6 +1997,19 @@ table.rst th,table.rst td{border:1px solid #c9cfdb;padding:4px 10px;text-align:c
 table.rst th{background:#e4f6ea;color:#15803d;font-weight:700}table.rst td.l,table.rst th.l{text-align:left;font-weight:700}
 table.rst td.tt{background:#f1f5ff;font-weight:800}table.rst tr.T td{background:#cfe89a;font-weight:800}
 table.rst td.z{color:#b6bcc9}
+
+/* Kitty vs last year (Excel-like sheet) */
+.lkw{font-family:"Times New Roman",Times,serif;color:#000;overflow:auto}
+.lkhd{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin:4px 0 4px}.lkhd b{font-size:17px}.lkhd .dt{font-size:26px;font-weight:800}
+table.lkt{border-collapse:collapse;background:#fff;font-family:inherit;color:#000}
+table.lkt th,table.lkt td{border:1px solid #000!important;padding:2px 10px;text-align:center;white-space:nowrap;background:#fff!important}
+table.lkt th{font-size:12px;font-weight:700;line-height:1.2;color:#000!important}
+table.lkt th.wn{font-size:19px;font-weight:700;padding:3px 14px}table.lkt th.wn .yr{font-size:11px;margin-top:1px}table.lkt th.yr{font-size:12px}table.lkt th.tl{font-size:13px}
+table.lkt td{height:30px;font-size:19px}table.lkt td.sl{font-size:17px}table.lkt td.cp{font-size:12px;font-weight:700}
+table.lkt td.lt,table.lkt td.tt,table.lkt td.df,table.lkt td.rt{font-size:18px;font-weight:700}
+table.lkt tr.T td{font-weight:700;font-size:18px}
+table.lkt td.lyc input{width:84px;border:0;background:transparent;text-align:center;font:600 19px "Times New Roman",Times,serif;color:#1c3d7a;padding:2px}
+table.lkt td.lyc input:focus{outline:2px solid #3b5bdb;background:#fffbe6}
 nav button#tmr{margin-top:auto}
 #mrnav button#mrr{margin-top:auto;border:2px solid #c2410c!important;color:#c2410c!important}
 @media (max-width:700px){nav button#tmr{margin-top:0}#mrnav button#mrr{margin-top:0;border:0!important;background:linear-gradient(135deg,#7a3bd8,#3b4fd8)!important;color:#fff!important}}
@@ -5147,7 +5160,7 @@ function mrKitDraw() {
     (can ? '<button class="btn" id="mksave" type="button" disabled>Save kitty</button>' : '') + (adm ? '<button class="btn sec" id="mkbase" type="button">Start figures (Admin)</button>' : '') + '<button class="btn sec" id="mkxl" type="button">&#11015; Excel</button></div></div>';
   h += mrLykHtml();
   h += (isAll ? '<div class="muted" style="font-size:12.5px">All workshops together (view only). Choose one workshop to type, save or check the need.</div>' : mrNeedHtml());
-  $('mkout').innerHTML = h + (adm ? '<div id="mkbw" class="hide"></div>' : ''); mrKitTotal(); if (MR.lkOn) mrLykLoad();
+  $('mkout').innerHTML = h + (adm ? '<div id="mkbw" class="hide"></div>' : ''); mrKitTotal(); if (MR.lkOn !== false) mrLykLoad();
 }
 function mrKitTotal() {
   var tot = [0, 0, 0, 0, 0, 0];
@@ -5296,74 +5309,115 @@ document.addEventListener('input', function (e) {
 })();
 
 
-/* ---- KITTY vs LAST YEAR: this year's net kitty against the kitty of the same date last year ---- */
-function lkChg(n) { return n > 0 ? '<b style="color:#15803d">&#9650; +' + n + '</b>' : n < 0 ? '<b style="color:#c00">&#9660; ' + n + '</b>' : '<b style="color:#64748b">0</b>'; }
+/* ---- KITTY vs LAST YEAR: one table like the Excel sheet - capacity rows, every workshop: last year | this year, totals, DIFF.
+        Last year's kitty is typed or pasted (all workshops together) for the same date last year; if that date is missing the nearest date within 5 days is used. ---- */
 function mrLykHtml() {
   return '<div class="card" id="mklk"><div class="bar" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Kitty compared with last year <span class="muted" style="text-transform:none;font-weight:600">- same date, last year</span></h3><span><button class="btn" id="mklkb" type="button">Compare</button> <button class="btn sec hide" id="mklkxl" type="button">&#11015; Excel</button></span></div><div id="mklkmsg"></div><div id="mklkout"></div></div>';
 }
 function mrLykLoad() {
   var K = MR.kd; if (!K || !K.r.base) return; MR.lkOn = true; var b = $('mklkb'); if (b) busy(b, true, 'Loading...'); msg('mklkmsg', '');
   var seq = MR.lkseq = (MR.lkseq || 0) + 1;
-  rpc('kitty_lyk_json', { p_day: mrIso(K.d) }).then(function (r) { if (b) busy(b, false); if (seq !== MR.lkseq || !$('mklkout')) return; MR.lk = { r: r, ws: K.ws, d: K.d }; mrLykDraw(); })
+  rpc('kitty_lyk_json', { p_day: mrIso(K.d) }).then(function (r) { if (b) busy(b, false); if (seq !== MR.lkseq || !$('mklkout')) return; MR.lk = { r: r, d: K.d, dirty: {} }; mrLykDraw(); })
     .catch(function (er) { if (b) busy(b, false); if ($('mklkmsg')) msg('mklkmsg', esc(er.message), 'err'); });
 }
-function mrLykSel() {
-  var L = MR.lk, list = L.r.ws.filter(function (w) { return L.ws === '__ALL__' || w.ws === L.ws; });
-  return list;
-}
-function mrLykCap() {
-  var L = MR.lk, list = mrLykSel(), out = {};
-  KCAPS.forEach(function (c) { out[c] = [c, 0, 0]; });
-  list.forEach(function (w) { w.rows.forEach(function (x) { if (out[x[0]]) { out[x[0]][1] += x[1]; out[x[0]][2] += x[2]; } }); });
-  return KCAPS.map(function (c) { return out[c]; });
-}
 function mrLykDraw() {
-  var L = MR.lk, list = mrLykSel(), single = L.ws !== '__ALL__' && list.length === 1 ? list[0] : null, manual = !!(single && !single.auto && single.edit);
-  var h = '<div class="muted" style="font-size:12.5px;margin:8px 0 6px">Net kitty on <b>' + esc(L.d) + '</b> against <b>' + mrDmy(L.r.ly) + '</b>.</div><div class="wrap" id="mklkws"></div>';
-  h += '<div class="muted" style="font-size:12.5px;margin:12px 0 6px"><b>Capacity-wise</b> - ' + esc(L.ws === '__ALL__' ? 'all workshops' : L.ws) + (single && !single.auto ? ' &middot; <span style="color:#c2410c">last year\'s kitty of this date is not in the app' + (manual ? ' - type it here once, it is saved by itself' : '') + '</span>' : '') + '</div>';
-  h += '<div class="wrap"><table class="mkt xg" id="mklkt"><thead><tr><th class="l">CAPACITY IN KVA</th><th>THIS YEAR</th><th' + (manual ? ' class="ed"' : '') + '>LAST YEAR</th><th>CHANGE</th></tr></thead><tbody>';
-  mrLykCap().forEach(function (x) {
-    h += '<tr data-c="' + x[0] + '"><td class="l">' + x[0] + '</td><td class="cy">' + x[1] + '</td><td' + (manual ? ' class="ed"' : '') + '>' + (manual ? '<input type="text" inputmode="numeric" autocomplete="off" class="mklk" data-c="' + x[0] + '" value="' + x[2] + '">' : '<span class="cl">' + x[2] + '</span>') + '</td><td class="cc"></td></tr>';
+  var L = MR.lk, W = L.r.ws, n = W.length, ty = L.d.slice(6), ly = String(L.r.ly || '').slice(0, 4);
+  if (!n) { $('mklkout').innerHTML = '<div class="msg info">No workshop has a started kitty on this date.</div>'; return; }
+  L.cy = W.map(function (w) { var m = {}; w.rows.forEach(function (x) { m[x[0]] = x[1]; }); return m; });
+  L.ly = W.map(function (w) { var m = {}; w.rows.forEach(function (x) { m[x[0]] = x[2]; }); return m; });
+  var canAny = W.some(function (w) { return w.edit; });
+  var h = '<div class="lkw">';
+  /* 1. last year's kitty: type or paste here (all workshops together) */
+  h += '<div class="lkhd"><b>LAST YEAR KITTY ON ' + esc(mrDmy(L.r.ly)) + (canAny ? ' <span style="font-weight:500;font-size:12.5px;font-family:Inter,system-ui,sans-serif;color:#555">- paste or type here, it is saved by itself</span>' : '') + '</b></div>' +
+    '<div class="wrap"><table class="lkt xg" id="mklky" data-lyk="1"><thead><tr><th rowspan="2">SL</th><th rowspan="2">CAPACITY OF<br>TRANSFORMERS</th><th colspan="' + n + '" class="wn">NAME OF WORKSHOP</th><th rowspan="2">TOTAL</th></tr><tr>' +
+    W.map(function (w) { return '<th class="wn">' + esc(dwNm(w.ws)) + '<div class="yr">AVAILABILITY</div></th>'; }).join('') + '</tr></thead><tbody>';
+  KCAPS.forEach(function (c, j) {
+    h += '<tr data-c="' + c + '"><td class="sl">' + (j + 1) + '</td><td class="cp">' + c + ' KVA</td>';
+    W.forEach(function (w, i) { h += '<td class="lyc">' + (w.edit ? '<input type="text" inputmode="numeric" autocomplete="off" class="mklk" data-w="' + esc(w.ws) + '" data-i="' + i + '" value="' + (L.ly[i][c] || 0) + '">' : '<span class="cl">' + (L.ly[i][c] || 0) + '</span>') + '</td>'; });
+    h += '<td class="rt"></td></tr>';
   });
-  h += '<tr class="t" id="mklkT"><td class="l">TOTAL</td><td></td><td></td><td></td></tr></tbody></table></div>';
+  h += '<tr class="T"><td></td><td>TOTAL</td>' + W.map(function () { return '<td class="ct"></td>'; }).join('') + '<td class="rt gt"></td></tr></tbody></table></div>';
+  /* 2. the comparison, like the Excel sheet */
+  h += '<div class="lkhd" style="margin-top:16px"><b>' + esc(cmpTitle()) + '</b><span class="dt">DATE-' + esc(L.d) + '</span></div>' +
+    '<div class="wrap"><table class="lkt" id="mklkt"><thead><tr><th rowspan="3">SL</th><th rowspan="3">CAPACITY OF<br>TRANSFORMERS</th><th colspan="' + (n * 2) + '" class="wn">NAME OF WORKSHOP</th><th rowspan="3" class="tl">' + ly + ' TOTAL</th><th rowspan="3" class="tl">' + ty + ' TOTAL</th><th rowspan="3" class="tl">DIFF</th></tr>' +
+    '<tr>' + W.map(function (w) { return '<th colspan="2" class="wn">' + esc(dwNm(w.ws)) + '</th>'; }).join('') + '</tr><tr>' + W.map(function () { return '<th class="yr">' + ly + '</th><th class="yr">' + ty + '</th>'; }).join('') + '</tr></thead><tbody>';
+  KCAPS.forEach(function (c, j) {
+    h += '<tr data-c="' + c + '"><td class="sl">' + (j + 1) + '</td><td class="cp">' + c + ' KVA</td>';
+    W.forEach(function (w, i) { h += '<td class="vl" data-i="' + i + '"></td><td class="vy" data-i="' + i + '">' + (L.cy[i][c] || 0) + '</td>'; });
+    h += '<td class="lt"></td><td class="tt"></td><td class="df"></td></tr>';
+  });
+  h += '<tr class="T"><td></td><td>TOTAL</td>' + W.map(function () { return '<td class="a"></td><td class="b"></td>'; }).join('') + '<td class="lt"></td><td class="tt"></td><td class="df"></td></tr></tbody></table></div>';
+  var notes = W.filter(function (w) { return !w.auto && w.src && w.src !== L.r.ly; }).map(function (w) {
+    var d = Math.round((new Date(w.src) - new Date(L.r.ly)) / 86400000); return esc(dwNm(w.ws)) + ': figures of ' + mrDmy(w.src) + ' (' + Math.abs(d) + ' day' + (Math.abs(d) > 1 ? 's' : '') + (d < 0 ? ' before' : ' after') + ')';
+  });
+  h += '<div class="muted" style="font-size:12.5px;margin-top:8px;font-family:Inter,system-ui,sans-serif">' + (canAny ? 'Copy the Excel block (rows = capacity, columns = workshops; a copied 800 KVA row is skipped) and paste it into the first cell of the last year table. ' : '') +
+    (notes.length ? '<br><span style="color:#c2410c">Same date not found - nearest date used: ' + notes.join(' &middot; ') + '.</span>' : '') +
+    (W.some(function (w) { return w.auto; }) ? '<br>Workshops whose kitty this app counted on that date last year use it automatically.' : '') + '</div></div>';
   $('mklkout').innerHTML = h; $('mklkxl').classList.remove('hide'); mrLykPaint();
 }
 function mrLykPaint() {
-  var L = MR.lk, list = mrLykSel(), tw = '<table class="mkt xg"><thead><tr><th class="l">NAME OF WORKSHOP</th><th>THIS YEAR</th><th>LAST YEAR</th><th>CHANGE</th><th>%</th></tr></thead><tbody>', a = 0, b = 0;
-  L.r.ws.forEach(function (w) {
-    var cy = 0, ly = 0; w.rows.forEach(function (x) { cy += x[1]; ly += x[2]; }); a += cy; b += ly;
-    tw += '<tr><td class="l"><b>' + esc(w.ws) + '</b>' + (w.auto ? '' : ' <span class="muted" style="font-size:11px">(typed)</span>') + '</td><td>' + cy + '</td><td>' + ly + '</td><td>' + lkChg(cy - ly) + '</td><td>' + (ly ? Math.round((cy - ly) * 1000 / Math.abs(ly)) / 10 + '%' : '-') + '</td></tr>';
+  var L = MR.lk, t = $('mklkt'), e = $('mklky'); if (!t || !e) return; var W = L.r.ws, n = W.length, i;
+  var ec = W.map(function () { return 0; }), gtot = 0;
+  [].forEach.call(e.querySelectorAll('tbody tr[data-c]'), function (tr) {
+    var c = +tr.dataset.c, a = 0; for (i = 0; i < n; i++) { var v = L.ly[i][c] || 0; a += v; ec[i] += v; }
+    tr.querySelector('.rt').innerHTML = '<b>' + a + '</b>'; gtot += a;
   });
-  tw += '<tr class="t"><td class="l">TOTAL</td><td><b>' + a + '</b></td><td><b>' + b + '</b></td><td>' + lkChg(a - b) + '</td><td>' + (b ? Math.round((a - b) * 1000 / Math.abs(b)) / 10 + '%' : '-') + '</td></tr></tbody></table>';
-  $('mklkws').innerHTML = tw;
-  var ct = 0, cl = 0;
-  document.querySelectorAll('#mklkt tbody tr[data-c]').forEach(function (tr) {
-    var cy = +tr.querySelector('.cy').textContent, i = tr.querySelector('.mklk'), ly = i ? (parseInt(i.value, 10) || 0) : +tr.querySelector('.cl').textContent;
-    tr.querySelector('.cc').innerHTML = lkChg(cy - ly); ct += cy; cl += ly;
+  var eT = e.querySelector('tr.T'); [].forEach.call(eT.querySelectorAll('.ct'), function (td, k) { td.innerHTML = '<b>' + ec[k] + '</b>'; }); eT.querySelector('.gt').innerHTML = '<b>' + gtot + '</b>';
+  var cl = W.map(function () { return 0; }), cy = W.map(function () { return 0; }), gl = 0, gt = 0;
+  [].forEach.call(t.querySelectorAll('tbody tr[data-c]'), function (tr) {
+    var c = +tr.dataset.c, a = 0, b = 0;
+    for (i = 0; i < n; i++) { var x = L.ly[i][c] || 0, y = L.cy[i][c] || 0; tr.querySelector('.vl[data-i="' + i + '"]').textContent = x; a += x; b += y; cl[i] += x; cy[i] += y; }
+    tr.querySelector('.lt').innerHTML = '<b>' + a + '</b>'; tr.querySelector('.tt').innerHTML = '<b>' + b + '</b>'; tr.querySelector('.df').innerHTML = '<b>' + (b - a) + '</b>'; gl += a; gt += b;
   });
-  var T = $('mklkT'); if (T) { T.children[1].innerHTML = '<b>' + ct + '</b>'; T.children[2].innerHTML = '<b>' + cl + '</b>'; T.children[3].innerHTML = lkChg(ct - cl); }
+  var T = t.querySelector('tr.T'), A = T.querySelectorAll('.a'), B = T.querySelectorAll('.b'); for (i = 0; i < n; i++) { A[i].innerHTML = '<b>' + cl[i] + '</b>'; B[i].innerHTML = '<b>' + cy[i] + '</b>'; }
+  T.querySelector('.lt').innerHTML = '<b>' + gl + '</b>'; T.querySelector('.tt').innerHTML = '<b>' + gt + '</b>'; T.querySelector('.df').innerHTML = '<b>' + (gt - gl) + '</b>';
 }
 function mrLykSave() {
-  var L = MR.lk; if (!L || L.ws === '__ALL__') return; var w = L.r.ws.filter(function (x) { return x.ws === L.ws; })[0]; if (!w || w.auto || !w.edit) return;
-  var ins = document.querySelectorAll('#mklkt .mklk'); if (!ins.length) return;
-  var rows = [].map.call(ins, function (i) { return { cap: +i.dataset.c, qty: Math.max(0, parseInt(i.value, 10) || 0) }; });
-  rows.forEach(function (r) { w.rows.forEach(function (x) { if (x[0] === r.cap) x[2] = r.qty; }); });
-  msg('mklkmsg', 'Saving...', 'info');
-  rpc('kitty_lyk_set', { p_ws: L.ws, p_day: L.r.ly, p_rows: rows }).then(function () { asMsg('mklkmsg', 'Saved', 'ok'); mrLykPaint(); }).catch(function (er) { msg('mklkmsg', esc(er.message), 'err'); });
+  var L = MR.lk; if (!L) return; var ws = Object.keys(L.dirty); if (!ws.length) return; L.dirty = {};
+  var k = Promise.resolve(); msg('mklkmsg', 'Saving...', 'info');
+  ws.forEach(function (w) {
+    var i = L.r.ws.map(function (x) { return x.ws; }).indexOf(w); if (i < 0) return;
+    var rows = KCAPS.map(function (c) { return { cap: c, qty: Math.max(0, L.ly[i][c] || 0) }; });
+    k = k.then(function () { return rpc('kitty_lyk_set', { p_ws: w, p_day: L.r.ly, p_rows: rows }); });
+  });
+  k.then(function () { asMsg('mklkmsg', 'Saved', 'ok'); }).catch(function (er) { msg('mklkmsg', esc(er.message), 'err'); });
 }
-document.addEventListener('input', function (e) { if (e.target.classList && e.target.classList.contains('mklk')) { var v = e.target.value.replace(/\D/g, ''); if (v !== e.target.value) e.target.value = v; mrLykPaint(); } });
+/* paste an Excel block into the last year table: by "10 KVA" labels when they are copied too, else row by row (a 800 KVA row is skipped) */
+function mrLykPaste(rows) {
+  var t = $('mklky'), L = MR.lk, b = xgBox(), g = xgGrid(t), st = g[b.r1] && g[b.r1][b.c1]; if (!st) return;
+  var trs = [].filter.call(t.tBodies[0].rows, function (tr) { return tr.dataset.c; }), inp0 = st.querySelector('input.mklk'), k0 = inp0 ? +inp0.dataset.i : 0, r0 = Math.max(0, trs.indexOf(st.closest('tr')));
+  var lab = rows.map(function (rw) { for (var m = 0; m < rw.length; m++) { var q = /^\s*(\d+)\s*kva\s*$/i.exec(rw[m]); if (q) return { cap: +q[1], vals: rw.slice(m + 1) }; } return null; });
+  var named = lab.filter(Boolean).length >= 5, put = function (tr, vals) { vals.forEach(function (v, j) { var inp = tr.querySelector('input.mklk[data-i="' + (k0 + j) + '"]'); if (inp) xgSet(inp.parentNode, String(v).trim()); }); };
+  if (named) { lab.forEach(function (x) { if (!x) return; var tr = t.querySelector('tbody tr[data-c="' + x.cap + '"]'); if (tr) put(tr, x.vals); }); return; }
+  if (rows.length === 11) rows = rows.slice(0, 9).concat(rows.slice(10));   // the Excel sheet has an 800 KVA row between 630 and 1000
+  rows.forEach(function (rw, i) { var tr = trs[r0 + i]; if (tr) put(tr, rw); });
+}
+document.addEventListener('input', function (e) {
+  var t = e.target; if (!t.classList || !t.classList.contains('mklk') || !MR.lk) return;
+  var v = t.value.replace(/\D/g, ''); if (v !== t.value) t.value = v;
+  MR.lk.ly[+t.dataset.i][+t.closest('tr').dataset.c] = parseInt(v, 10) || 0; MR.lk.dirty[t.dataset.w] = 1; mrLykPaint();
+});
 document.addEventListener('click', function (e) {
   var t = e.target; if (!t.closest) return;
   if (t.closest('#mklkb')) { mrLykLoad(); return; }
   if (t.closest('#mklkxl') && MR.lk) {
-    var L = MR.lk, rows = [['Net kitty on ' + L.d + ' against ' + mrDmy(L.r.ly)], [], ['NAME OF WORKSHOP', 'THIS YEAR', 'LAST YEAR', 'CHANGE']];
-    L.r.ws.forEach(function (w) { var a = 0, b = 0; w.rows.forEach(function (x) { a += x[1]; b += x[2]; }); rows.push([w.ws, a, b, a - b]); });
-    rows.push([]); rows.push(['CAPACITY IN KVA - ' + (L.ws === '__ALL__' ? 'All workshops' : L.ws), 'THIS YEAR', 'LAST YEAR', 'CHANGE']);
-    mrLykCap().forEach(function (x) { var i = document.querySelector('#mklkt .mklk[data-c="' + x[0] + '"]'); var ly = i ? (parseInt(i.value, 10) || 0) : x[2]; rows.push([x[0], x[1], ly, x[1] - ly]); });
-    xlsxDownload('Kitty_vs_LastYear_' + mrFile(L.ws === '__ALL__' ? 'All' : L.ws) + '_' + mrFile(L.d) + '.xlsx', [{ name: 'Kitty vs LY', rows: rows }]);
+    var L = MR.lk, W = L.r.ws, n = W.length, ty = L.d.slice(6), ly = String(L.r.ly || '').slice(0, 4), rows = [], mg = [], i, T = 2 * n + 5;
+    var r0 = []; for (i = 0; i < T; i++) r0.push(''); r0[0] = { v: cmpTitle(), s: 1 }; r0[T - 1] = { v: 'DATE-' + L.d, s: 10 }; rows.push(r0);
+    var r1 = [], r2 = [], r3 = []; for (i = 0; i < T; i++) { r1.push({ v: '', s: 5 }); r2.push({ v: '', s: 5 }); r3.push({ v: '', s: 5 }); }
+    r1[0] = { v: 'SL', s: 5 }; r1[1] = { v: 'CAPACITY OF TRANSFORMERS', s: 5 }; r1[2] = { v: 'NAME OF WORKSHOP', s: 5 }; r1[2 * n + 2] = { v: ly + ' TOTAL', s: 5 }; r1[2 * n + 3] = { v: ty + ' TOTAL', s: 5 }; r1[2 * n + 4] = { v: 'DIFF', s: 5 };
+    W.forEach(function (w, k) { r2[2 + 2 * k] = { v: dwNm(w.ws), s: 5 }; r3[2 + 2 * k] = { v: ly, s: 5 }; r3[3 + 2 * k] = { v: ty, s: 5 }; mg.push([2, 2 + 2 * k, 2, 3 + 2 * k]); });
+    rows.push(r1); rows.push(r2); rows.push(r3); mg.push([1, 2, 1, 2 * n + 1]); [0, 1, 2 * n + 2, 2 * n + 3, 2 * n + 4].forEach(function (c) { mg.push([1, c, 3, c]); });
+    var tl = 0, tt = 0, cl = W.map(function () { return 0; }), cy = W.map(function () { return 0; });
+    KCAPS.forEach(function (c, ri) {
+      var line = [{ v: ri + 1, s: 4 }, { v: c + ' KVA', s: 4 }], a = 0, b = 0;
+      W.forEach(function (w, k) { var x = L.ly[k][c] || 0, y = L.cy[k][c] || 0; a += x; b += y; cl[k] += x; cy[k] += y; line.push({ v: x, s: 4 }); line.push({ v: y, s: 4 }); });
+      line.push({ v: a, s: 5 }); line.push({ v: b, s: 5 }); line.push({ v: b - a, s: 5 }); tl += a; tt += b; rows.push(line);
+    });
+    var last = [{ v: '', s: 5 }, { v: 'TOTAL', s: 5 }]; W.forEach(function (w, k) { last.push({ v: cl[k], s: 5 }); last.push({ v: cy[k], s: 5 }); }); last.push({ v: tl, s: 5 }); last.push({ v: tt, s: 5 }); last.push({ v: tt - tl, s: 5 }); rows.push(last);
+    var cw = [6, 17]; for (i = 0; i < n; i++) { cw.push(9); cw.push(9); } cw.push(11); cw.push(11); cw.push(9);
+    xlsxDownload('Kitty_vs_LastYear_' + mrFile(L.d) + '.xlsx', [{ name: 'Kitty vs LY', rows: rows, merges: mg, cw: cw }]);
   }
 });
-
 /* KITTY COMPARE: on top of the Kitty tab, for the date of the Kitty tab */
 function mrCmpLoad() {
   var d = $('mkd').value.trim(); if (!validD(d)) return msg('mkmsg', 'Enter the date in DD.MM.YYYY format.', 'err');
@@ -5751,6 +5805,7 @@ document.addEventListener('paste', function (e) {
   var rows = tx.split('\n').map(function (x) { return x.split('\t'); });
   if (rows.length === 1 && rows[0].length === 1 && e.target.tagName === 'INPUT') return;   // a single value: the normal paste (digits only)
   e.preventDefault();
+  if (XG.t.dataset.lyk) { mrLykPaste(rows); return; }
   var b = xgBox(), key = XG.t.dataset.b, g = xgGrid(XG.t), r0 = b.r1, c0 = b.c1, need = r0 + rows.length - XG.t.querySelectorAll('tbody tr[data-b]').length;
   if (need > 0 && XG.t.dataset.grow === undefined && key && document.querySelector('#mpout table.rrt')) { mrRepGrow(need); var nt = document.querySelector('table.xg[data-b="' + key + '"]'); if (nt) { XG.t = nt; g = xgGrid(nt); } }
   rows.forEach(function (rw, i) { rw.forEach(function (v, j) { var td = g[r0 + i] && g[r0 + i][c0 + j]; if (td) xgSet(td, v.trim()); }); });

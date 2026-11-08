@@ -3188,3 +3188,39 @@ end $$;
 revoke all on function public.rr_summary_json(date, date, text, text) from public, anon;
 grant execute on function public.rr_summary_json(date, date, text, text) to authenticated;
 notify pgrst, 'reload schema';
+
+-- ================================================================================================================
+-- STEP 88 : Kitty vs last year - if the same date last year is missing, the nearest typed date within 5 days (before or after) is used
+-- Safe to run again.
+-- ================================================================================================================
+create or replace function public.kitty_lyk_json(p_day date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare ly date := (p_day - interval '1 year')::date; w text; a jsonb; b jsonb; auto boolean; src date; rws jsonb; outj jsonb := '[]'::jsonb;
+        caps int[] := array[10, 16, 25, 63, 100, 160, 250, 400, 630, 1000];
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  foreach w in array public.my_workshops() loop
+    a := public.kitty_json(w, p_day);
+    if (a->>'base') is null then continue; end if;
+    b := public.kitty_json(w, ly);
+    auto := (b->>'base') is not null;
+    src := ly;
+    if not auto then
+      src := null;
+      select k.day into src from public.kitty_lyk k
+       where k.workshop = w and k.day between ly - 5 and ly + 5
+       group by k.day order by abs(k.day - ly), k.day limit 1;
+      if src is null then src := ly; end if;
+    end if;
+    select jsonb_agg(jsonb_build_array(c,
+             coalesce((select (x->>7)::int from jsonb_array_elements(a->'rows') x where (x->>0)::int = c), 0),
+             case when auto then coalesce((select (x->>7)::int from jsonb_array_elements(b->'rows') x where (x->>0)::int = c), 0)
+                  else coalesce((select k.qty from public.kitty_lyk k where k.workshop = w and k.day = src and k.cap = c), 0) end) order by c)
+      into rws from unnest(caps) c;
+    outj := outj || jsonb_build_array(jsonb_build_object('ws', w, 'auto', auto, 'edit', public.mr_edit_ok(w), 'src', src, 'rows', rws));
+  end loop;
+  return jsonb_build_object('ly', ly, 'ws', outj);
+end $$;
+revoke all on function public.kitty_lyk_json(date) from public, anon;
+grant execute on function public.kitty_lyk_json(date) to authenticated;
+notify pgrst, 'reload schema';
