@@ -2097,3 +2097,1042 @@ revoke all on function public.struct_json(), public.struct_found(text[]), public
 grant execute on function public.struct_json(), public.struct_found(text[]), public.struct_save(text[], jsonb) to authenticated;
 
 -- DONE.  Next: create the first Admin (see the README), then add workshops in the Admin tab.
+-- STEP 40 : M&R DASHBOARD  (Maintenance & Repair)  -- run in the TEST project first.
+-- DTC no / DTC date per PR row, and the daily KITTY (stock of repaired transformers) per workshop and capacity.
+-- Nothing in the existing tables is changed.  New tables:  dtc, kitty_base, kitty_day.
+-- Who: an "M&R user" is a normal user whose tabs list contains 'mr'.  An Admin (and the App Creator for reading) can also use it.
+
+-- 1) DTC no + DTC date, one row per PR row of the Data Sheet ---------------------------------------------
+create table if not exists public.dtc (
+  data_id   bigint primary key references public.data(id) on delete cascade,
+  dtc_no    text,
+  dtc_date  date,
+  by_login  text,
+  at        timestamptz not null default now()
+);
+create index if not exists dtc_date_i on public.dtc(dtc_date);
+alter table public.dtc enable row level security;
+revoke all on public.dtc from public, anon;
+grant select on public.dtc to authenticated;
+drop policy if exists dtc_read on public.dtc;
+-- a user can read a DTC row only if the Data Sheet row itself is visible to him (workshop scope)
+create policy dtc_read on public.dtc for select to authenticated using (exists (select 1 from public.data d where d.id = data_id));
+
+-- 2) kitty: the starting figures set by an Admin (opening kitty + unrepaired T/F on a start date) -------------
+create table if not exists public.kitty_base (
+  workshop text not null, day date not null, cap int not null,
+  opening int not null default 0 check (opening >= 0), unrep int not null default 0 check (unrep >= 0),
+  by_login text, at timestamptz not null default now(),
+  primary key (workshop, day, cap)
+);
+-- 3) kitty: the daily figures typed by the M&R user ---------------------------------------------------------
+create table if not exists public.kitty_day (
+  workshop text not null, day date not null, cap int not null,
+  repair int not null default 0 check (repair >= 0), to_other int not null default 0 check (to_other >= 0), from_other int not null default 0 check (from_other >= 0),
+  by_login text, at timestamptz not null default now(),
+  primary key (workshop, day, cap)
+);
+alter table public.kitty_base enable row level security;
+alter table public.kitty_day  enable row level security;
+revoke all on public.kitty_base, public.kitty_day from public, anon, authenticated;
+
+-- who may use M&R ------------------------------------------------------------------------------------------
+create or replace function public.mr_ok() returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select p.active and (p.role in ('admin', 'creator') or 'mr' = any (coalesce(p.tabs, '{}'))) from public.profiles p where p.user_id = auth.uid()), false)
+$$;
+-- may the caller change the M&R figures of this workshop?  (an M&R user: his workshops; an Admin: the workshops of his division; the App Creator: no)
+create or replace function public.mr_edit_ok(p_ws text) returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select p.active and p_ws = any (public.my_workshops())
+                           and (p.role = 'admin' or (p.role = 'je' and 'mr' = any (coalesce(p.tabs, '{}')))) from public.profiles p where p.user_id = auth.uid()), false)
+$$;
+create or replace function public.mr_admin_ok(p_ws text) returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select p.active and p.role = 'admin' and p_ws = any (public.my_workshops()) from public.profiles p where p.user_id = auth.uid()), false)
+$$;
+
+-- 4) M&R SUMMARY ---------------------------------------------------------------------------------------------
+-- rows: workshop-wise  [workshop, today_pr, today_dtc, total_pr, total_dtc, pending_dtc]
+--       capacity-wise  [workshop, capacity, pr, dtc_done, pending]
+--  PR = PR raised (PR date) in the period;  DTC done = of those PR, the ones that have a DTC no;  pending = PR - done.
+--  TODAY PR = PR raised on the date;  TODAY DTC = DTC entered with that DTC date.
+create or replace function public.mr_summary_json(p_date date, p_from date, p_to date) returns jsonb
+language plpgsql stable set search_path = public as $$
+declare r jsonb;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  with d as (select x.workshop, x.capacity, x.pr_date, t.dtc_no, t.dtc_date
+               from public.data x left join public.dtc t on t.data_id = x.id
+              where not x.dup and x.workshop = any (public.my_workshops())),
+  w as (select workshop,
+               count(*) filter (where pr_date = p_date) today_pr,
+               count(*) filter (where dtc_date = p_date and dtc_no is not null) today_dtc,
+               count(*) filter (where pr_date between p_from and p_to) tot_pr,
+               count(*) filter (where pr_date between p_from and p_to and nullif(btrim(dtc_no), '') is not null) tot_dtc
+          from d group by workshop),
+  c as (select workshop, coalesce(capacity, 0) cap,
+               count(*) filter (where pr_date between p_from and p_to) pr,
+               count(*) filter (where pr_date between p_from and p_to and nullif(btrim(dtc_no), '') is not null) done
+          from d group by workshop, coalesce(capacity, 0))
+  select jsonb_build_object(
+    'ws',  coalesce((select jsonb_agg(jsonb_build_array(workshop, today_pr, today_dtc, tot_pr, tot_dtc, tot_pr - tot_dtc) order by workshop) from w), '[]'),
+    'cap', coalesce((select jsonb_agg(jsonb_build_array(workshop, cap, pr, done, pr - done) order by workshop, cap) from c where pr > 0), '[]'))
+    into r;
+  return r;
+end $$;
+
+-- 5) DTC SHEET: the rows of one month (by PR date) ----------------------------------------------------------------
+create or replace function public.mr_list_json(p_month date, p_ws text default null, p_status text default 'all', p_q text default null, p_limit int default 300, p_offset int default 0) returns jsonb
+language plpgsql stable set search_path = public as $$
+declare m1 date := date_trunc('month', p_month)::date; m2 date := (date_trunc('month', p_month) + interval '1 month - 1 day')::date; q text := nullif(btrim(coalesce(p_q, '')), ''); r jsonb;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  with b as (select x.*, t.dtc_no, t.dtc_date, (nullif(btrim(t.dtc_no), '') is not null) done
+               from public.data x left join public.dtc t on t.data_id = x.id
+              where not x.dup and x.workshop = any (public.my_workshops()) and x.pr_date between m1 and m2
+                and (p_ws is null or x.workshop = p_ws)
+                and (q is null or x.pr_no ilike '%' || q || '%' or coalesce(x.complain_no, '') ilike '%' || q || '%' or coalesce(x.place_of_damage, '') ilike '%' || q || '%' or coalesce(t.dtc_no, '') ilike '%' || q || '%')),
+  f as (select * from b where p_status = 'all' or (p_status = 'pending' and not done) or (p_status = 'done' and done))
+  select jsonb_build_object(
+    'all', (select count(*) from b), 'pending', (select count(*) from b where not done), 'done', (select count(*) from b where done), 'shown', (select count(*) from f),
+    'rows', coalesce((select jsonb_agg(jsonb_build_array(id, workshop, division, substation, feeder, place_of_damage, capacity, complain_no, pr_no, pr_date, je_name, issue_date, repl_date, return_date, dtc_no, dtc_date,
+                        case when public.mr_edit_ok(workshop) then 1 else 0 end) order by pr_date, pr_no collate "C")
+                        from (select * from f order by pr_date, pr_no collate "C" limit least(greatest(p_limit, 1), 1000) offset greatest(p_offset, 0)) z), '[]'))
+    into r;
+  return r;
+end $$;
+
+-- set / clear the DTC no + DTC date of one row ------------------------------------------------------------
+create or replace function public.mr_dtc_set(p_id bigint, p_no text, p_date date) returns text
+language plpgsql security definer set search_path = public as $$
+declare ws text; no text := nullif(btrim(coalesce(p_no, '')), ''); c public.profiles := public.tf_caller();
+begin
+  select workshop into ws from public.data where id = p_id;
+  if ws is null then raise exception 'This PR row was not found.'; end if;
+  if not public.mr_edit_ok(ws) then raise exception 'You cannot change the DTC of this workshop.'; end if;
+  if no is not null and length(no) > 40 then raise exception 'DTC no is too long.'; end if;
+  if p_date is not null and (p_date < date '2000-01-01' or p_date > current_date + 2) then raise exception 'DTC date looks wrong.'; end if;
+  if no is null and p_date is null then delete from public.dtc where data_id = p_id; return 'cleared'; end if;
+  insert into public.dtc(data_id, dtc_no, dtc_date, by_login, at) values (p_id, no, p_date, c.login_id, now())
+    on conflict (data_id) do update set dtc_no = excluded.dtc_no, dtc_date = excluded.dtc_date, by_login = excluded.by_login, at = now();
+  return 'saved';
+end $$;
+
+-- 6) KITTY ----------------------------------------------------------------------------------------------------
+-- For one workshop and one day, for each standard capacity:
+--   OPENING KITTY  = net kitty of the day before  (on the start day: the figure set by the Admin)
+--   UNREPAIRED T/F = unrepaired of the day before - repair of the day before + transformers RETURNED today (Data Sheet return date)
+--                    (on the start day: the figure set by the Admin)
+--   ISSUE          = transformers issued today (Data Sheet issue date)
+--   REPAIR, ISSUE TO OTHER W/S, RECEIVE FROM OTHER W/S = typed by the M&R user
+--   NET KITTY      = opening + repair + receive from other - issue - issue to other
+create or replace function public.kitty_json(p_ws text, p_day date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare r jsonb; base_day date;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not (p_ws = any (public.my_workshops())) then raise exception 'This workshop is not yours.'; end if;
+  select max(day) into base_day from public.kitty_base where workshop = p_ws and day <= p_day;
+  if base_day is null then
+    return jsonb_build_object('base', null, 'first', (select min(day) from public.kitty_base where workshop = p_ws), 'rows', '[]'::jsonb, 'edit', public.mr_edit_ok(p_ws), 'admin', public.mr_admin_ok(p_ws));
+  end if;
+  with caps as (select unnest(array[10, 16, 25, 63, 100, 160, 250, 400, 630]) cap),
+  b as (select distinct on (k.cap) k.cap, k.day a, k.opening, k.unrep from public.kitty_base k where k.workshop = p_ws and k.day <= p_day order by k.cap, k.day desc),
+  days as (select b.cap, b.a, b.opening, b.unrep, g::date d from b, generate_series(b.a, p_day, interval '1 day') g),
+  iss as (select issue_date d, capacity cap, count(*) n from public.data where not dup and workshop = p_ws and issue_date between base_day and p_day group by 1, 2),
+  ret as (select return_date d, capacity cap, count(*) n from public.data where not dup and workshop = p_ws and return_date between base_day and p_day group by 1, 2),
+  x as (select days.cap, days.a, days.opening, days.unrep, days.d,
+               coalesce(i.n, 0) issue, coalesce(t.n, 0) ret, coalesce(k.repair, 0) repair, coalesce(k.to_other, 0) to_other, coalesce(k.from_other, 0) from_other
+          from days left join iss i on i.d = days.d and i.cap = days.cap
+                    left join ret t on t.d = days.d and t.cap = days.cap
+                    left join public.kitty_day k on k.workshop = p_ws and k.day = days.d and k.cap = days.cap),
+  y as (select x.*,
+               sum(repair + from_other - issue - to_other) over (partition by cap order by d rows between unbounded preceding and 1 preceding) prev_delta,
+               sum(repair) over (partition by cap order by d rows between unbounded preceding and 1 preceding) prev_repair,
+               sum(case when d > a then ret else 0 end) over (partition by cap order by d rows between unbounded preceding and current row) cum_ret
+          from x),
+  z as (select cap, d, issue, repair, to_other, from_other,
+               opening + coalesce(prev_delta, 0) as opening_kitty,
+               unrep - coalesce(prev_repair, 0) + cum_ret as unrepaired,
+               opening + coalesce(prev_delta, 0) + repair + from_other - issue - to_other as net
+          from y where d = p_day)
+  select jsonb_build_object('base', base_day, 'first', (select min(day) from public.kitty_base where workshop = p_ws),
+    'rows', coalesce((select jsonb_agg(jsonb_build_array(cap, opening_kitty, unrepaired, issue, repair, to_other, from_other, net) order by cap) from z), '[]'),
+    'edit', public.mr_edit_ok(p_ws), 'admin', public.mr_admin_ok(p_ws))
+    into r;
+  return r;
+end $$;
+
+-- save the M&R user's daily figures: p_rows = [{cap, repair, to_other, from_other}, ...]
+create or replace function public.kitty_save(p_ws text, p_day date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); bd date; n int := 0;
+begin
+  if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the kitty of this workshop.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  select max(day) into bd from public.kitty_base where workshop = p_ws and day <= p_day;
+  if bd is null then raise exception 'The Admin must first set the opening kitty and the unrepaired T/F (start date).'; end if;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    if (e->>'cap')::int not in (10, 16, 25, 63, 100, 160, 250, 400, 630) then continue; end if;
+    if coalesce((e->>'repair')::int, 0) < 0 or coalesce((e->>'to_other')::int, 0) < 0 or coalesce((e->>'from_other')::int, 0) < 0
+       or coalesce((e->>'repair')::int, 0) > 100000 or coalesce((e->>'to_other')::int, 0) > 100000 or coalesce((e->>'from_other')::int, 0) > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.kitty_day(workshop, day, cap, repair, to_other, from_other, by_login, at)
+      values (p_ws, p_day, (e->>'cap')::int, coalesce((e->>'repair')::int, 0), coalesce((e->>'to_other')::int, 0), coalesce((e->>'from_other')::int, 0), c.login_id, now())
+      on conflict (workshop, day, cap) do update set repair = excluded.repair, to_other = excluded.to_other, from_other = excluded.from_other, by_login = excluded.by_login, at = now();
+    n := n + 1;
+  end loop;
+  return 'saved ' || n;
+end $$;
+
+-- the Admin sets / changes the start figures: p_rows = [{cap, opening, unrep}, ...]  (a new start date replaces the older ones from that day on)
+create or replace function public.kitty_base_set(p_ws text, p_day date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); n int := 0;
+begin
+  if not public.mr_admin_ok(p_ws) then raise exception 'Only the Admin of this workshop can set the start figures.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    if (e->>'cap')::int not in (10, 16, 25, 63, 100, 160, 250, 400, 630) then continue; end if;
+    if coalesce((e->>'opening')::int, 0) < 0 or coalesce((e->>'unrep')::int, 0) < 0 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.kitty_base(workshop, day, cap, opening, unrep, by_login, at)
+      values (p_ws, p_day, (e->>'cap')::int, coalesce((e->>'opening')::int, 0), coalesce((e->>'unrep')::int, 0), c.login_id, now())
+      on conflict (workshop, day, cap) do update set opening = excluded.opening, unrep = excluded.unrep, by_login = excluded.by_login, at = now();
+    n := n + 1;
+  end loop;
+  return 'saved ' || n;
+end $$;
+
+revoke all on function public.mr_ok(), public.mr_edit_ok(text), public.mr_admin_ok(text), public.mr_summary_json(date, date, date), public.mr_list_json(date, text, text, text, int, int),
+  public.mr_dtc_set(bigint, text, date), public.kitty_json(text, date), public.kitty_save(text, date, jsonb), public.kitty_base_set(text, date, jsonb) from public, anon;
+grant execute on function public.mr_ok(), public.mr_edit_ok(text), public.mr_admin_ok(text), public.mr_summary_json(date, date, date), public.mr_list_json(date, text, text, text, int, int),
+  public.mr_dtc_set(bigint, text, date), public.kitty_json(text, date), public.kitty_save(text, date, jsonb), public.kitty_base_set(text, date, jsonb) to authenticated;
+
+
+-- 7) the tab list of a user may now also hold 'emg' (Emergency) and 'mr' (M&R dashboard) -------------------------------------
+create or replace function public.admin_set_user(p_login text, p_name text, p_scope text[], p_edit boolean, p_tabs text[], p_active boolean) returns text
+language plpgsql security definer set search_path = public as
+$$
+declare c public.profiles := public.tf_caller(); t public.profiles; sc text[] := coalesce(p_scope, '{}'); tb text[] := p_tabs; ed boolean := coalesce(p_edit,false);
+begin
+  if c.user_id is null or c.role not in ('admin','creator') then raise exception 'Only an Admin can change users.'; end if;
+  select * into t from public.profiles where login_id = lower(btrim(p_login));
+  if t.user_id is null then raise exception 'User not found.'; end if;
+  if t.role = 'creator' then raise exception 'This user cannot be changed here.'; end if;
+  if c.role = 'admin' and not (t.role = 'je' and t.org_division is not distinct from c.org_division) then raise exception 'You can change only the users of your own division.'; end if;
+  if t.user_id = c.user_id and not coalesce(p_active, true) then raise exception 'You cannot deactivate your own ID.'; end if;
+  if tb is not null then
+    if cardinality(tb) = 0 then raise exception 'Choose at least one tab.'; end if;
+    if exists (select 1 from unnest(tb) x where x not in ('sum','data','drv','emg','mr')) then raise exception 'Unknown tab.'; end if;
+    if not ('data' = any(tb)) then ed := false; end if;
+  end if;
+  if t.role = 'je' then
+    if cardinality(sc) = 0 then raise exception 'Choose at least one workshop.'; end if;
+    if exists (select 1 from unnest(sc) x where x not in (select name from public.workshops where org_division = coalesce(t.org_division, c.org_division))) then
+      raise exception 'A workshop is not in this division.'; end if;
+  else sc := t.scope; end if;
+  update public.profiles set display = coalesce(nullif(btrim(p_name),''), display), scope = sc, can_edit = ed, tabs = tb, active = coalesce(p_active, active)
+   where user_id = t.user_id;
+  return 'OK';
+end $$;
+-- STEP 41 : M&R  part 2  (run in the TEST project AFTER step 40)
+--  * DTC Sheet shows firm + driver name (not issue / replacement date)
+--  * "Next month need": last year's same month  ->  repair added to the kitty, PR (+2%) subtracted
+--  * last year's repair typed as a MONTH TOTAL per capacity (only while the kitty has no own data of that time)
+--  * Kitty compare: net kitty of all your workshops, capacity wise
+
+-- 1) DTC list: columns  [id, workshop, division, substation, feeder, place, cap, complain, pr_no, pr_date, je_name, firm, driver_name, return_date, dtc_no, dtc_date, editable]
+create or replace function public.mr_list_json(p_month date, p_ws text default null, p_status text default 'all', p_q text default null, p_limit int default 300, p_offset int default 0) returns jsonb
+language plpgsql stable set search_path = public as $$
+declare m1 date := date_trunc('month', p_month)::date; m2 date := (date_trunc('month', p_month) + interval '1 month - 1 day')::date; q text := nullif(btrim(coalesce(p_q, '')), ''); r jsonb;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  with b as (select x.*, t.dtc_no, t.dtc_date, (nullif(btrim(t.dtc_no), '') is not null) done
+               from public.data x left join public.dtc t on t.data_id = x.id
+              where not x.dup and x.workshop = any (public.my_workshops()) and x.pr_date between m1 and m2
+                and (p_ws is null or x.workshop = p_ws)
+                and (q is null or x.pr_no ilike '%' || q || '%' or coalesce(x.complain_no, '') ilike '%' || q || '%' or coalesce(x.place_of_damage, '') ilike '%' || q || '%' or coalesce(t.dtc_no, '') ilike '%' || q || '%')),
+  f as (select * from b where p_status = 'all' or (p_status = 'pending' and not done) or (p_status = 'done' and done))
+  select jsonb_build_object(
+    'all', (select count(*) from b), 'pending', (select count(*) from b where not done), 'done', (select count(*) from b where done), 'shown', (select count(*) from f),
+    'rows', coalesce((select jsonb_agg(jsonb_build_array(id, workshop, division, substation, feeder, place_of_damage, capacity, complain_no, pr_no, pr_date, je_name, firm, driver_name, return_date, dtc_no, dtc_date,
+                        case when public.mr_edit_ok(workshop) then 1 else 0 end) order by pr_date, pr_no collate "C")
+                        from (select * from f order by pr_date, pr_no collate "C" limit least(greatest(p_limit, 1), 1000) offset greatest(p_offset, 0)) z), '[]'))
+    into r;
+  return r;
+end $$;
+
+-- 2) last year's repair, one number per workshop + month + capacity ----------------------------------------------
+create table if not exists public.kitty_ly (
+  workshop text not null, month date not null, cap int not null,
+  repair int not null default 0 check (repair >= 0),
+  by_login text, at timestamptz not null default now(),
+  primary key (workshop, month, cap)
+);
+alter table public.kitty_ly enable row level security;
+revoke all on public.kitty_ly from public, anon, authenticated;
+
+create or replace function public.kitty_ly_json(p_ws text, p_month date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare m date := date_trunc('month', p_month)::date;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not (p_ws = any (public.my_workshops())) then raise exception 'This workshop is not yours.'; end if;
+  return jsonb_build_object('month', m, 'edit', public.mr_edit_ok(p_ws),
+    'rows', (select jsonb_agg(jsonb_build_array(c.cap, coalesce(k.repair, 0)) order by c.cap)
+               from (select unnest(array[10, 16, 25, 63, 100, 160, 250, 400, 630]) cap) c
+               left join public.kitty_ly k on k.workshop = p_ws and k.month = m and k.cap = c.cap));
+end $$;
+
+create or replace function public.kitty_ly_set(p_ws text, p_month date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); m date := date_trunc('month', p_month)::date; n int := 0;
+begin
+  if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the kitty of this workshop.'; end if;
+  if m >= date_trunc('month', current_date)::date then raise exception 'Choose a month of the past.'; end if;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    if (e->>'cap')::int not in (10, 16, 25, 63, 100, 160, 250, 400, 630) then continue; end if;
+    if coalesce((e->>'repair')::int, 0) < 0 or coalesce((e->>'repair')::int, 0) > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.kitty_ly(workshop, month, cap, repair, by_login, at) values (p_ws, m, (e->>'cap')::int, coalesce((e->>'repair')::int, 0), c.login_id, now())
+      on conflict (workshop, month, cap) do update set repair = excluded.repair, by_login = excluded.by_login, at = now();
+    n := n + 1;
+  end loop;
+  return 'saved ' || n;
+end $$;
+
+-- 3) NEXT MONTH NEED -------------------------------------------------------------------------------------------
+--  kitty        = net kitty of the viewed day
+--  window       = the same date LAST YEAR, p_days days long
+--  last-year PR = PR of that window (Data Sheet), made 2% more
+--  last-year repair = the kitty's own daily repair of that window when the kitty already had data then,
+--                     else the month totals typed in kitty_ly (shared by the days of the window)
+--  result       = kitty + repair - PR(+2%);  need = the missing part (0 when the kitty is enough)
+-- rows: [cap, kitty, repair_ly, pr_ly, pr_plus2, result, need]
+create or replace function public.kitty_need_json(p_ws text, p_day date, p_days int default 30) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare k jsonb; n int := least(greatest(coalesce(p_days, 30), 1), 120); w1 date := (p_day - interval '1 year')::date; w2 date; bmin date; manual boolean; rows jsonb; mons jsonb;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not (p_ws = any (public.my_workshops())) then raise exception 'This workshop is not yours.'; end if;
+  w2 := w1 + n - 1;
+  k := public.kitty_json(p_ws, p_day);
+  if k->'base' is null or k->>'base' is null then raise exception 'The Admin must first set the start figures of the kitty (see Start figures).'; end if;
+  select min(day) into bmin from public.kitty_base where workshop = p_ws;
+  manual := (bmin is null or w1 < bmin);
+  with caps as (select unnest(array[10, 16, 25, 63, 100, 160, 250, 400, 630]) cap),
+  kit as (select (e->>0)::int cap, (e->>7)::int net from jsonb_array_elements(k->'rows') e),
+  pr as (select capacity cap, count(*) n from public.data where not dup and workshop = p_ws and pr_date between w1 and w2 group by 1),
+  own as (select cap, sum(repair) n from public.kitty_day where workshop = p_ws and day between w1 and w2 group by 1),
+  man as (select l.cap, sum(l.repair::numeric * (least(w2, (l.month + interval '1 month - 1 day')::date) - greatest(w1, l.month) + 1) / extract(day from (l.month + interval '1 month - 1 day'))) n
+            from public.kitty_ly l where l.workshop = p_ws and l.month <= w2 and (l.month + interval '1 month - 1 day')::date >= w1 group by 1),
+  x as (select caps.cap, coalesce(kit.net, 0) kitty, round(case when manual then coalesce(man.n, 0) else coalesce(own.n, 0) end)::int rep, coalesce(pr.n, 0)::int prn,
+               ceil(coalesce(pr.n, 0) * 1.02)::int pr2
+          from caps left join kit using (cap) left join pr using (cap) left join own using (cap) left join man using (cap))
+  select jsonb_agg(jsonb_build_array(cap, kitty, rep, prn, pr2, kitty + rep - pr2, greatest(0, pr2 - kitty - rep)) order by cap) into rows from x;
+  select coalesce(jsonb_agg(m order by m), '[]') into mons from (select distinct date_trunc('month', g)::date m from generate_series(w1, w2, interval '1 day') g) q;
+  return jsonb_build_object('rows', rows, 'w1', w1, 'w2', w2, 'days', n, 'manual', manual, 'months', mons, 'edit', public.mr_edit_ok(p_ws));
+end $$;
+
+-- 4) KITTY COMPARE : net kitty of the day, capacity wise, one column per workshop of the caller --------------------
+-- ws: [names]   rows: [cap, n1, n2, ...]   nobase: workshops whose kitty is not started on that day
+create or replace function public.kitty_cmp_json(p_day date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare w text; names jsonb := '[]'; nob jsonb := '[]'; vals jsonb := '{}'; k jsonb; e jsonb; res jsonb := '[]'; cp int;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  for w in select unnest(public.my_workshops()) order by 1 loop
+    names := names || to_jsonb(w);
+    k := public.kitty_json(w, p_day);
+    if k->>'base' is null then nob := nob || to_jsonb(w);
+    else for e in select * from jsonb_array_elements(k->'rows') loop vals := jsonb_set(vals, array[w || '|' || (e->>0)], to_jsonb((e->>7)::int), true); end loop;
+    end if;
+  end loop;
+  foreach cp in array array[10, 16, 25, 63, 100, 160, 250, 400, 630] loop
+    res := res || jsonb_build_array(jsonb_build_array(cp) || coalesce((select jsonb_agg(coalesce(vals->(n || '|' || cp), 'null'::jsonb) order by ord) from jsonb_array_elements_text(names) with ordinality t(n, ord)), '[]'));
+  end loop;
+  return jsonb_build_object('ws', names, 'rows', res, 'nobase', nob);
+end $$;
+
+grant execute on function public.kitty_ly_json(text, date), public.kitty_ly_set(text, date, jsonb), public.kitty_need_json(text, date, int), public.kitty_cmp_json(date) to authenticated;
+-- STEP 42 : M&R part 3  (run in the TEST project AFTER step 41)
+-- "Next month need" now sends only the NEED per capacity (all the calculation stays here in the database):
+--   need = PR of last year's same days (+2%, rounded up)  -  (kitty of the viewed day + last year's repair of those days), never below 0
+-- rows: [cap, need]     ly_any = true when last year's repair of the window has been filled (own daily figures or month totals)
+create or replace function public.kitty_need_json(p_ws text, p_day date, p_days int default 30) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare k jsonb; n int := least(greatest(coalesce(p_days, 30), 1), 120); w1 date := (p_day - interval '1 year')::date; w2 date; bmin date; manual boolean; rows jsonb; any_rep boolean;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not (p_ws = any (public.my_workshops())) then raise exception 'This workshop is not yours.'; end if;
+  w2 := w1 + n - 1;
+  k := public.kitty_json(p_ws, p_day);
+  if k->>'base' is null then raise exception 'The Admin must first set the start figures of the kitty (see Start figures).'; end if;
+  select min(day) into bmin from public.kitty_base where workshop = p_ws;
+  manual := (bmin is null or w1 < bmin);
+  with caps as (select unnest(array[10, 16, 25, 63, 100, 160, 250, 400, 630]) cap),
+  kit as (select (e->>0)::int cap, (e->>7)::int net from jsonb_array_elements(k->'rows') e),
+  pr as (select capacity cap, count(*) n from public.data where not dup and workshop = p_ws and pr_date between w1 and w2 group by 1),
+  own as (select cap, sum(repair) n from public.kitty_day where workshop = p_ws and day between w1 and w2 group by 1),
+  man as (select l.cap, sum(l.repair::numeric * (least(w2, (l.month + interval '1 month - 1 day')::date) - greatest(w1, l.month) + 1) / extract(day from (l.month + interval '1 month - 1 day'))) n
+            from public.kitty_ly l where l.workshop = p_ws and l.month <= w2 and (l.month + interval '1 month - 1 day')::date >= w1 group by 1),
+  x as (select caps.cap, coalesce(kit.net, 0) kitty, round(case when manual then coalesce(man.n, 0) else coalesce(own.n, 0) end)::int rep, ceil(coalesce(pr.n, 0) * 1.02)::int pr2
+          from caps left join kit using (cap) left join pr using (cap) left join own using (cap) left join man using (cap))
+  select jsonb_agg(jsonb_build_array(cap, greatest(0, pr2 - kitty - rep)) order by cap), coalesce(bool_or(rep > 0), false) into rows, any_rep from x;
+  return jsonb_build_object('rows', rows, 'w1', w1, 'w2', w2, 'days', n, 'manual', manual, 'ly_any', any_rep);
+end $$;
+-- STEP 43 : M&R part 4  (run in the TEST project AFTER step 42)
+-- "Next month need" again shows the full calculation (kitty, last year repair, last year PR, PR + x%, kitty after, need).
+-- PR of last year is made x% more: x is chosen on the screen, 0 to 5 (default 5), rounded up.
+-- rows: [cap, kitty, repair_ly, pr_ly, pr_plus, result, need]
+drop function if exists public.kitty_need_json(text, date, int);
+create or replace function public.kitty_need_json(p_ws text, p_day date, p_days int default 30, p_pct numeric default 5) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare k jsonb; n int := least(greatest(coalesce(p_days, 30), 1), 120); pc numeric := least(greatest(coalesce(p_pct, 5), 0), 5); w1 date := (p_day - interval '1 year')::date; w2 date; bmin date; manual boolean; rows jsonb; any_rep boolean;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not (p_ws = any (public.my_workshops())) then raise exception 'This workshop is not yours.'; end if;
+  w2 := w1 + n - 1;
+  k := public.kitty_json(p_ws, p_day);
+  if k->>'base' is null then raise exception 'The Admin must first set the start figures of the kitty (see Start figures).'; end if;
+  select min(day) into bmin from public.kitty_base where workshop = p_ws;
+  manual := (bmin is null or w1 < bmin);
+  with caps as (select unnest(array[10, 16, 25, 63, 100, 160, 250, 400, 630]) cap),
+  kit as (select (e->>0)::int cap, (e->>7)::int net from jsonb_array_elements(k->'rows') e),
+  pr as (select capacity cap, count(*) n from public.data where not dup and workshop = p_ws and pr_date between w1 and w2 group by 1),
+  own as (select cap, sum(repair) n from public.kitty_day where workshop = p_ws and day between w1 and w2 group by 1),
+  man as (select l.cap, sum(l.repair::numeric * (least(w2, (l.month + interval '1 month - 1 day')::date) - greatest(w1, l.month) + 1) / extract(day from (l.month + interval '1 month - 1 day'))) n
+            from public.kitty_ly l where l.workshop = p_ws and l.month <= w2 and (l.month + interval '1 month - 1 day')::date >= w1 group by 1),
+  x as (select caps.cap, coalesce(kit.net, 0) kitty, round(case when manual then coalesce(man.n, 0) else coalesce(own.n, 0) end)::int rep, coalesce(pr.n, 0)::int prn,
+               ceil(coalesce(pr.n, 0) * (1 + pc / 100))::int pr2
+          from caps left join kit using (cap) left join pr using (cap) left join own using (cap) left join man using (cap))
+  select jsonb_agg(jsonb_build_array(cap, kitty, rep, prn, pr2, kitty + rep - pr2, greatest(0, pr2 - kitty - rep)) order by cap), coalesce(bool_or(rep > 0), false) into rows, any_rep from x;
+  return jsonb_build_object('rows', rows, 'w1', w1, 'w2', w2, 'days', n, 'pct', pc, 'manual', manual, 'ly_any', any_rep);
+end $$;
+grant execute on function public.kitty_need_json(text, date, int, numeric) to authenticated;
+-- STEP 44 : M&R "REPAIR" tab  (REPAIR / ASSEMBLY / OVEN, firm-wise and capacity-wise, typed by the M&R user)  -- TEST project.
+-- Run after step 40..43.  One row = workshop + date + block + firm + capacity -> qty.  Nothing existing is changed.
+create table if not exists public.rr_entry (
+  workshop text not null, day date not null, block text not null check (block in ('REPAIR','ASSEMBLY','OVEN')),
+  firm text not null, cap text not null check (cap in ('10','16','25','63','100','160','250AL','250CU','400','630','1000')),
+  qty int not null default 0 check (qty >= 0 and qty <= 100000),
+  by_login text, at timestamptz not null default now(),
+  primary key (workshop, day, block, firm, cap)
+);
+alter table public.rr_entry enable row level security;
+revoke all on public.rr_entry from public, anon, authenticated;
+
+-- read one day:  rows [block, firm, cap, qty];  firms = firm names of the latest earlier day (to pre-fill an empty day)
+create or replace function public.rr_json(p_ws text, p_day date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare r jsonb; pd date;
+begin
+  if not public.mr_ok() or not (p_ws = any (public.my_workshops())) then raise exception 'You cannot see this workshop.'; end if;
+  select max(day) into pd from public.rr_entry where workshop = p_ws and day < p_day;
+  select jsonb_build_object(
+    'rows', coalesce((select jsonb_agg(jsonb_build_array(block, firm, cap, qty) order by block, firm, cap) from public.rr_entry where workshop = p_ws and day = p_day), '[]'::jsonb),
+    'firms', coalesce((select jsonb_agg(jsonb_build_array(block, firm) order by block, firm) from (select distinct block, firm from public.rr_entry where workshop = p_ws and day = pd) f), '[]'::jsonb),
+    'edit', public.mr_edit_ok(p_ws)) into r;
+  return r;
+end $$;
+
+-- save one day (replaces that day): p_rows = [{block, firm, cap, qty}, ...]
+create or replace function public.rr_save(p_ws text, p_day date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); n int := 0; f text;
+begin
+  if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the figures of this workshop.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  delete from public.rr_entry where workshop = p_ws and day = p_day;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    f := btrim(coalesce(e->>'firm', ''));
+    if f = '' then continue; end if;
+    if length(f) > 60 then raise exception 'Firm name is too long.'; end if;
+    if coalesce((e->>'qty')::int, 0) < 0 or coalesce((e->>'qty')::int, 0) > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.rr_entry(workshop, day, block, firm, cap, qty, by_login, at)
+      values (p_ws, p_day, e->>'block', f, e->>'cap', coalesce((e->>'qty')::int, 0), c.login_id, now())
+      on conflict (workshop, day, block, firm, cap) do update set qty = excluded.qty, by_login = excluded.by_login, at = now();
+    n := n + 1;
+  end loop;
+  return 'saved ' || n;
+end $$;
+revoke all on function public.rr_json(text, date), public.rr_save(text, date, jsonb) from public, anon;
+grant execute on function public.rr_json(text, date), public.rr_save(text, date, jsonb) to authenticated;
+notify pgrst, 'reload schema';
+-- STEP 45 : M&R "CHAMBER ASSEMBLY" report  -- TEST project.  Run after steps 40..44.
+-- One report for a date, all your workshops x capacity (10,16,25,63,100,160,250,400,630,1000):
+--   UNREPAIRED   = Kitty-tab unrepaired + the repairs the Kitty already deducted (a repaired T/F comes out of the OVEN, not out of unrepaired) - ASSEMBLY entries
+--   AVAILABILITY = Kitty-tab net kitty
+--   ASSEMBLY     = start figure + ASSEMBLY entries - OVEN entries
+--   OVEN         = start figure + OVEN entries - the daily REPAIR of the Kitty tab (a repaired transformer leaves the oven)
+--   Total including Oven & Assembly = availability + assembly + oven
+-- The start figures (assembly, oven) are typed ONCE by the Admin and are the figures in the MORNING of the start date (entries of the start date itself are counted).
+-- The start figures (assembly, oven) are typed ONCE by the Admin.  The Repair tab's 250(AL) and 250(CU) are added together as 250.
+create table if not exists public.ch_base (
+  workshop text not null, day date not null, cap int not null check (cap in (10,16,25,63,100,160,250,400,630,1000)),
+  assembly int not null default 0 check (assembly >= 0), oven int not null default 0 check (oven >= 0),
+  by_login text, at timestamptz not null default now(),
+  primary key (workshop, day, cap)
+);
+alter table public.ch_base enable row level security;
+revoke all on public.ch_base from public, anon, authenticated;
+
+create or replace function public.ch_report_json(p_day date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare w text; k jsonb; bd date; out jsonb := '[]'; rj jsonb; nob text[] := '{}'; nok text[] := '{}';
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  for w in select unnest(public.my_workshops()) loop
+    k := public.kitty_json(w, p_day);
+    if (k->>'base') is null then nok := nok || w; end if;
+    select max(day) into bd from public.ch_base where workshop = w and day <= p_day;
+    if bd is null then nob := nob || w; end if;
+    with caps as (select unnest(array[10,16,25,63,100,160,250,400,630,1000]) cap),
+    kr as (select (e->>0)::int cap, (e->>2)::int unrep, (e->>7)::int net from jsonb_array_elements(coalesce(k->'rows', '[]'::jsonb)) e),
+    bs as (select cap, assembly, oven from public.ch_base where workshop = w and day = bd),
+    kp as (select cap, sum(repair)::int q from public.kitty_day where workshop = w and day < p_day and day >= coalesce((k->>'base')::date, p_day) group by cap),
+    ko as (select cap, sum(repair)::int q from public.kitty_day where workshop = w and day <= p_day and (bd is null or day >= bd) group by cap),
+    en as (select case when cap in ('250AL','250CU') then 250 else cap::int end cap, block, sum(qty)::int q
+             from public.rr_entry where workshop = w and day <= p_day and (bd is null or day >= bd) and block in ('ASSEMBLY','OVEN') group by 1, 2)
+    select jsonb_agg(jsonb_build_array(w, caps.cap, coalesce(kr.unrep, 0) + coalesce(kp.q, 0) - coalesce(a.q, 0), coalesce(kr.net, 0),
+                                        coalesce(bs.assembly, 0) + coalesce(a.q, 0) - coalesce(o.q, 0), coalesce(bs.oven, 0) + coalesce(o.q, 0) - coalesce(ko.q, 0)) order by caps.cap)
+      into rj
+      from caps left join kr on kr.cap = caps.cap left join bs on bs.cap = caps.cap left join kp on kp.cap = caps.cap left join ko on ko.cap = caps.cap
+                left join en a on a.cap = caps.cap and a.block = 'ASSEMBLY' left join en o on o.cap = caps.cap and o.block = 'OVEN';
+    out := out || coalesce(rj, '[]'::jsonb);
+  end loop;
+  return jsonb_build_object('rows', out, 'nobase', to_jsonb(nob), 'nokitty', to_jsonb(nok));
+end $$;
+
+-- the start figures in force on a date: {day, rows [[cap, assembly, oven]]}
+create or replace function public.ch_base_json(p_ws text, p_day date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare bd date;
+begin
+  if not public.mr_ok() or not (p_ws = any (public.my_workshops())) then raise exception 'You cannot see this workshop.'; end if;
+  select max(day) into bd from public.ch_base where workshop = p_ws and day <= p_day;
+  return jsonb_build_object('day', bd, 'rows', coalesce((select jsonb_agg(jsonb_build_array(cap, assembly, oven) order by cap) from public.ch_base where workshop = p_ws and day = bd), '[]'::jsonb));
+end $$;
+
+-- the Admin types the start figures once: p_rows = [{cap, assembly, oven}, ...]
+create or replace function public.ch_base_set(p_ws text, p_day date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); n int := 0;
+begin
+  if not public.mr_admin_ok(p_ws) then raise exception 'Only the Admin of this workshop can set the start figures.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  delete from public.ch_base where workshop = p_ws and day = p_day;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    if (e->>'cap')::int not in (10,16,25,63,100,160,250,400,630,1000) then continue; end if;
+    if coalesce((e->>'assembly')::int, 0) < 0 or coalesce((e->>'oven')::int, 0) < 0 or coalesce((e->>'assembly')::int, 0) > 100000 or coalesce((e->>'oven')::int, 0) > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.ch_base(workshop, day, cap, assembly, oven, by_login, at) values (p_ws, p_day, (e->>'cap')::int, coalesce((e->>'assembly')::int, 0), coalesce((e->>'oven')::int, 0), c.login_id, now());
+    n := n + 1;
+  end loop;
+  return 'saved ' || n;
+end $$;
+revoke all on function public.ch_report_json(date), public.ch_base_json(text, date), public.ch_base_set(text, date, jsonb) from public, anon;
+grant execute on function public.ch_report_json(date), public.ch_base_json(text, date), public.ch_base_set(text, date, jsonb) to authenticated;
+notify pgrst, 'reload schema';
+-- STEP 46 : date check allows 'today' also for users whose day has already turned (India is ahead of the database clock, UTC).
+-- Re-creates 4 functions only (no data is touched).  Safe to run again.
+
+create or replace function public.kitty_save(p_ws text, p_day date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); bd date; n int := 0;
+begin
+  if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the kitty of this workshop.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  select max(day) into bd from public.kitty_base where workshop = p_ws and day <= p_day;
+  if bd is null then raise exception 'The Admin must first set the opening kitty and the unrepaired T/F (start date).'; end if;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    if (e->>'cap')::int not in (10, 16, 25, 63, 100, 160, 250, 400, 630) then continue; end if;
+    if coalesce((e->>'repair')::int, 0) < 0 or coalesce((e->>'to_other')::int, 0) < 0 or coalesce((e->>'from_other')::int, 0) < 0
+       or coalesce((e->>'repair')::int, 0) > 100000 or coalesce((e->>'to_other')::int, 0) > 100000 or coalesce((e->>'from_other')::int, 0) > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.kitty_day(workshop, day, cap, repair, to_other, from_other, by_login, at)
+      values (p_ws, p_day, (e->>'cap')::int, coalesce((e->>'repair')::int, 0), coalesce((e->>'to_other')::int, 0), coalesce((e->>'from_other')::int, 0), c.login_id, now())
+      on conflict (workshop, day, cap) do update set repair = excluded.repair, to_other = excluded.to_other, from_other = excluded.from_other, by_login = excluded.by_login, at = now();
+    n := n + 1;
+  end loop;
+  return 'saved ' || n;
+end $$;
+
+create or replace function public.kitty_base_set(p_ws text, p_day date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); n int := 0;
+begin
+  if not public.mr_admin_ok(p_ws) then raise exception 'Only the Admin of this workshop can set the start figures.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    if (e->>'cap')::int not in (10, 16, 25, 63, 100, 160, 250, 400, 630) then continue; end if;
+    if coalesce((e->>'opening')::int, 0) < 0 or coalesce((e->>'unrep')::int, 0) < 0 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.kitty_base(workshop, day, cap, opening, unrep, by_login, at)
+      values (p_ws, p_day, (e->>'cap')::int, coalesce((e->>'opening')::int, 0), coalesce((e->>'unrep')::int, 0), c.login_id, now())
+      on conflict (workshop, day, cap) do update set opening = excluded.opening, unrep = excluded.unrep, by_login = excluded.by_login, at = now();
+    n := n + 1;
+  end loop;
+  return 'saved ' || n;
+end $$;
+
+create or replace function public.rr_save(p_ws text, p_day date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); n int := 0; f text;
+begin
+  if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the figures of this workshop.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  delete from public.rr_entry where workshop = p_ws and day = p_day;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    f := btrim(coalesce(e->>'firm', ''));
+    if f = '' then continue; end if;
+    if length(f) > 60 then raise exception 'Firm name is too long.'; end if;
+    if coalesce((e->>'qty')::int, 0) < 0 or coalesce((e->>'qty')::int, 0) > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.rr_entry(workshop, day, block, firm, cap, qty, by_login, at)
+      values (p_ws, p_day, e->>'block', f, e->>'cap', coalesce((e->>'qty')::int, 0), c.login_id, now())
+      on conflict (workshop, day, block, firm, cap) do update set qty = excluded.qty, by_login = excluded.by_login, at = now();
+    n := n + 1;
+  end loop;
+  return 'saved ' || n;
+end $$;
+
+create or replace function public.ch_base_set(p_ws text, p_day date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); n int := 0;
+begin
+  if not public.mr_admin_ok(p_ws) then raise exception 'Only the Admin of this workshop can set the start figures.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  delete from public.ch_base where workshop = p_ws and day = p_day;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    if (e->>'cap')::int not in (10,16,25,63,100,160,250,400,630,1000) then continue; end if;
+    if coalesce((e->>'assembly')::int, 0) < 0 or coalesce((e->>'oven')::int, 0) < 0 or coalesce((e->>'assembly')::int, 0) > 100000 or coalesce((e->>'oven')::int, 0) > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.ch_base(workshop, day, cap, assembly, oven, by_login, at) values (p_ws, p_day, (e->>'cap')::int, coalesce((e->>'assembly')::int, 0), coalesce((e->>'oven')::int, 0), c.login_id, now());
+    n := n + 1;
+  end loop;
+  return 'saved ' || n;
+end $$;
+
+notify pgrst, 'reload schema';
+
+-- STEP 47 : SIR (Site Inspection Report) - link the Google Sheet where the SIR form saves its data.
+-- Run after the earlier steps.  The Admin of a division stores ONE link (a Google Sheet "Publish to web" CSV link) and the heading of the column
+-- that holds the Indent / PR number.  The app reads that sheet in the browser and counts a 100 KVA & above PR as "SIR done" when its number is found.
+-- Nothing existing is changed.
+create table if not exists public.sir_cfg (
+  org_division text primary key,
+  url text not null check (url ~ '^https://docs\.google\.com/spreadsheets/' and length(url) <= 700),
+  col text not null default 'INDENT NO' check (length(btrim(col)) between 1 and 60),
+  by_login text, at timestamptz not null default now()
+);
+alter table public.sir_cfg enable row level security;
+revoke all on public.sir_cfg from public, anon, authenticated;
+
+-- the link(s) of the divisions the caller works in: [{division, url, col}]
+create or replace function public.sir_cfg_get() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object('division', c.org_division, 'url', c.url, 'col', c.col)), '[]'::jsonb)
+    from public.sir_cfg c
+   where c.org_division in (select w.org_division from public.workshops w where w.name = any (coalesce(public.my_workshops(), '{}')))
+$$;
+
+-- the Admin saves / removes the link of his division (empty url = remove)
+create or replace function public.sir_cfg_set(p_url text, p_col text) returns text
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); u text := btrim(coalesce(p_url, '')); k text := btrim(coalesce(p_col, ''));
+begin
+  if c.user_id is null or c.role <> 'admin' or not c.active or c.org_division is null then raise exception 'Only the Admin of the division can link the SIR sheet.'; end if;
+  if u = '' then delete from public.sir_cfg where org_division = c.org_division; return 'removed'; end if;
+  if u !~ '^https://docs\.google\.com/spreadsheets/' then raise exception 'This is not a Google Sheet link. Use the link you get from File > Share > Publish to web.'; end if;
+  if length(u) > 700 then raise exception 'The link is too long.'; end if;
+  if k = '' then k := 'INDENT NO'; end if;
+  if length(k) > 60 then raise exception 'The column heading is too long.'; end if;
+  insert into public.sir_cfg(org_division, url, col, by_login, at) values (c.org_division, u, k, c.login_id, now())
+    on conflict (org_division) do update set url = excluded.url, col = excluded.col, by_login = excluded.by_login, at = now();
+  return 'saved';
+end $$;
+
+-- the 100 KVA & above PRs of the caller's workshops raised between two dates: [workshop, division, capacity, pr_no, pr_date]
+-- (wrong / duplicate PRs and rows without a PR date are not counted, like the Summary)
+create or replace function public.sir_prs_json(p_from date, p_to date) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_array(d.workshop, w.org_division, d.capacity, d.pr_no, to_char(d.pr_date, 'YYYY-MM-DD')) order by d.pr_date, d.pr_no), '[]'::jsonb)
+    from (select * from public.data
+           where workshop = any (coalesce(public.my_workshops(), '{}')) and capacity >= 100 and pr_date between p_from and p_to
+             and not public.is_dup(firm) limit 20000) d
+    join public.workshops w on w.name = d.workshop
+$$;
+revoke all on function public.sir_cfg_get(), public.sir_cfg_set(text, text), public.sir_prs_json(date, date) from public, anon;
+grant execute on function public.sir_cfg_get(), public.sir_cfg_set(text, text), public.sir_prs_json(date, date) to authenticated;
+notify pgrst, 'reload schema';
+
+-- STEP 48 : (a) a division name with two spaces inside ("EWD  AZAMGARH") is the SAME division as "EWD AZAMGARH" - everywhere
+--           (b) the Pending SIR numbers open the list of those PRs
+-- Run after step 47.  Safe to run again.
+
+-- (a) one spelling of every division name: spaces trimmed and a run of spaces / tabs becomes a single space
+create or replace function public.tf_sp(t text) returns text language sql immutable as
+  $$ select nullif(btrim(regexp_replace(coalesce(t, ''), '\s+', ' ', 'g')), '') $$;
+
+create or replace function public.tf_trg_div_org() returns trigger language plpgsql as
+$$ begin new.org_division := public.tf_sp(new.org_division); return new; end $$;
+create or replace function public.tf_trg_div_data() returns trigger language plpgsql as
+$$ begin if new.division is not null then new.division := coalesce(public.tf_sp(new.division), ''); end if; return new; end $$;
+create or replace function public.tf_trg_div_map() returns trigger language plpgsql as
+$$ begin new.division := coalesce(public.tf_sp(new.division), new.division); new.circle := coalesce(public.tf_sp(new.circle), new.circle); return new; end $$;
+
+drop trigger if exists tf_div_ws on public.workshops;
+create trigger tf_div_ws before insert or update of org_division on public.workshops for each row execute function public.tf_trg_div_org();
+drop trigger if exists tf_div_pr on public.profiles;
+create trigger tf_div_pr before insert or update of org_division on public.profiles for each row execute function public.tf_trg_div_org();
+drop trigger if exists tf_div_data on public.data;
+create trigger tf_div_data before insert or update of division on public.data for each row execute function public.tf_trg_div_data();
+drop trigger if exists tf_div_map on public.divmap;
+create trigger tf_div_map before insert or update of division, circle on public.divmap for each row execute function public.tf_trg_div_map();
+
+-- clean what is already there (only rows that really change)
+update public.workshops set org_division = public.tf_sp(org_division) where org_division is distinct from public.tf_sp(org_division);
+update public.profiles  set org_division = public.tf_sp(org_division) where org_division is distinct from public.tf_sp(org_division);
+update public.divmap    set division = public.tf_sp(division), circle = public.tf_sp(circle)
+ where division is distinct from public.tf_sp(division) or circle is distinct from public.tf_sp(circle);
+update public.data      set division = coalesce(public.tf_sp(division), '')
+ where division is not null and division is distinct from coalesce(public.tf_sp(division), '');
+-- (the SIR link and the installed-count tables use the division name as a key: merge the ones that were written with extra spaces)
+update public.installed i set org_division = public.tf_sp(i.org_division)
+ where i.org_division is distinct from public.tf_sp(i.org_division)
+   and not exists (select 1 from public.installed j where j.org_division = public.tf_sp(i.org_division) and j.div_key = i.div_key and j.yr = i.yr);
+delete from public.installed where org_division is distinct from public.tf_sp(org_division);
+update public.sir_cfg s set org_division = public.tf_sp(s.org_division)
+ where s.org_division is distinct from public.tf_sp(s.org_division) and not exists (select 1 from public.sir_cfg x where x.org_division = public.tf_sp(s.org_division));
+delete from public.sir_cfg where org_division is distinct from public.tf_sp(org_division);
+
+-- (b) the PRs behind a SIR PENDING number: same row shape as the other lists
+create or replace function public.sir_rows_json(p_ws text, p_caps int[], p_prs text[], p_limit int default 300, p_offset int default 0)
+returns jsonb language sql stable security invoker set search_path = public as
+$$
+  with h as (
+    select d.* from public.data d
+     where (p_ws is null or d.workshop = p_ws) and (p_caps is null or coalesce(d.capacity, 0) = any (p_caps))
+       and d.pr_no = any (coalesce(p_prs, '{}')) and not public.is_dup(d.firm)
+  ), top as (
+    select * from h order by coalesce(pr_date, date '1900-01-01'), pr_no collate "C" limit least(greatest(p_limit, 1), 2000) offset greatest(p_offset, 0)
+  )
+  select jsonb_build_object('total', (select count(*) from h),
+    'rows', coalesce((select jsonb_agg(public.row20(t) || to_jsonb((select case when public.can_edit_rows() then 1 else 0 end)) order by coalesce(t.pr_date, date '1900-01-01'), t.pr_no collate "C") from top t), '[]'::jsonb))
+$$;
+revoke all on function public.sir_rows_json(text, int[], text[], int, int) from public, anon;
+grant execute on function public.sir_rows_json(text, int[], text[], int, int) to authenticated;
+notify pgrst, 'reload schema';
+
+-- STEP 49 : (a) the Kitty REPAIR column comes from the Repair tab, day by day   (b) M&R "SCRAP" tab
+-- Run after steps 40..48.  Safe to run again.
+
+-- (a) KITTY REPAIR = the REPAIR block of the Repair tab (all firms added), per capacity; 250(AL) + 250(CU) = 250 ----------
+create or replace function public.rr_cap_n(p_ws text, p_day date, p_cap int) returns int
+language sql stable security definer set search_path = public as $$
+  select coalesce(sum(qty), 0)::int from public.rr_entry
+   where workshop = p_ws and day = p_day and block = 'REPAIR' and (cap = p_cap::text or (p_cap = 250 and cap in ('250AL', '250CU')))
+$$;
+revoke all on function public.rr_cap_n(text, date, int) from public, anon, authenticated;
+
+create or replace function public.kitty_sync_repair(p_ws text, p_day date) returns void
+language sql security definer set search_path = public as $$
+  insert into public.kitty_day(workshop, day, cap, repair, by_login, at)
+  select p_ws, p_day, c, public.rr_cap_n(p_ws, p_day, c), 'repair-tab', now() from unnest(array[10, 16, 25, 63, 100, 160, 250, 400, 630]) c
+  on conflict (workshop, day, cap) do update set repair = excluded.repair
+$$;
+revoke all on function public.kitty_sync_repair(text, date) from public, anon, authenticated;
+
+-- the kitty save no longer takes the repair figure (it is read from the Repair tab)
+create or replace function public.kitty_save(p_ws text, p_day date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); bd date; n int := 0;
+begin
+  if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the kitty of this workshop.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  select max(day) into bd from public.kitty_base where workshop = p_ws and day <= p_day;
+  if bd is null then raise exception 'The Admin must first set the opening kitty and the unrepaired T/F (start date).'; end if;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    if (e->>'cap')::int not in (10, 16, 25, 63, 100, 160, 250, 400, 630) then continue; end if;
+    if coalesce((e->>'to_other')::int, 0) < 0 or coalesce((e->>'from_other')::int, 0) < 0
+       or coalesce((e->>'to_other')::int, 0) > 100000 or coalesce((e->>'from_other')::int, 0) > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.kitty_day(workshop, day, cap, repair, to_other, from_other, by_login, at)
+      values (p_ws, p_day, (e->>'cap')::int, public.rr_cap_n(p_ws, p_day, (e->>'cap')::int), coalesce((e->>'to_other')::int, 0), coalesce((e->>'from_other')::int, 0), c.login_id, now())
+      on conflict (workshop, day, cap) do update set to_other = excluded.to_other, from_other = excluded.from_other, by_login = excluded.by_login, at = now();
+    n := n + 1;
+  end loop;
+  return 'saved ' || n;
+end $$;
+
+-- the Repair tab save also writes the kitty repair of that day
+create or replace function public.rr_save(p_ws text, p_day date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); n int := 0; f text;
+begin
+  if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the figures of this workshop.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  delete from public.rr_entry where workshop = p_ws and day = p_day;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    f := btrim(coalesce(e->>'firm', ''));
+    if f = '' then continue; end if;
+    if length(f) > 60 then raise exception 'Firm name is too long.'; end if;
+    if coalesce((e->>'qty')::int, 0) < 0 or coalesce((e->>'qty')::int, 0) > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.rr_entry(workshop, day, block, firm, cap, qty, by_login, at)
+      values (p_ws, p_day, e->>'block', f, e->>'cap', coalesce((e->>'qty')::int, 0), c.login_id, now())
+      on conflict (workshop, day, block, firm, cap) do update set qty = excluded.qty, by_login = excluded.by_login, at = now();
+    n := n + 1;
+  end loop;
+  perform public.kitty_sync_repair(p_ws, p_day);
+  return 'saved ' || n;
+end $$;
+
+-- days already typed in the Repair tab: copy their repair to the kitty now
+do $$ declare r record; begin
+  for r in select distinct workshop, day from public.rr_entry where block = 'REPAIR' loop perform public.kitty_sync_repair(r.workshop, r.day); end loop;
+end $$;
+
+-- (b) SCRAP ----------------------------------------------------------------------------------------------------------
+-- scrap received (kg) of a day = Repair-tab REPAIR quantity (10..250 aluminium only) x standard qty x recovery %.
+-- opening scrap = the Admin types it once (a start date); after that: opening of a day = remaining of the day before.
+-- remaining = opening + receive - issue for reconditioning - auctioned.
+create table if not exists public.scrap_cfg (id int primary key default 1 check (id = 1), pct numeric not null default 97 check (pct > 0 and pct <= 100));
+insert into public.scrap_cfg(id) values (1) on conflict do nothing;
+create table if not exists public.scrap_std (cap text primary key, qty numeric not null check (qty >= 0 and qty < 100000), ord int not null);
+insert into public.scrap_std(cap, qty, ord) values ('10', 11, 1), ('16', 20, 2), ('25', 25, 3), ('63', 50, 4), ('100', 69, 5), ('160', 90, 6), ('250AL', 115, 7) on conflict do nothing;
+create table if not exists public.scrap_base (workshop text not null, day date not null, opening numeric not null default 0 check (opening >= 0), by_login text, at timestamptz not null default now(), primary key (workshop, day));
+create table if not exists public.scrap_day (workshop text not null, day date not null, issue numeric not null default 0 check (issue >= 0), auction numeric not null default 0 check (auction >= 0), by_login text, at timestamptz not null default now(), primary key (workshop, day));
+alter table public.scrap_cfg enable row level security; alter table public.scrap_std enable row level security;
+alter table public.scrap_base enable row level security; alter table public.scrap_day enable row level security;
+revoke all on public.scrap_cfg, public.scrap_std, public.scrap_base, public.scrap_day from public, anon, authenticated;
+
+create or replace function public.scrap_rcv(p_ws text, p_d1 date, p_d2 date) returns numeric
+language sql stable security definer set search_path = public as $$
+  select coalesce(sum(e.qty * s.qty * (select pct from public.scrap_cfg) / 100), 0)
+    from public.rr_entry e join public.scrap_std s on s.cap = e.cap
+   where e.workshop = p_ws and e.block = 'REPAIR' and e.day between p_d1 and p_d2
+$$;
+revoke all on function public.scrap_rcv(text, date, date) from public, anon, authenticated;
+
+-- one workshop, one day -> {nobase, opening, receive, issue, auction, remaining}
+create or replace function public.scrap_calc(p_ws text, p_day date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare bd date; op numeric := 0; o numeric; rc numeric; i numeric := 0; a numeric := 0;
+begin
+  select max(day) into bd from public.scrap_base where workshop = p_ws and day <= p_day;
+  if bd is not null then select opening into op from public.scrap_base where workshop = p_ws and day = bd; else bd := date '2000-01-01'; end if;
+  o := op + public.scrap_rcv(p_ws, bd, p_day - 1) - coalesce((select sum(issue + auction) from public.scrap_day where workshop = p_ws and day between bd and p_day - 1), 0);
+  rc := public.scrap_rcv(p_ws, p_day, p_day);
+  select coalesce(issue, 0), coalesce(auction, 0) into i, a from public.scrap_day where workshop = p_ws and day = p_day;
+  i := coalesce(i, 0); a := coalesce(a, 0);
+  return jsonb_build_object('nobase', not exists (select 1 from public.scrap_base where workshop = p_ws and day <= p_day),
+    'opening', round(o, 2), 'receive', round(rc, 2), 'issue', round(i, 2), 'auction', round(a, 2), 'remaining', round(o + rc - i - a, 2));
+end $$;
+revoke all on function public.scrap_calc(text, date) from public, anon, authenticated;
+
+-- the SCRAP SUMMARY of a date: rows [workshop, opening, receive, issue, auction, remaining, can_edit, is_admin]
+create or replace function public.scrap_json(p_day date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare w text; k jsonb; rows jsonb := '[]'; nob text[] := '{}';
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  for w in select unnest(public.my_workshops()) order by 1 loop
+    k := public.scrap_calc(w, p_day);
+    if (k->>'nobase')::boolean then nob := nob || w; end if;
+    rows := rows || jsonb_build_array(jsonb_build_array(w, k->'opening', k->'receive', k->'issue', k->'auction', k->'remaining', public.mr_edit_ok(w), public.mr_admin_ok(w)));
+  end loop;
+  return jsonb_build_object('rows', rows, 'nobase', to_jsonb(nob), 'pct', (select pct from public.scrap_cfg));
+end $$;
+
+-- capacity-wise scrap receive of one workshop and day: rows [cap, repaired qty, std qty, kg per T/F, scrap kg]  +  the standard list
+create or replace function public.scrap_cap_json(p_ws text, p_day date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare pct numeric;
+begin
+  if not public.mr_ok() or not (p_ws = any (public.my_workshops())) then raise exception 'You cannot see this workshop.'; end if;
+  select c.pct into pct from public.scrap_cfg c;
+  return jsonb_build_object('pct', pct, 'admin', public.mr_admin_ok(p_ws),
+    'rows', coalesce((select jsonb_agg(jsonb_build_array(s.cap, q.n, s.qty, round(s.qty * pct / 100, 2), round(q.n * s.qty * pct / 100, 2)) order by s.ord)
+      from public.scrap_std s, lateral (select coalesce(sum(e.qty), 0)::int n from public.rr_entry e where e.workshop = p_ws and e.day = p_day and e.block = 'REPAIR' and e.cap = s.cap) q), '[]'::jsonb),
+    'base', (select jsonb_build_object('day', day, 'opening', opening) from public.scrap_base where workshop = p_ws and day <= p_day order by day desc limit 1));
+end $$;
+
+-- the M&R user types the day's "issue for reconditioning" and "scrap auctioned" (kg)
+create or replace function public.scrap_save(p_ws text, p_day date, p_issue numeric, p_auction numeric) returns text
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); k jsonb;
+begin
+  if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the scrap of this workshop.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  if coalesce(p_issue, 0) < 0 or coalesce(p_auction, 0) < 0 or coalesce(p_issue, 0) > 100000000 or coalesce(p_auction, 0) > 100000000 then raise exception 'Numbers must be 0 or more.'; end if;
+  insert into public.scrap_day(workshop, day, issue, auction, by_login, at) values (p_ws, p_day, round(coalesce(p_issue, 0), 2), round(coalesce(p_auction, 0), 2), c.login_id, now())
+    on conflict (workshop, day) do update set issue = excluded.issue, auction = excluded.auction, by_login = excluded.by_login, at = now();
+  k := public.scrap_calc(p_ws, p_day);
+  if (k->>'remaining')::numeric < 0 then raise exception 'Issue + auctioned is more than the scrap available (% kg).', round((k->>'opening')::numeric + (k->>'receive')::numeric, 2); end if;
+  return 'saved';
+end $$;
+
+-- Admin: opening scrap on a start date, standard qty per capacity, recovery %
+create or replace function public.scrap_base_set(p_ws text, p_day date, p_opening numeric) returns text
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller();
+begin
+  if not public.mr_admin_ok(p_ws) then raise exception 'Only the Admin of this workshop can set the opening scrap.'; end if;
+  if p_day is null or p_day > current_date + 1 then raise exception 'Choose today or an earlier date.'; end if;
+  if coalesce(p_opening, 0) < 0 or coalesce(p_opening, 0) > 100000000 then raise exception 'Numbers must be 0 or more.'; end if;
+  insert into public.scrap_base(workshop, day, opening, by_login, at) values (p_ws, p_day, round(coalesce(p_opening, 0), 2), c.login_id, now())
+    on conflict (workshop, day) do update set opening = excluded.opening, by_login = excluded.by_login, at = now();
+  return 'saved';
+end $$;
+
+create or replace function public.scrap_std_set(p_pct numeric, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller();
+begin
+  if c.user_id is null or c.role <> 'admin' or not c.active then raise exception 'Only an Admin can change the standard.'; end if;
+  if p_pct is null or p_pct <= 0 or p_pct > 100 then raise exception 'Recovery %% must be between 1 and 100.'; end if;
+  update public.scrap_cfg set pct = p_pct;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    if coalesce((e->>'qty')::numeric, -1) < 0 or (e->>'qty')::numeric >= 100000 then raise exception 'Standard qty must be 0 or more.'; end if;
+    update public.scrap_std set qty = (e->>'qty')::numeric where cap = e->>'cap';
+  end loop;
+  return 'saved';
+end $$;
+
+revoke all on function public.scrap_json(date), public.scrap_cap_json(text, date), public.scrap_save(text, date, numeric, numeric), public.scrap_base_set(text, date, numeric), public.scrap_std_set(numeric, jsonb) from public, anon;
+grant execute on function public.scrap_json(date), public.scrap_cap_json(text, date), public.scrap_save(text, date, numeric, numeric), public.scrap_base_set(text, date, numeric), public.scrap_std_set(numeric, jsonb) to authenticated;
+notify pgrst, 'reload schema';
+
+-- ================================================================================================================
+-- STEP 80 : (1) Data Sheet shows DTC NO + DTC DATE   (2) Scrap summary from date to date   (3) Kitty gets 1000 KVA
+-- Safe to run again. No data is deleted.
+-- ================================================================================================================
+
+-- (1) DTC no / date of the rows shown in the Data Sheet.  p_keys = [[workshop, pr_no], ...]  ->  rows [workshop, pr_no, id, dtc_no, dtc_date DD.MM.YYYY, can_edit]
+create or replace function public.dtc_map_json(p_keys jsonb) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare mine text[] := public.my_workshops(); ed text[];
+begin
+  if not public.mr_ok() then return jsonb_build_object('ok', false, 'rows', '[]'::jsonb); end if;
+  select coalesce(array_agg(w), '{}') into ed from unnest(mine) w where public.mr_edit_ok(w);
+  return jsonb_build_object('ok', true, 'rows', coalesce((
+    select jsonb_agg(jsonb_build_array(x.workshop, x.pr_no, x.id, coalesce(t.dtc_no, ''), coalesce(to_char(t.dtc_date, 'DD.MM.YYYY'), ''), x.workshop = any (ed)))
+      from jsonb_array_elements(coalesce(p_keys, '[]'::jsonb)) k
+      join public.data x on x.workshop = k->>0 and x.pr_no = k->>1 and x.workshop = any (mine)
+      left join public.dtc t on t.data_id = x.id), '[]'::jsonb));
+end $$;
+
+-- (2) Scrap summary of a period: totals + the dates on which scrap was issued for reconditioning / auctioned
+create or replace function public.scrap_range_json(p_from date, p_to date, p_ws text default null) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare ws text[]; rc numeric := 0; w text;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if p_from is null or p_to is null or p_from > p_to then raise exception 'Choose the From and To dates (From must not be after To).'; end if;
+  if p_to - p_from > 1100 then raise exception 'Choose a period of up to 3 years.'; end if;
+  if coalesce(p_ws, '') <> '' then
+    if not (p_ws = any (public.my_workshops())) then raise exception 'This workshop is not yours.'; end if;
+    ws := array[p_ws];
+  else ws := public.my_workshops(); end if;
+  foreach w in array ws loop rc := rc + public.scrap_rcv(w, p_from, p_to); end loop;
+  return jsonb_build_object('receive', round(rc, 2),
+    'issue', round(coalesce((select sum(issue) from public.scrap_day where workshop = any (ws) and day between p_from and p_to), 0), 2),
+    'auction', round(coalesce((select sum(auction) from public.scrap_day where workshop = any (ws) and day between p_from and p_to), 0), 2),
+    'rows', coalesce((select jsonb_agg(jsonb_build_array(day, workshop, issue, auction) order by day desc, workshop)
+                        from public.scrap_day where workshop = any (ws) and day between p_from and p_to and (issue > 0 or auction > 0)), '[]'::jsonb));
+end $$;
+
+revoke all on function public.dtc_map_json(jsonb), public.scrap_range_json(date, date, text) from public, anon;
+grant execute on function public.dtc_map_json(jsonb), public.scrap_range_json(date, date, text) to authenticated;
+
+-- (3) Kitty: add 1000 KVA to every kitty function (the capacity lists inside the function texts are rewritten)
+do $$
+declare f record; d text; n text;
+begin
+  for f in select p.oid from pg_proc p join pg_namespace s on s.oid = p.pronamespace
+            where s.nspname = 'public' and p.proname in ('kitty_json', 'kitty_save', 'kitty_base_set', 'kitty_ly_json', 'kitty_ly_set', 'kitty_need_json', 'kitty_cmp_json', 'rr_save') loop
+    d := pg_get_functiondef(f.oid);
+    n := replace(replace(d, 'array[10, 16, 25, 63, 100, 160, 250, 400, 630]', 'array[10, 16, 25, 63, 100, 160, 250, 400, 630, 1000]'),
+                            '(10, 16, 25, 63, 100, 160, 250, 400, 630)', '(10, 16, 25, 63, 100, 160, 250, 400, 630, 1000)');
+    if n <> d then execute n; end if;
+  end loop;
+end $$;
+notify pgrst, 'reload schema';
+
+-- ================================================================================================================
+-- STEP 81 : Kitty compared with last year (kitty of the same date last year)
+-- If the app already counted the kitty on that date last year it is used automatically; otherwise it is typed once
+-- (per workshop and date) and saved in kitty_lyk. Safe to run again.
+-- ================================================================================================================
+create table if not exists public.kitty_lyk (
+  workshop text not null, day date not null, cap int not null,
+  qty int not null default 0 check (qty >= 0),
+  by_login text, at timestamptz not null default now(),
+  primary key (workshop, day, cap)
+);
+alter table public.kitty_lyk enable row level security;
+revoke all on public.kitty_lyk from public, anon, authenticated;
+
+create or replace function public.kitty_lyk_json(p_day date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare ly date := (p_day - interval '1 year')::date; w text; a jsonb; b jsonb; auto boolean; rows jsonb; outj jsonb := '[]'::jsonb;
+        caps int[] := array[10, 16, 25, 63, 100, 160, 250, 400, 630, 1000];
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  foreach w in array public.my_workshops() loop
+    a := public.kitty_json(w, p_day);
+    if (a->>'base') is null then continue; end if;
+    b := public.kitty_json(w, ly);
+    auto := (b->>'base') is not null;
+    select jsonb_agg(jsonb_build_array(c,
+             coalesce((select (x->>7)::int from jsonb_array_elements(a->'rows') x where (x->>0)::int = c), 0),
+             case when auto then coalesce((select (x->>7)::int from jsonb_array_elements(b->'rows') x where (x->>0)::int = c), 0)
+                  else coalesce((select k.qty from public.kitty_lyk k where k.workshop = w and k.day = ly and k.cap = c), 0) end) order by c)
+      into rows from unnest(caps) c;
+    outj := outj || jsonb_build_array(jsonb_build_object('ws', w, 'auto', auto, 'edit', public.mr_edit_ok(w), 'rows', rows));
+  end loop;
+  return jsonb_build_object('ly', ly, 'ws', outj);
+end $$;
+
+create or replace function public.kitty_lyk_set(p_ws text, p_day date, p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; c public.profiles := public.tf_caller(); n int := 0;
+begin
+  if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the kitty of this workshop.'; end if;
+  if p_day is null or p_day >= current_date then raise exception 'Choose a day of the past.'; end if;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    if (e->>'cap')::int not in (10, 16, 25, 63, 100, 160, 250, 400, 630, 1000) then continue; end if;
+    if coalesce((e->>'qty')::int, 0) < 0 or coalesce((e->>'qty')::int, 0) > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
+    insert into public.kitty_lyk(workshop, day, cap, qty, by_login, at) values (p_ws, p_day, (e->>'cap')::int, coalesce((e->>'qty')::int, 0), c.login_id, now())
+      on conflict (workshop, day, cap) do update set qty = excluded.qty, by_login = excluded.by_login, at = now();
+    n := n + 1;
+  end loop;
+  return 'saved ' || n;
+end $$;
+
+revoke all on function public.kitty_lyk_json(date), public.kitty_lyk_set(text, date, jsonb) from public, anon;
+grant execute on function public.kitty_lyk_json(date), public.kitty_lyk_set(text, date, jsonb) to authenticated;
+notify pgrst, 'reload schema';
+
+-- ================================================================================================================
+-- STEP 83 : Comparison - day-wise PR and Repair (selected dates against the same dates of last year)
+-- PR = PRs of the Data Sheet by PR date (duplicates not counted, like the Comparison). Repair = the REPAIR block of the Repair tab.
+-- Safe to run again.
+-- ================================================================================================================
+create or replace function public.daywise_json(p_from date, p_to date) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); pf date := (p_from - interval '1 year')::date; pt date := (p_to - interval '1 year')::date; ws text[]; a jsonb; b jsonb;
+begin
+  if c.user_id is null or not c.active or c.role not in ('admin', 'je', 'discom', 'creator') then raise exception 'Not allowed.'; end if;
+  if p_from is null or p_to is null or p_from > p_to then raise exception 'Choose the From and To dates.'; end if;
+  if p_to - p_from > 400 then raise exception 'Choose a period of up to 13 months.'; end if;
+  select coalesce(array_agg(w.name), '{}') into ws from public.workshops w
+   where c.role in ('discom', 'creator') or c.org_division is null or w.org_division = c.org_division;
+  select coalesce(jsonb_agg(jsonb_build_array(q.per, q.wsn, q.dy, q.n)), '[]'::jsonb) into a from (
+    select 'c'::text as per, d.workshop as wsn, d.pr_date as dy, count(*) as n from public.data d
+     where not d.dup and d.workshop = any (ws) and d.pr_date between p_from and p_to group by d.workshop, d.pr_date
+    union all
+    select 'p'::text as per, d.workshop as wsn, d.pr_date as dy, count(*) as n from public.data d
+     where not d.dup and d.workshop = any (ws) and d.pr_date between pf and pt group by d.workshop, d.pr_date) q;
+  select coalesce(jsonb_agg(jsonb_build_array(q.per, q.wsn, q.dy, q.n)), '[]'::jsonb) into b from (
+    select 'c'::text as per, e.workshop as wsn, e.day as dy, sum(e.qty)::int as n from public.rr_entry e
+     where e.block = 'REPAIR' and e.workshop = any (ws) and e.day between p_from and p_to group by e.workshop, e.day
+    union all
+    select 'p'::text as per, e.workshop as wsn, e.day as dy, sum(e.qty)::int as n from public.rr_entry e
+     where e.block = 'REPAIR' and e.workshop = any (ws) and e.day between pf and pt group by e.workshop, e.day) q;
+  return jsonb_build_object('pr', a, 'rp', b);
+end $$;
+revoke all on function public.daywise_json(date, date) from public, anon;
+grant execute on function public.daywise_json(date, date) to authenticated;
+notify pgrst, 'reload schema';

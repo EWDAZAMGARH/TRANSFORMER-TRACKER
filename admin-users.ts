@@ -8,7 +8,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-const TABS = ["sum", "data", "drv", "emg"];
+const TABS = ["sum", "data", "drv", "emg", "mr"];
 
 function tempPass() {
   const a = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789", b = new Uint8Array(6);
