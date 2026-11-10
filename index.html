@@ -2031,7 +2031,25 @@ details.lkd{margin:2px 0 6px}details.lkd>summary{cursor:pointer;list-style:none;
 .otpin{font-size:26px;letter-spacing:8px;text-align:center;width:100%;padding:8px;border:2px solid #cbd5e1;border-radius:10px;font-family:ui-monospace,Menlo,monospace}
 .otps{display:flex;flex-direction:column;gap:10px}.otps .st{display:flex;gap:10px;align-items:flex-start;font-size:14px}.otps .st i{flex:none;width:24px;height:24px;border-radius:50%;background:#1d4ed8;color:#fff;font-style:normal;font-weight:700;text-align:center;line-height:24px}
 #tsout .wrap{max-height:calc(100vh - 230px);overflow:auto;border:1px solid #cfd6f3;border-radius:10px;background:#fff}
-table.tst{border-collapse:separate;border-spacing:0;font-size:12.5px;background:#fff;color:#000;min-width:2300px}
+table.tst{border-collapse:separate;border-spacing:0;font-size:12.5px;background:#fff;color:#000;min-width:1500px}
+#gov .tqf{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}#gov .tqf label{display:block;font-size:12px;font-weight:700;margin-bottom:3px}#gov .tqf input[type=text],#gov .tqf select{width:100%;box-sizing:border-box;min-height:42px;font-size:16px}
+@media (max-width:560px){#gov .tqf{grid-template-columns:1fr}}
+#gov .tqf>div{animation:tqIn .5s cubic-bezier(.2,.8,.2,1) both}
+#gov .tqf>div:nth-child(1){animation-delay:.04s}#gov .tqf>div:nth-child(2){animation-delay:.08s}#gov .tqf>div:nth-child(3){animation-delay:.12s}#gov .tqf>div:nth-child(4){animation-delay:.16s}#gov .tqf>div:nth-child(5){animation-delay:.2s}#gov .tqf>div:nth-child(6){animation-delay:.24s}#gov .tqf>div:nth-child(7){animation-delay:.28s}#gov .tqf>div:nth-child(8){animation-delay:.32s}#gov .tqf>div:nth-child(9){animation-delay:.36s}#gov .tqf>div:nth-child(10){animation-delay:.4s}#gov .tqf>div:nth-child(11){animation-delay:.44s}#gov .tqf>div:nth-child(12){animation-delay:.48s}
+@keyframes tqIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#gov .tqf label{color:#1c3d7a;letter-spacing:.2px}#gov .tqf label i{font-weight:400;color:#7a86a6;font-style:normal}
+#gov .tqf input[type=text],#gov .tqf select{border:1.5px solid #d3dbf2;border-radius:12px;background:#f7f9ff;transition:border-color .2s,box-shadow .2s,background .2s,transform .2s}
+#gov .tqf input[type=text]:focus,#gov .tqf select:focus{outline:0;border-color:#3b5bdb;background:#fff;box-shadow:0 0 0 4px rgba(59,91,219,.16);transform:translateY(-1px)}
+#gov .tqf input.tqa{color:#8e98b3;font-style:italic;filter:blur(.7px);background:linear-gradient(90deg,#eef2ff,#f7f9ff)}
+#gov .tqf input.tqa:focus{filter:none}
+#gov .tqn{font-size:12px;color:#7a86a6;margin-top:10px;animation:tqIn .5s .5s both}
+#gov .tqgo{background:linear-gradient(135deg,#3b5bdb,#6d4de0)!important;border:0;color:#fff;border-radius:14px;font-weight:800;font-size:16px;box-shadow:0 8px 20px rgba(59,91,219,.35);transition:transform .15s,box-shadow .15s;animation:tqIn .5s .52s both}
+#gov .tqgo:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(59,91,219,.45)}#gov .tqgo:active{transform:scale(.97)}
+#gov .box:has(.tqf){border-top:5px solid #3b5bdb;background:linear-gradient(180deg,#eef2ff 0,#fff 90px)}
+#gov .box:has(.tqf) #govmsg .msg{animation:mrPop .4s both}
+table.tst td.jb.d2,.jbk.d2{background:#86efac!important}table.tst td.jb.d3,.jbk.d3{background:#fde047!important}table.tst td.jb.d4,.jbk.d4{background:#fb923c!important}table.tst td.jb.d5,.jbk.d5{background:#ef4444!important;color:#fff}
+.jbk{display:inline-block;padding:0 7px;border-radius:6px;font-weight:700;color:#111;margin-left:3px}.jbk.d5{color:#fff}
+table.tst td.jb.d5 input{color:#fff}
 table.tst th,table.tst td{border-right:1px solid #000;border-bottom:1px solid #000;padding:0;text-align:center;white-space:nowrap;background:#fff}
 table.tst thead th{position:sticky;top:0;z-index:2;background:#e8effc;font-weight:700;font-size:12px;padding:4px 6px;border-top:1px solid #000}
 table.tst thead tr+tr th{top:25px}
@@ -2329,6 +2347,7 @@ nav button#tmr{margin-top:auto}
       <div class="card">
         <div class="bar sbar">
           <div class="ptitle"><b>Testing Register</b><span>test results of the repaired transformers</span></div>
+          <button class="btn" id="tsq" type="button" title="Quick entry - fill one test and submit (easy on a phone)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>Quick entry</button>
           <button class="btn sec" id="tstd" type="button" title="STD - the standard full load loss of every capacity (IS losses)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>STD</button>
           <div><label>Workshop</label><select id="tsw"></select></div>
           <div><label>From (testing date)</label><div class="dt"><input type="text" class="dtx" id="tsf" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="tsf"></span></div></div>
@@ -2391,7 +2410,7 @@ nav button#tmr{margin-top:auto}
 </div></div>
 
 <!-- GRAPH DASHBOARD -->
-<div id="gov" class="ov hide"><div class="gdash">
+<div id="gdov" class="ov hide"><div class="gdash">
   <button class="btn sec gx" id="gclose">Close &#10005;</button>
   <div id="gbody"></div>
 </div></div>
@@ -4194,7 +4213,7 @@ function openDash() {
   if (!validD(f) || !validD(t)) return msg('smsg', 'Enter the From and To dates first.', 'err');
   if (parseD(f) > parseD(t)) return msg('smsg', 'The "From" date cannot be later than the "To" date.', 'err');
   var key = 'dash|' + f + '|' + t, c = cget(key), seq = ++DASHSEQ;
-  $('gov').classList.remove('hide');
+  $('gdov').classList.remove('hide');
   if (c && Date.now() - c.t < TTL) { $('gbody').innerHTML = dashHtml(c.v, f, t); return; }
   $('gbody').innerHTML = '<div class="msg info"><span class="sp" style="border-color:#3b5bdb55;border-top-color:#3b5bdb"></span>Loading...</div>';
   rpc('dashboard_json', { p_from: d2i(f), p_to: d2i(t) }).then(function (r) {
@@ -4202,8 +4221,8 @@ function openDash() {
   }).catch(function (e) { if (seq === DASHSEQ) $('gbody').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; });
 }
 $('sgr').onclick = openDash;
-$('gclose').onclick = function () { $('gov').classList.add('hide'); DASHSEQ++; };
-$('gov').addEventListener('click', function (e) { if (e.target === $('gov')) { $('gov').classList.add('hide'); DASHSEQ++; } });
+$('gclose').onclick = function () { $('gdov').classList.add('hide'); DASHSEQ++; };
+$('gdov').addEventListener('click', function (e) { if (e.target === $('gdov')) { $('gdov').classList.add('hide'); DASHSEQ++; } });
 
 var HS_DESIGNS = [{"n": "Cream Editorial", "no": "01", "top": false, "dark": false, "v": {"bg": "#f7f1e6", "bgimg": "none", "ink": "#2b2118", "sdbg": "#fbf7ef", "sdink": "#2b2118", "nibg": "#ffffff", "niink": "#2b2118", "nirad": "10px", "cdbg": "#fffdf8", "cdbd": "#eadfca", "cdbw": "1px", "cdrad": "14px", "cdsh": "0 6px 18px rgba(80,55,20,.10)", "cdblur": "none", "cdink": "#2b2118", "thbg": "#f1e6d2", "think": "#4a3724", "g1": "#f7d9bf", "g2": "#d6e8d3", "tdink": "#2b2118", "tot": "#efe2c8", "h3": "#9a3412", "hf": "Georgia,\"Times New Roman\",serif", "krad": "14px", "anim": "fade", "k1bg": "#fffdf8", "k1im": "none", "k1ink": "#2b2118", "k1bd": "#eadfca", "k1bw": "1px", "k2bg": "#fffdf8", "k2im": "none", "k2ink": "#15803d", "k2bd": "#eadfca", "k2bw": "1px", "k3bg": "#fffdf8", "k3im": "none", "k3ink": "#1d4ed8", "k3bd": "#eadfca", "k3bw": "1px", "k4bg": "#fffdf8", "k4im": "none", "k4ink": "#c2410c", "k4bd": "#eadfca", "k4bw": "1px", "k5bg": "#fffdf8", "k5im": "none", "k5ink": "#a16207", "k5bd": "#eadfca", "k5bw": "1px", "k6bg": "#fffdf8", "k6im": "none", "k6ink": "#7e22ce", "k6bd": "#eadfca", "k6bw": "1px", "navon": "#c2410c"}}, {"n": "Midnight Glass", "no": "02", "top": false, "dark": true, "v": {"bg": "#070b24", "bgimg": "radial-gradient(900px 500px at 15% 0%,rgba(79,70,229,.35),transparent 60%),radial-gradient(800px 500px at 100% 100%,rgba(236,72,153,.22),transparent 60%)", "ink": "#e8ecff", "sdbg": "rgba(10,14,40,.92)", "sdink": "#e8ecff", "nibg": "rgba(255,255,255,.16)", "niink": "#ffffff", "nirad": "14px", "cdbg": "rgba(255,255,255,.06)", "cdbd": "rgba(255,255,255,.15)", "cdbw": "1px", "cdrad": "16px", "cdsh": "0 8px 24px rgba(0,0,0,.3)", "cdblur": "blur(14px)", "cdink": "#e8ecff", "thbg": "rgba(255,255,255,.09)", "think": "#d3dcff", "g1": "rgba(251,146,60,.28)", "g2": "rgba(52,211,153,.25)", "tdink": "#e8ecff", "tot": "rgba(255,255,255,.15)", "h3": "#a5b4fc", "hf": "inherit", "krad": "16px", "anim": "glow", "k1bg": "rgba(96,165,250,.2)", "k1im": "none", "k1ink": "#bfdbfe", "k1bd": "transparent", "k1bw": "0px", "k2bg": "rgba(52,211,153,.2)", "k2im": "none", "k2ink": "#a7f3d0", "k2bd": "transparent", "k2bw": "0px", "k3bg": "rgba(129,140,248,.22)", "k3im": "none", "k3ink": "#c7d2fe", "k3bd": "transparent", "k3bw": "0px", "k4bg": "rgba(251,146,60,.24)", "k4im": "none", "k4ink": "#fed7aa", "k4bd": "transparent", "k4bw": "0px", "k5bg": "rgba(250,204,21,.2)", "k5im": "none", "k5ink": "#fde68a", "k5bd": "transparent", "k5bw": "0px", "k6bg": "rgba(192,132,252,.24)", "k6im": "none", "k6ink": "#e9d5ff", "k6bd": "transparent", "k6bw": "0px", "navon": "#a5b4fc"}}, {"n": "Mint Fresh", "no": "03", "top": true, "dark": false, "v": {"bg": "#e8f2ec", "bgimg": "none", "ink": "#12332a", "sdbg": "#ffffff", "sdink": "#12332a", "nibg": "#0f3d2e", "niink": "#ffffff", "nirad": "99px", "cdbg": "#ffffff", "cdbd": "#d5e6dc", "cdbw": "1px", "cdrad": "20px", "cdsh": "0 8px 22px rgba(15,61,46,.08)", "cdblur": "none", "cdink": "#12332a", "thbg": "#e3f1e8", "think": "#12503c", "g1": "#ffd9bd", "g2": "#cdeedb", "tdink": "#12332a", "tot": "#d3ead9", "h3": "#0f6b4f", "hf": "inherit", "krad": "20px", "anim": "pop", "k1bg": "#0f3d2e", "k1im": "none", "k1ink": "#ffffff", "k1bd": "transparent", "k1bw": "0px", "k2bg": "#d4f3e2", "k2im": "none", "k2ink": "#0f5a3f", "k2bd": "transparent", "k2bw": "0px", "k3bg": "#e4dcfb", "k3im": "none", "k3ink": "#4c2fa3", "k3bd": "transparent", "k3bw": "0px", "k4bg": "#ffe3cf", "k4im": "none", "k4ink": "#b4470f", "k4bd": "transparent", "k4bw": "0px", "k5bg": "#fff0b8", "k5im": "none", "k5ink": "#8a6100", "k5bd": "transparent", "k5bw": "0px", "k6bg": "#fbd9e7", "k6im": "none", "k6ink": "#a61e5a", "k6bd": "transparent", "k6bw": "0px", "navon": "#0f3d2e"}}, {"n": "Orange & Black", "no": "04", "top": true, "dark": false, "v": {"bg": "#f2efe8", "bgimg": "none", "ink": "#111111", "sdbg": "#111111", "sdink": "#ffffff", "nibg": "#ff5a1f", "niink": "#111111", "nirad": "0px", "cdbg": "#ffffff", "cdbd": "#111111", "cdbw": "2px", "cdrad": "0px", "cdsh": "none", "cdblur": "none", "cdink": "#111111", "thbg": "#111111", "think": "#ffffff", "g1": "#ff5a1f", "g2": "#555555", "tdink": "#111111", "tot": "#ffd9c9", "h3": "#111111", "hf": "\"Courier New\",ui-monospace,monospace", "krad": "0px", "anim": "snap", "k1bg": "#ffffff", "k1im": "none", "k1ink": "#111111", "k1bd": "#111111", "k1bw": "2px", "k2bg": "#ffffff", "k2im": "none", "k2ink": "#111111", "k2bd": "#111111", "k2bw": "2px", "k3bg": "#ffffff", "k3im": "none", "k3ink": "#111111", "k3bd": "#111111", "k3bw": "2px", "k4bg": "#ffffff", "k4im": "none", "k4ink": "#111111", "k4bd": "#111111", "k4bw": "2px", "k5bg": "#ff5a1f", "k5im": "none", "k5ink": "#111111", "k5bd": "#111111", "k5bw": "2px", "k6bg": "#ffffff", "k6im": "none", "k6ink": "#111111", "k6bd": "#111111", "k6bw": "2px", "navon": "#ff5a1f"}}, {"n": "One-Page Aurora", "no": "05", "top": false, "dark": true, "v": {"bg": "#080c26", "bgimg": "radial-gradient(900px 600px at 10% 0%,rgba(45,212,191,.22),transparent 60%),radial-gradient(900px 600px at 90% 100%,rgba(168,85,247,.28),transparent 60%)", "ink": "#e6ebff", "sdbg": "rgba(9,13,38,.95)", "sdink": "#e6ebff", "nibg": "rgba(125,211,252,.22)", "niink": "#e0f7ff", "nirad": "14px", "cdbg": "rgba(255,255,255,.05)", "cdbd": "rgba(255,255,255,.14)", "cdbw": "1px", "cdrad": "18px", "cdsh": "0 10px 30px rgba(0,0,0,.35)", "cdblur": "blur(16px)", "cdink": "#e6ebff", "thbg": "rgba(255,255,255,.08)", "think": "#cfd8ff", "g1": "rgba(251,146,60,.26)", "g2": "rgba(45,212,191,.24)", "tdink": "#e6ebff", "tot": "rgba(255,255,255,.14)", "h3": "#93c5fd", "hf": "inherit", "krad": "18px", "anim": "aurora", "rail": "1", "k1bg": "rgba(96,165,250,.22)", "k1im": "none", "k1ink": "#bfdbfe", "k1bd": "rgba(255,255,255,.14)", "k1bw": "1px", "k2bg": "rgba(45,212,191,.2)", "k2im": "none", "k2ink": "#99f6e4", "k2bd": "rgba(255,255,255,.14)", "k2bw": "1px", "k3bg": "rgba(129,140,248,.22)", "k3im": "none", "k3ink": "#c7d2fe", "k3bd": "rgba(255,255,255,.14)", "k3bw": "1px", "k4bg": "rgba(251,146,60,.22)", "k4im": "none", "k4ink": "#fed7aa", "k4bd": "rgba(255,255,255,.14)", "k4bw": "1px", "k5bg": "rgba(250,204,21,.2)", "k5im": "none", "k5ink": "#fde68a", "k5bd": "rgba(255,255,255,.14)", "k5bw": "1px", "k6bg": "rgba(192,132,252,.24)", "k6im": "none", "k6ink": "#e9d5ff", "k6bd": "rgba(255,255,255,.14)", "k6bw": "1px", "navon": "#7dd3fc"}}];
 
@@ -4986,20 +5005,14 @@ window.addEventListener('resize', function () { setTimeout(sumFit, 80); });
 
 /* ---- Testing Register: Excel of the register (same two-row heading as the Excel sheet) ---- */
 function tsExcel() {
-  var rows = [], mg = [], i, T = 29, H1 = ['S.No.', 'NAME OF WORKSHOP', 'FIRM NAME', 'CAPACITY (IN KVA)', 'JOB NO/UNIQUE NO', 'TESTING DATE', 'TURN RATIO TEST', '', '', 'MEGGER', '', '', 'DVDF', 'HIGH VOLTAGE', 'NO LOAD LOSSES (W)', 'FULL LOAD LOSS', 'IS LOSSES', '% LOSSES', 'AUTO CALCULATING'];
-  var a = [], b = []; for (i = 0; i < T; i++) { a.push({ v: H1[i] || '', s: 5 }); b.push({ v: '', s: 5 }); }
-  a[28] = { v: 'REMARK', s: 5 }; ['R', 'Y', 'B', 'HV/E', 'LV/E', 'HV/LV'].forEach(function (x, j) { b[6 + j] = { v: x, s: 5 }; }); TS_SLAB.forEach(function (x, k) { b[18 + k] = { v: x, s: 5 }; });
-  rows.push(a); rows.push(b); [0, 1, 2, 3, 4, 5, 12, 13, 14, 15, 16, 17, 28].forEach(function (c) { mg.push([0, c, 1, c]); }); mg.push([0, 6, 0, 8]); mg.push([0, 9, 0, 11]); mg.push([0, 18, 0, 27]);
-  var cnt = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], n = 0;
+  var rows = [], i, H = ['S.No.', 'NAME OF WORKSHOP', 'FIRM NAME', 'CAPACITY (IN KVA)', 'JOB NO/UNIQUE NO', 'TESTING DATE', 'TURN RATIO', 'MEGGER', 'DVDF', 'HIGH VOLTAGE', 'NO LOAD LOSSES (W)', 'FULL LOAD LOSS', 'IS LOSSES', '% LOSSES', 'REMARK'];
+  rows.push(H.map(function (x) { return { v: x, s: 5 }; })); var n = 0;
   TS.rows.forEach(function (r) {
-    if (!r.id && !r.dirty) return; n++; var p = tsPct(r), sl = tsSlab(p), sd = tsStd(r.cap), nn = function (v) { return v === '' || v == null || isNaN(+v) ? (v || '') : +v; };
-    var line = [{ v: n, s: 4 }, { v: r.ws, s: 11 }, { v: r.firm, s: 11 }, { v: +r.cap || '', s: 4 }, { v: r.job, s: 4 }, { v: r.date, s: 4 }, { v: r.tr[0], s: 4 }, { v: r.tr[1], s: 4 }, { v: r.tr[2], s: 4 }, { v: r.mg[0], s: 4 }, { v: r.mg[1], s: 4 }, { v: r.mg[2], s: 4 }, { v: r.dvdf, s: 4 }, { v: r.hv, s: 4 }, { v: nn(r.nll), s: 4 }, { v: nn(r.fll), s: 4 }, { v: sd || '', s: 4 }, { v: p == null ? '' : p, s: 4 }];
-    for (var k = 0; k < 10; k++) { line.push({ v: p == null ? '' : (sl === k ? 1 : 0), s: 4 }); if (sl === k) cnt[k]++; }
-    line.push({ v: r.remark, s: 11 }); rows.push(line);
+    if (!r.id && !r.dirty) return; n++; var p = tsPct(r), sd = tsStd(r.cap), nn = function (v) { return v === '' || v == null || isNaN(+v) ? (v || '') : +v; };
+    rows.push([{ v: n, s: 4 }, { v: r.ws, s: 11 }, { v: r.firm, s: 11 }, { v: +r.cap || '', s: 4 }, { v: r.job, s: 4 }, { v: r.date, s: 4 }, { v: r.tr[0], s: 4 }, { v: r.mg[0], s: 4 }, { v: r.dvdf, s: 4 }, { v: r.hv, s: 4 }, { v: nn(r.nll), s: 4 }, { v: nn(r.fll), s: 4 }, { v: sd || '', s: 4 }, { v: p == null ? '' : p, s: 4 }, { v: r.remark, s: 11 }]);
   });
-  var last = []; for (i = 0; i < T; i++) last.push({ v: '', s: 5 }); last[1] = { v: 'TOTAL', s: 5 }; last[2] = { v: n + ' rows', s: 5 }; cnt.forEach(function (v, k) { last[18 + k] = { v: v, s: 5 }; }); rows.push(last);
-  var cw = [6, 17, 17, 10, 22, 12, 8, 8, 8, 14, 14, 14, 12, 12, 13, 14, 12, 10]; for (i = 0; i < 10; i++) cw.push(11); cw.push(20);
-  xlsxDownload('Testing_Register_' + mrFile(TS.f) + '_to_' + mrFile(TS.t) + '.xlsx', [{ name: 'Test Report Summary', rows: rows, merges: mg, cw: cw }]);
+  var last = []; for (i = 0; i < H.length; i++) last.push({ v: '', s: 5 }); last[1] = { v: 'TOTAL', s: 5 }; last[2] = { v: n + ' rows', s: 5 }; rows.push(last);
+  xlsxDownload('Testing_Register_' + mrFile(TS.f) + '_to_' + mrFile(TS.t) + '.xlsx', [{ name: 'Testing Register', rows: rows, merges: [], cw: [6, 17, 17, 10, 22, 12, 10, 14, 12, 12, 13, 14, 12, 10, 20] }]);
 }
 /* ---- Testing Register: report of a period (counts by % loss slab), workshop wise and capacity wise, TOTAL at the end ---- */
 function tsRepOpen() {
@@ -5110,8 +5123,8 @@ function tsInit() {
   TS.rows = []; TS.firms = {}; $('tsout').innerHTML = '';
 }
 (function () { var o = mrAfterLogin; mrAfterLogin = function () { o.apply(this, arguments); tsInit(); }; })();
-function tsRow(a) { return { id: a[0], ws: a[1], firm: a[2] || '', cap: a[3] || '', job: a[4] || '', date: a[5] || '', tr: [a[6] || '', a[7] || '', a[8] || ''], mg: [a[9] || '', a[10] || '', a[11] || ''], dvdf: a[12] || '', hv: a[13] || '', nll: a[14] == null ? '' : a[14], fll: a[15] == null ? '' : a[15], remark: a[16] || '', edit: a[17] === 1 }; }
-function tsBlank() { var w = $('tsw').value || mrWs()[0] || ''; return { id: null, ws: w, firm: '', cap: '', job: '', date: fmt(new Date()), tr: ['', '', ''], mg: ['', '', ''], dvdf: '', hv: '', nll: '', fll: '', remark: '', edit: true, isNew: true }; }
+function tsRow(a) { return { id: a[0], ws: a[1], firm: a[2] || '', cap: a[3] || '', job: a[4] || '', date: a[5] || '', tr: [a[6] || ''], mg: [a[9] || ''], cnt: +a[18] || 0, dvdf: a[12] || '', hv: a[13] || '', nll: a[14] == null ? '' : a[14], fll: a[15] == null ? '' : a[15], remark: a[16] || '', edit: a[17] === 1 }; }
+function tsBlank() { var w = $('tsw').value || mrWs()[0] || ''; return { id: null, ws: w, firm: '', cap: '', job: '', date: fmt(new Date()), tr: [''], mg: [''], cnt: 0, dvdf: '', hv: '', nll: '', fll: '', remark: '', edit: true, isNew: true }; }
 function tsFirms(ws) {
   if (!ws) return Promise.resolve([]); if (TS.firms[ws]) return Promise.resolve(TS.firms[ws]);
   return rpc('test_firms_json', { p_ws: ws }).then(function (a) { TS.firms[ws] = a || []; return TS.firms[ws]; }).catch(function () { return []; });
@@ -5125,7 +5138,7 @@ function tsLoad() {
     if (seq !== TS.seq) return; TS.std = {}; (a[0].rows || []).forEach(function (x) { TS.std[x[0]] = x; }); TS.stdEdit = !!a[0].edit;
     TS.rows = (a[1].rows || []).map(tsRow); TS.total = a[1].total || 0;
     var wl = {}; TS.rows.forEach(function (r) { wl[r.ws] = 1; }); wl[w || mrWs()[0]] = 1;
-    return Promise.all(Object.keys(wl).map(tsFirms)).then(function () { if (seq !== TS.seq) return; for (var i = 0; i < 5; i++) TS.rows.push(tsBlank()); busy(b, false); msg('tsmsg', TS.total > TS.rows.length - 5 ? 'First ' + (TS.rows.length - 5) + ' of ' + TS.total + ' rows are shown. Narrow the dates to see the rest.' : '', 'info'); tsDraw(); });
+    return Promise.all(Object.keys(wl).map(tsFirms)).then(function () { if (seq !== TS.seq) return; for (var i = 0; i < 10; i++) TS.rows.push(tsBlank()); busy(b, false); msg('tsmsg', TS.total > TS.rows.length - 10 ? 'First ' + (TS.rows.length - 10) + ' of ' + TS.total + ' rows are shown. Narrow the dates to see the rest.' : '', 'info'); tsDraw(); });
   }).catch(function (e) { busy(b, false); if (seq === TS.seq) msg('tsmsg', esc(e.message), 'err'); });
 }
 function tsOpts(list, cur, blank) { var h = '<option value="">' + (blank || '') + '</option>', seen = false; list.forEach(function (x) { if (String(x) === String(cur)) seen = true; h += '<option' + (String(x) === String(cur) ? ' selected' : '') + '>' + esc(x) + '</option>'; }); if (cur && !seen) h += '<option selected>' + esc(cur) + '</option>'; return h; }
@@ -5136,11 +5149,10 @@ function tsRowHtml(r, i) {
     '<td><select data-k="ws"' + (d || r.id ? ' disabled' : '') + '>' + tsOpts(mrWs(), r.ws) + '</select></td>' +
     '<td><select data-k="firm"' + (d ? ' disabled' : '') + '>' + tsOpts(TS.firms[r.ws] || [], r.firm, '(choose firm)') + '</select></td>' +
     '<td><select data-k="cap"' + (d ? ' disabled' : '') + '>' + tsOpts(TS_CAPS, r.cap, '') + '</select></td>' +
-    '<td>' + tsInp('job', r.job, '', false, i, d) + '</td><td>' + tsInp('date', r.date, 'DD.MM.YYYY', false, i, d) + '</td>';
-  [0, 1, 2].forEach(function (j) { h += '<td>' + tsInp('tr' + j, r.tr[j], TS_DT, dt(r.tr[j], TS_DT), i, d) + '</td>'; });
-  [0, 1, 2].forEach(function (j) { h += '<td>' + tsInp('mg' + j, r.mg[j], '2000-5000', dt(r.mg[j], TS_DM), i, d) + '</td>'; });
+    '<td class="jb">' + tsInp('job', r.job, '', false, i, d) + '</td><td>' + tsInp('date', r.date, 'DD.MM.YYYY', false, i, d) + '</td>';
+  h += '<td>' + tsInp('tr0', r.tr[0], TS_DT, false, i, d) + '</td><td>' + tsInp('mg0', r.mg[0], '2000-5000', false, i, d) + '</td>';
   h += '<td>' + tsInp('dvdf', r.dvdf, '', false, i, d) + '</td><td>' + tsInp('hv', r.hv, '', false, i, d) + '</td><td>' + tsInp('nll', r.nll, '', false, i, d) + '</td><td>' + tsInp('fll', r.fll, '', false, i, d) + '</td>';
-  h += '<td class="au q"></td><td class="au p"></td>'; for (var k = 0; k < 10; k++) h += '<td class="au s' + k + '"></td>';
+  h += '<td class="au q"></td><td class="au p"></td>';
   h += '<td>' + tsInp('remark', r.remark, '', false, i, d) + '</td><td class="rx">' + (r.edit ? '<button type="button" title="Delete this row">&times;</button>' : '') + '</td></tr>';
   return h;
 }
@@ -5148,34 +5160,40 @@ function tsStd(cap) { var x = TS.std[cap]; return x && x[2] ? +x[2] : 0; }
 function tsPct(r) { var sd = tsStd(r.cap), f = parseFloat(r.fll); return sd && !isNaN(f) && r.fll !== '' ? Math.round(f * 100 / sd) : null; }
 function tsSlab(p) { return p == null ? -1 : p <= 100 ? 0 : p <= 115 ? 1 : p <= 120 ? 2 : p <= 125 ? 3 : p <= 130 ? 4 : p <= 135 ? 5 : p <= 140 ? 6 : p <= 145 ? 7 : p <= 150 ? 8 : 9; }
 function tsDraw() {
-  var h = '<div class="wrap"><table class="tst xg" id="tstb" data-ts="1"><thead><tr><th rowspan="2">S.No.</th><th rowspan="2">NAME OF WORKSHOP</th><th rowspan="2">FIRM NAME</th><th rowspan="2">CAPACITY<br>(IN KVA)</th><th rowspan="2">JOB NO / UNIQUE NO</th><th rowspan="2">TESTING DATE</th><th colspan="3">TURN RATIO TEST</th><th colspan="3">MEGGER</th><th rowspan="2">DVDF</th><th rowspan="2">HIGH VOLTAGE</th><th rowspan="2">NO LOAD LOSSES (W)</th><th rowspan="2">FULL LOAD LOSS</th><th rowspan="2" style="background:#dff3df">IS LOSSES</th><th rowspan="2" style="background:#dff3df">% LOSSES</th><th colspan="10" style="background:#dff3df">AUTO CALCULATING</th><th rowspan="2">REMARK</th><th rowspan="2"></th></tr><tr><th>R</th><th>Y</th><th>B</th><th>HV/E</th><th>LV/E</th><th>HV/LV</th>' +
-    TS_SLAB.map(function (x) { return '<th style="background:#dff3df;font-size:10.5px;white-space:normal;min-width:62px">' + x.replace(' & ', ' &<br>') + '</th>'; }).join('') + '</tr></thead><tbody>';
+  var h = '<div class="wrap"><table class="tst xg" id="tstb" data-ts="1"><thead><tr><th>S.No.</th><th>NAME OF WORKSHOP</th><th>FIRM NAME</th><th>CAPACITY<br>(IN KVA)</th><th>JOB NO / UNIQUE NO</th><th>TESTING DATE</th><th>TURN RATIO</th><th>MEGGER</th><th>DVDF</th><th>HIGH VOLTAGE</th><th>NO LOAD LOSSES (W)</th><th>FULL LOAD LOSS</th><th style="background:#dff3df">IS LOSSES</th><th style="background:#dff3df">% LOSSES</th><th>REMARK</th><th></th></tr></thead><tbody>';
   TS.rows.forEach(function (r, i) { h += tsRowHtml(r, i); });
-  h += '<tr class="tt" id="tstt"><td colspan="16" style="text-align:right">TOTAL &nbsp;</td><td class="n" colspan="2"></td>' + TS_SLAB.map(function (x, k) { return '<td class="t' + k + '"></td>'; }).join('') + '<td colspan="2"></td></tr></tbody></table></div>' +
-    '<div class="bar" style="margin-top:8px"><button class="btn sec" id="tsadd" type="button">+ 10 rows</button><span class="muted" style="font-size:12.5px;flex:1">Fill up to FULL LOAD LOSS (job no, capacity and workshop are needed to save). Typing is saved by itself. <b>Turn ratio</b> (' + TS_DT + ') and <b>megger</b> (' + TS_DM + ') come by themselves if you leave them empty (grey). IS LOSSES, % LOSSES and the green slabs are calculated from the STD. You can paste a block from Excel (columns from NAME OF WORKSHOP to FULL LOAD LOSS).</span></div>';
+  h += '<tr class="tt" id="tstt"><td colspan="12" style="text-align:right">TOTAL &nbsp;</td><td class="n" colspan="2"></td><td colspan="2"></td></tr></tbody></table></div>' +
+    '<div class="bar" style="margin-top:8px"><button class="btn sec" id="tsadd" type="button">+ 10 rows</button><span class="muted" style="font-size:12.5px;flex:1">Fill up to FULL LOAD LOSS (job no, capacity and workshop are needed to save). Typing is saved by itself. <b>Turn ratio</b> (' + TS_DT + ') and <b>megger</b> (' + TS_DM + ') - if you leave them empty, one value between the two limits is filled by itself (grey). IS LOSSES and % LOSSES are calculated from the STD; the slab counts are in the Report. You can paste a block from Excel (columns from NAME OF WORKSHOP to FULL LOAD LOSS). <b>Job no colour:</b> <span class="jbk d2">2 times</span> <span class="jbk d3">3 times</span> <span class="jbk d4">4 times</span> <span class="jbk d5">more than 4</span></span></div>';
   $('tsout').innerHTML = h; tsPaintAll();
 }
-function tsPaint(tr) {
-  var r = TS.rows[+tr.dataset.i]; if (!r) return; var p = tsPct(r), sl = tsSlab(p), sd = tsStd(r.cap);
+function tsKey(r) { var j = String(r.job || '').trim().toUpperCase(); return j && r.ws ? r.ws + '|' + j : ''; }
+function tsDupMap() {      // how many times each job no is in the register: the larger of what the database said and what is on the screen now
+  var loc = {}, srv = {}, M = {}; TS.rows.forEach(function (r) { var k = tsKey(r); if (!k) return; if (r.id || r.dirty) loc[k] = (loc[k] || 0) + 1; if (r.id && r.cnt) srv[k] = Math.max(srv[k] || 0, r.cnt); });
+  Object.keys(loc).concat(Object.keys(srv)).forEach(function (k) { M[k] = Math.max(loc[k] || 0, srv[k] || 0); }); return M;
+}
+function tsPaint(tr, M) {
+  var r = TS.rows[+tr.dataset.i]; if (!r) return; var p = tsPct(r), sd = tsStd(r.cap);
   tr.querySelector('.q').textContent = sd || ''; tr.querySelector('.p').textContent = p == null ? '' : p;
-  for (var k = 0; k < 10; k++) { var c = tr.querySelector('.s' + k); c.textContent = p == null ? '' : (sl === k ? 1 : 0); c.classList.toggle('au1', sl === k); }
-  var ready = !!(r.ws && r.cap && String(r.job).trim()), touched = r.dirty || r.id; tr.classList.toggle('inc', !!(r.dirty && !ready));
+  var ready = !!(r.ws && r.cap && String(r.job).trim()); tr.classList.toggle('inc', !!(r.dirty && !ready));
+  var n = (M || tsDupMap())[tsKey(r)] || 0, td = tr.querySelector('td.jb'); td.className = 'jb' + (n >= 2 ? ' d' + Math.min(n, 5) : ''); td.title = n >= 2 ? 'This job no is in the register ' + n + ' times' : '';
 }
 function tsPaintAll() {
-  var t = $('tstb'); if (!t) return; [].forEach.call(t.querySelectorAll('tbody tr[data-i]'), tsPaint);
-  var cnt = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], n = 0; TS.rows.forEach(function (r) { if (!r.id && !r.dirty) return; n++; var s = tsSlab(tsPct(r)); if (s >= 0) cnt[s]++; });
-  var T = $('tstt'); if (!T) return; T.querySelector('.n').textContent = n + ' rows'; cnt.forEach(function (v, k) { T.querySelector('.t' + k).textContent = v; });
+  var t = $('tstb'); if (!t) return; var M = tsDupMap(); [].forEach.call(t.querySelectorAll('tbody tr[data-i]'), function (tr) { tsPaint(tr, M); });
+  var n = 0; TS.rows.forEach(function (r) { if (r.id || r.dirty) n++; });
+  var T = $('tstt'); if (!T) return; T.querySelector('.n').textContent = n + ' rows';
 }
 function tsSave() {
   var ready = TS.rows.filter(function (r) { return r.dirty && r.edit && r.ws && r.cap && String(r.job).trim(); }); if (!ready.length) return;
   var rows = ready.map(function (r) { var d = String(r.date || '').trim(), n = function (v) { v = String(v).replace(/,/g, '.').trim(); return v === '' || isNaN(+v) ? '' : +v; };
-    return { id: r.id || null, workshop: r.ws, firm: r.firm, cap: +r.cap, job_no: String(r.job).trim(), test_date: d ? mrIso(normDate(d)) : null, tr_r: r.tr[0], tr_y: r.tr[1], tr_b: r.tr[2], meg_hve: tsMg(r.mg[0]), meg_lve: tsMg(r.mg[1]), meg_hvlv: tsMg(r.mg[2]), dvdf: r.dvdf, hv: r.hv, nll: n(r.nll), fll: n(r.fll), remark: r.remark }; });
+    return { id: r.id || null, workshop: r.ws, firm: r.firm, cap: +r.cap, job_no: String(r.job).trim(), test_date: d ? mrIso(normDate(d)) : null, tr_r: r.tr[0], tr_y: r.tr[0], tr_b: r.tr[0], meg_hve: tsMg(r.mg[0]), meg_lve: tsMg(r.mg[0]), meg_hvlv: tsMg(r.mg[0]), dvdf: r.dvdf, hv: r.hv, nll: n(r.nll), fll: n(r.fll), remark: r.remark }; });
   if (rows.some(function (x) { return x.test_date === null && String(ready[rows.indexOf(x)].date || '').trim(); })) return msg('tsmsg', 'Testing date must be DD.MM.YYYY.', 'err');
   ready.forEach(function (r) { r.dirty = false; r.saving = true; });
   msg('tsmsg', 'Saving...', 'info');
   rpc('test_save', { p_rows: rows }).then(function (res) {
     res.forEach(function (x) { var r = ready[x.i]; r.id = x.id; r.saving = false; r.isNew = false; var tr = document.querySelector('#tstb tr[data-i="' + TS.rows.indexOf(r) + '"]');
-      [0, 1, 2].forEach(function (j) { if (!r.tr[j]) { r.tr[j] = x.tr; if (tr) { var i = tr.querySelector('[data-k="tr' + j + '"]'); i.value = x.tr; i.classList.add('dflt'); } } if (!r.mg[j]) { r.mg[j] = x.mg; if (tr) { var m = tr.querySelector('[data-k="mg' + j + '"]'); m.value = x.mg; m.classList.add('dflt'); } } });
+      if (!r.tr[0]) { r.tr[0] = x.tr; if (tr) { var i = tr.querySelector('[data-k="tr0"]'); i.value = x.tr; i.classList.add('dflt'); } }
+      if (!r.mg[0]) { r.mg[0] = x.mg; if (tr) { var m = tr.querySelector('[data-k="mg0"]'); m.value = x.mg; m.classList.add('dflt'); } }
+      r.cnt = x.cnt || 0; var kk = tsKey(r); TS.rows.forEach(function (o) { if (o !== r && o.id && tsKey(o) === kk) o.cnt = r.cnt; });
       if (tr) tr.querySelector('[data-k="ws"]').disabled = true; });
     asMsg('tsmsg', 'Saved', 'ok'); tsPaintAll();
   }).catch(function (er) { ready.forEach(function (r) { r.dirty = true; r.saving = false; }); msg('tsmsg', esc(er.message), 'err'); });
@@ -5184,6 +5202,7 @@ function tsMg(v) { v = String(v || '').trim(); return /^\d+(\.\d+)?\s*-\s*\d+(\.
 function tsSet(r, k, v) {
   if (k === 'ws' || k === 'firm' || k === 'cap' || k === 'job' || k === 'date' || k === 'dvdf' || k === 'hv' || k === 'nll' || k === 'fll' || k === 'remark') r[k] = v;
   else if (k.slice(0, 2) === 'tr') r.tr[+k[2]] = v; else if (k.slice(0, 2) === 'mg') r.mg[+k[2]] = v;
+  if (k === 'job' || k === 'ws') r.cnt = 0;
   r.dirty = true;
 }
 function tsEdit(e) {
@@ -5198,10 +5217,10 @@ document.addEventListener('input', function (e) { if (e.target.closest && e.targ
 document.addEventListener('change', function (e) { if (e.target.closest && e.target.closest('#tstb') && e.target.tagName === 'SELECT') tsEdit(e); });
 function tsPaste(rows) {
   var b = xgBox(), g = xgGrid($('tstb')), st = g[b.r1] && g[b.r1][b.c1]; if (!st) return;
-  var keys = ['ws', 'firm', 'cap', 'job', 'date', 'tr0', 'tr1', 'tr2', 'mg0', 'mg1', 'mg2', 'dvdf', 'hv', 'nll', 'fll'];
+  var keys = ['ws', 'firm', 'cap', 'job', 'date', 'tr0', 'mg0', 'dvdf', 'hv', 'nll', 'fll'];
   var ctl = st.querySelector('[data-k]'), k0 = ctl ? keys.indexOf(ctl.dataset.k) : -1; if (k0 < 0) k0 = 0;
   var trs = [].slice.call($('tstb').querySelectorAll('tbody tr[data-i]')), r0 = Math.max(0, trs.indexOf(st.closest('tr')));
-  if (k0 === 0 && rows.every(function (rw) { return rw.length >= 16 && /^\d{1,5}$/.test(String(rw[0]).trim()); })) rows = rows.map(function (rw) { return rw.slice(1, 16); });   // the S.No column was copied too
+  if (k0 === 0 && rows.every(function (rw) { return rw.length >= 12 && /^\d{1,5}$/.test(String(rw[0]).trim()); })) rows = rows.map(function (rw) { return rw.slice(1, 12); });   // the S.No column was copied too
   rows.forEach(function (rw, i) {
     while (r0 + i >= TS.rows.length) TS.rows.push(tsBlank());
     var tr = $('tstb').querySelector('tr[data-i="' + (r0 + i) + '"]'); if (!tr) { TS._need = true; }
@@ -5223,13 +5242,54 @@ document.addEventListener('click', function (e) {
   if (x) { var tr = x.closest('tr'), ri = +tr.dataset.i, r = TS.rows[ri];
     if (!r.id) { TS.rows.splice(ri, 1); tsDraw(); return; }
     askDelete('Delete test row: job ' + r.job + ' (' + r.ws + ')', function () { $('tsxl').click(); }, function (permit) {
-      rpc('test_delete', { p_id: r.id, p_permit: permit }).then(function () { TS.rows.splice(TS.rows.indexOf(r), 1); tsDraw(); asMsg('tsmsg', 'Deleted', 'ok'); }).catch(function (er) { msg('tsmsg', esc(er.message), 'err'); });
+      rpc('test_delete', { p_id: r.id, p_permit: permit }).then(function () { var kd = tsKey(r); TS.rows.splice(TS.rows.indexOf(r), 1); TS.rows.forEach(function (o) { if (o.id && tsKey(o) === kd && o.cnt > 0) o.cnt--; }); tsDraw(); asMsg('tsmsg', 'Deleted', 'ok'); }).catch(function (er) { msg('tsmsg', esc(er.message), 'err'); });
     });
     return; }
   if (t.closest('#tstd')) { tsStdOpen(); return; }
   if (t.closest('#tsrep')) { tsRepOpen(); return; }
   if (t.closest('#tsxl')) { tsExcel(); return; }
 });
+/* ---- Testing Register: QUICK ENTRY (one test at a time, easy on a phone). Submit -> saved in the register ---- */
+function tqAuto() { return { tr: (43.5 + Math.random()).toFixed(1), mg: String(Math.round((2000 + Math.random() * 3000) / 10) * 10) + 'M-ohm' }; }
+function tqHtml(keep) {
+  var ws = keep.ws || $('tsw').value || mrWs()[0] || '', fl = TS.firms[ws] || [], au = tqAuto();
+  var f = function (l, c) { return '<div><label>' + l + '</label>' + c + '</div>'; }, inp = function (id, ph, im) { return '<input type="text" id="' + id + '" autocomplete="off" placeholder="' + (ph || '') + '"' + (im ? ' inputmode="' + im + '"' : '') + '>'; };
+  return '<div class="tqf">' +
+    f('Workshop', '<select id="tqw">' + tsOpts(mrWs(), ws) + '</select>') + f('Firm name', '<select id="tqfm">' + tsOpts(fl, keep.firm || '', '(choose firm)') + '</select>') +
+    f('Capacity (KVA)', '<select id="tqc">' + tsOpts(TS_CAPS, keep.cap || '', '') + '</select>') + f('Job no / Unique no', inp('tqj', '', '')) +
+    f('Testing date', mrDt('tqd', keep.date || fmt(new Date()))) + f('Turn ratio <i>(' + TS_DT + ')</i>', inp('tqtr', '', 'decimal').replace('<input', '<input class="tqa" value="' + au.tr + '"')) +
+    f('Megger <i>(' + TS_DM + ')</i>', inp('tqmg', '', 'decimal').replace('<input', '<input class="tqa" value="' + au.mg + '"')) + f('DVDF', inp('tqdv', '', '')) + f('High voltage', inp('tqhv', '', '')) +
+    f('No load losses (W)', inp('tqnl', '', 'decimal')) + f('Full load loss', inp('tqfl', '', 'decimal')) + f('Remark', inp('tqrm', '', '')) +
+    '</div><div class="tqn">Turn ratio and megger are shown faded: that value is saved as it is. Type over it to change.</div><div class="bar" style="margin-top:12px"><button class="btn tqgo" id="tqgo" type="button" style="flex:1;padding:13px">Submit &#10003;</button></div>';
+}
+function tqOpen(keep) {
+  keep = keep || {}; var ws = keep.ws || $('tsw').value || mrWs()[0] || '';
+  tsFirms(ws).then(function () {
+    govOpen('<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:6px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>Testing - quick entry', tqHtml(keep), true);
+    var d = $('tqd'); if (d) d.addEventListener('input', function () { var v = dotFmt(d.value); if (v !== d.value && /^[\d.]*$/.test(d.value)) d.value = v; });
+    $('tqj').focus();
+  });
+}
+function tqSubmit() {
+  var g = function (id) { return ($(id).value || '').trim(); }, ws = g('tqw'), cap = parseInt(g('tqc'), 10), job = g('tqj'), dt = g('tqd');
+  if (!ws) return msg('govmsg', 'Choose the workshop.', 'err');
+  if (!cap) return msg('govmsg', 'Choose the capacity.', 'err');
+  if (!job) return msg('govmsg', 'Enter the job no / unique no.', 'err');
+  var di = dt ? mrIso(normDate(dt)) : null; if (dt && !validD(normDate(dt))) return msg('govmsg', 'Testing date must be DD.MM.YYYY.', 'err');
+  var nn = function (v) { v = v.replace(/,/g, '.'); return v === '' || isNaN(+v) ? '' : +v; }, tr = g('tqtr').replace(/,/g, '.'), mg = tsMg(g('tqmg'));
+  var b = $('tqgo'); busy(b, true, 'Submitting...');
+  rpc('test_save', { p_rows: [{ id: null, workshop: ws, firm: g('tqfm'), cap: cap, job_no: job, test_date: di, tr_r: tr, tr_y: tr, tr_b: tr, meg_hve: mg, meg_lve: mg, meg_hvlv: mg, dvdf: g('tqdv'), hv: g('tqhv'), nll: nn(g('tqnl')), fll: nn(g('tqfl')), remark: g('tqrm') }] }).then(function (res) {
+    var x = res[0] || {}, keep = { ws: ws, firm: g('tqfm'), cap: cap, date: dt };
+    govOpen($('govt').innerHTML, tqHtml(keep), true);
+    var cm = x.cnt >= 2 ? ' This job no is now in the register ' + x.cnt + ' times.' : '';
+    msg('govmsg', 'Saved: job ' + esc(job) + ' (turn ratio ' + esc(x.tr) + ', megger ' + esc(x.mg) + ').' + cm + ' Next one:', x.cnt >= 2 ? 'info' : 'ok'); $('tqj').focus();
+    if (TS.f && $('tsout').innerHTML) tsLoad();
+  }).catch(function (er) { busy(b, false); msg('govmsg', esc(er.message), 'err'); });
+}
+document.addEventListener('focusin', function (e) { var t = e.target; if (t.classList && t.classList.contains('tqa')) t.select(); });
+document.addEventListener('input', function (e) { var t = e.target; if (t.classList && t.classList.contains('tqa')) t.classList.remove('tqa'); });
+document.addEventListener('click', function (e) { var t = e.target; if (!t.closest) return; if (t.closest('#tsq')) tqOpen(); else if (t.closest('#tqgo')) tqSubmit(); });
+document.addEventListener('change', function (e) { if (e.target.id === 'tqw') { var ws = e.target.value; tsFirms(ws).then(function (l) { $('tqfm').innerHTML = tsOpts(l, '', '(choose firm)'); }); } });
 /* STD (IS losses) */
 function tsStdOpen() {
   var go = function () {
