@@ -3224,3 +3224,237 @@ end $$;
 revoke all on function public.kitty_lyk_json(date) from public, anon;
 grant execute on function public.kitty_lyk_json(date) to authenticated;
 notify pgrst, 'reload schema';
+
+-- ================================================================================================================
+-- STEP 92 : Testing Register (M&R) + STD (IS losses) + delete only with an OTP + storage figures for the Admin
+-- Safe to run again. Nothing is deleted.
+-- ================================================================================================================
+
+-- ---- STD: the standard full load loss of a capacity (the "IS LOSSES" sheet) ----
+create table if not exists public.test_std (cap int primary key, no_load numeric, load_loss numeric);
+insert into public.test_std (cap, no_load, load_loss) values
+  (10, null, null), (16, null, null), (25, null, null), (63, null, null),
+  (100, null, 1650), (160, null, 1950), (250, null, 2930), (400, null, 3450), (630, null, 5300), (1000, null, 7700)
+  on conflict (cap) do nothing;
+alter table public.test_std enable row level security;
+revoke all on public.test_std from public, anon, authenticated;
+
+-- ---- the register itself (one row = one tested transformer) ----
+create table if not exists public.test_reg (
+  id bigint generated always as identity primary key,
+  workshop text not null, firm text, cap int, job_no text, test_date date,
+  tr_r text, tr_y text, tr_b text,                 -- turn ratio R Y B
+  meg_hve text, meg_lve text, meg_hvlv text,       -- megger HV/E LV/E HV/LV
+  dvdf text, hv text,                              -- DVDF, high voltage
+  nll numeric, fll numeric,                        -- no load loss (W), full load loss (W)
+  remark text, by_login text, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
+);
+create unique index if not exists test_reg_job on public.test_reg (workshop, upper(job_no)) where coalesce(job_no, '') <> '';
+create index if not exists test_reg_date on public.test_reg (workshop, test_date);
+alter table public.test_reg enable row level security;
+revoke all on public.test_reg from public, anon, authenticated;
+
+-- ---- OTP for deleting: the person who wants to delete asks, the Admin sees the 6 digit code in the app, tells it, the person types it ----
+create table if not exists public.del_req (
+  id uuid primary key default gen_random_uuid(),
+  requester uuid not null, login text, division text, detail text,
+  code text not null, tries int not null default 0,
+  expires timestamptz not null default (now() + interval '10 minutes'),
+  verified boolean not null default false, permit_until timestamptz
+);
+alter table public.del_req enable row level security;
+revoke all on public.del_req from public, anon, authenticated;
+
+create or replace function public.del_request(p_detail text) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); rid uuid;
+begin
+  if c.user_id is null or c.role not in ('admin', 'je', 'creator') then raise exception 'You cannot delete data.'; end if;
+  delete from public.del_req where expires < now() - interval '1 day';
+  insert into public.del_req (requester, login, division, detail, code)
+  values (c.user_id, c.login_id, c.org_division, left(coalesce(p_detail, ''), 200),
+          lpad(((('x' || substr(md5(gen_random_uuid()::text), 1, 6))::bit(24)::int) % 1000000)::text, 6, '0'))
+  returning id into rid;
+  return rid;
+end $$;
+
+-- what an Admin sees: the open requests of his division with the code
+create or replace function public.del_pending_json() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller();
+begin
+  if c.user_id is null or c.role not in ('admin', 'creator') then return '[]'::jsonb; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('id', r.id, 'who', r.login, 'detail', r.detail, 'code', r.code, 'left', greatest(0, extract(epoch from (r.expires - now()))::int)) order by r.expires desc)
+                     from public.del_req r
+                    where r.expires > now() and not r.verified and (c.role = 'creator' or r.division is not distinct from c.org_division)), '[]'::jsonb);
+end $$;
+
+create or replace function public.del_verify(p_id uuid, p_code text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare r public.del_req;
+begin
+  select * into r from public.del_req where id = p_id and requester = auth.uid();
+  if r.id is null then raise exception 'This request was not found. Ask for a new OTP.'; end if;
+  if r.expires < now() then raise exception 'The OTP has expired. Ask for a new one.'; end if;
+  if r.tries >= 5 then raise exception 'Too many wrong tries. Ask for a new OTP.'; end if;
+  if btrim(coalesce(p_code, '')) <> r.code then
+    update public.del_req set tries = tries + 1 where id = p_id;
+    raise exception 'Wrong OTP.';
+  end if;
+  update public.del_req set verified = true, permit_until = now() + interval '10 minutes' where id = p_id;
+  return jsonb_build_object('permit', p_id);
+end $$;
+
+create or replace function public.del_ok(p_permit uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.del_req r where r.id = p_permit and r.requester = auth.uid() and r.verified and r.permit_until > now())
+$$;
+
+-- delete a PR of the Data Sheet: only with a valid OTP permit (the old direct delete is switched off)
+create or replace function public.delete_pr_otp(p_ws text, p_pr text, p_permit uuid) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare c int;
+begin
+  if not public.del_ok(p_permit) then raise exception 'Delete needs the Admin OTP.'; end if;
+  if not (public.my_can_edit() and public.my_role() in ('admin', 'je') and p_ws = any (coalesce(public.my_workshops(), '{}'))) then raise exception 'You do not have permission to delete this PR.'; end if;
+  delete from public.data where workshop = p_ws and pr_no = btrim(p_pr);
+  get diagnostics c = row_count;
+  if c = 0 then raise exception 'PR % not found.', p_pr; end if;
+  return true;
+end $$;
+revoke execute on function public.delete_pr(text, text) from authenticated;
+
+-- ---- Testing register functions ----
+create or replace function public.test_std_json() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  return jsonb_build_object('rows', coalesce((select jsonb_agg(jsonb_build_array(cap, no_load, load_loss) order by cap) from public.test_std), '[]'::jsonb),
+                            'edit', public.my_role() in ('admin', 'creator'));
+end $$;
+
+create or replace function public.test_std_set(p_rows jsonb) returns text
+language plpgsql security definer set search_path = public as $$
+declare e jsonb;
+begin
+  if public.my_role() not in ('admin', 'creator') then raise exception 'Only an Admin can change the STD.'; end if;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    if (e->>'cap')::int not in (10, 16, 25, 63, 100, 160, 250, 400, 630, 1000) then continue; end if;
+    insert into public.test_std (cap, no_load, load_loss) values ((e->>'cap')::int, nullif(e->>'no_load', '')::numeric, nullif(e->>'load_loss', '')::numeric)
+      on conflict (cap) do update set no_load = excluded.no_load, load_loss = excluded.load_loss;
+  end loop;
+  return 'saved';
+end $$;
+
+-- firms of a workshop = the firms typed in the Repair tab (and the firms already used in the register)
+create or replace function public.test_firms_json(p_ws text) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not (p_ws = any (public.my_workshops())) then raise exception 'This workshop is not yours.'; end if;
+  return coalesce((select jsonb_agg(f order by f) from (
+            select distinct upper(btrim(e.firm)) f from public.rr_entry e where e.workshop = p_ws and coalesce(btrim(e.firm), '') <> ''
+            union select distinct upper(btrim(t.firm)) from public.test_reg t where t.workshop = p_ws and coalesce(btrim(t.firm), '') <> '') q), '[]'::jsonb);
+end $$;
+
+create or replace function public.test_list_json(p_from date, p_to date, p_ws text default null) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare ed text[]; tot int;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if p_from is null or p_to is null or p_from > p_to then raise exception 'Choose the From and To dates.'; end if;
+  select coalesce(array_agg(w), '{}') into ed from unnest(public.my_workshops()) w where public.mr_edit_ok(w);
+  select count(*) into tot from public.test_reg t where t.workshop = any (public.my_workshops()) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws);
+  return jsonb_build_object('total', tot, 'rows', coalesce((
+    select jsonb_agg(jsonb_build_array(z.id, z.workshop, z.firm, z.cap, z.job_no, to_char(z.test_date, 'DD.MM.YYYY'), z.tr_r, z.tr_y, z.tr_b, z.meg_hve, z.meg_lve, z.meg_hvlv, z.dvdf, z.hv, z.nll, z.fll, z.remark,
+                                         case when z.workshop = any (ed) then 1 else 0 end) order by z.test_date, z.id)
+      from (select t.* from public.test_reg t where t.workshop = any (public.my_workshops()) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws)
+             order by t.test_date, t.id limit 3000) z), '[]'::jsonb));
+end $$;
+
+-- save one or more rows. A row is {id?, workshop, firm, cap, job_no, test_date (YYYY-MM-DD), tr_r, tr_y, tr_b, meg_hve, meg_lve, meg_hvlv, dvdf, hv, nll, fll, remark}
+-- an empty turn ratio becomes 43.5-44.5, an empty megger becomes 2000-5000M-ohm. Returns [{i, id, tr_r.. defaults}] for every saved row.
+create or replace function public.test_save(p_rows jsonb) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare e jsonb; i int := 0; rid bigint; outj jsonb := '[]'::jsonb; c public.profiles := public.tf_caller(); w text; tr text; mg text;
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    w := e->>'workshop';
+    if not public.mr_edit_ok(w) then raise exception 'You cannot change the register of %.', w; end if;
+    if coalesce(btrim(e->>'job_no'), '') = '' then raise exception 'Job no / unique no is needed.'; end if;
+    if (e->>'cap')::int not in (10, 16, 25, 63, 100, 160, 250, 400, 630, 1000) then raise exception 'Choose the capacity.'; end if;
+    tr := '43.5-44.5'; mg := '2000-5000M-ohm';
+    if nullif(e->>'id', '') is not null then
+      update public.test_reg set workshop = w, firm = nullif(upper(btrim(e->>'firm')), ''), cap = (e->>'cap')::int, job_no = btrim(e->>'job_no'), test_date = nullif(e->>'test_date', '')::date,
+             tr_r = coalesce(nullif(btrim(e->>'tr_r'), ''), tr), tr_y = coalesce(nullif(btrim(e->>'tr_y'), ''), tr), tr_b = coalesce(nullif(btrim(e->>'tr_b'), ''), tr),
+             meg_hve = coalesce(nullif(btrim(e->>'meg_hve'), ''), mg), meg_lve = coalesce(nullif(btrim(e->>'meg_lve'), ''), mg), meg_hvlv = coalesce(nullif(btrim(e->>'meg_hvlv'), ''), mg),
+             dvdf = nullif(btrim(e->>'dvdf'), ''), hv = nullif(btrim(e->>'hv'), ''), nll = nullif(e->>'nll', '')::numeric, fll = nullif(e->>'fll', '')::numeric,
+             remark = nullif(btrim(e->>'remark'), ''), by_login = c.login_id, updated_at = now()
+       where id = (e->>'id')::bigint and workshop = any (public.my_workshops()) returning id into rid;
+      if rid is null then raise exception 'This row was not found.'; end if;
+    else
+      insert into public.test_reg (workshop, firm, cap, job_no, test_date, tr_r, tr_y, tr_b, meg_hve, meg_lve, meg_hvlv, dvdf, hv, nll, fll, remark, by_login)
+      values (w, nullif(upper(btrim(e->>'firm')), ''), (e->>'cap')::int, btrim(e->>'job_no'), nullif(e->>'test_date', '')::date,
+              coalesce(nullif(btrim(e->>'tr_r'), ''), tr), coalesce(nullif(btrim(e->>'tr_y'), ''), tr), coalesce(nullif(btrim(e->>'tr_b'), ''), tr),
+              coalesce(nullif(btrim(e->>'meg_hve'), ''), mg), coalesce(nullif(btrim(e->>'meg_lve'), ''), mg), coalesce(nullif(btrim(e->>'meg_hvlv'), ''), mg),
+              nullif(btrim(e->>'dvdf'), ''), nullif(btrim(e->>'hv'), ''), nullif(e->>'nll', '')::numeric, nullif(e->>'fll', '')::numeric, nullif(btrim(e->>'remark'), ''), c.login_id)
+      returning id into rid;
+    end if;
+    outj := outj || jsonb_build_array(jsonb_build_object('i', i, 'id', rid, 'tr', tr, 'mg', mg));
+    i := i + 1;
+  end loop;
+  return outj;
+exception when unique_violation then
+  raise exception 'This job no / unique no is already in the register of this workshop.';
+end $$;
+
+create or replace function public.test_delete(p_id bigint, p_permit uuid) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare w text;
+begin
+  if not public.del_ok(p_permit) then raise exception 'Delete needs the Admin OTP.'; end if;
+  select workshop into w from public.test_reg where id = p_id;
+  if w is null or not public.mr_edit_ok(w) then raise exception 'You cannot delete this row.'; end if;
+  delete from public.test_reg where id = p_id;
+  return true;
+end $$;
+
+-- report of a period: counts by % loss slab, per workshop and capacity.  Slabs like the Excel: <=100, <=115, <=120, <=125, <=130, <=135, <=140, <=145, <=150, above 150.
+-- rows [workshop, cap, slab (0..9, or -1 = % not known: no full load loss typed or no STD), count]
+create or replace function public.test_report_json(p_from date, p_to date, p_ws text default null) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if p_from is null or p_to is null or p_from > p_to then raise exception 'Choose the From and To dates.'; end if;
+  return jsonb_build_object('rows', coalesce((
+    select jsonb_agg(jsonb_build_array(q.workshop, q.cap, q.slab, q.n))
+      from (select t.workshop, t.cap,
+                   case when t.fll is null or coalesce(s.load_loss, 0) = 0 then -1
+                        else (select case when p <= 100 then 0 when p <= 115 then 1 when p <= 120 then 2 when p <= 125 then 3 when p <= 130 then 4
+                                          when p <= 135 then 5 when p <= 140 then 6 when p <= 145 then 7 when p <= 150 then 8 else 9 end
+                                from (select round(t.fll * 100 / s.load_loss) as p) pp) end as slab,
+                   count(*) as n
+              from public.test_reg t left join public.test_std s on s.cap = t.cap
+             where t.workshop = any (public.my_workshops()) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws)
+             group by 1, 2, 3) q), '[]'::jsonb));
+end $$;
+
+-- storage figures (Admin): database size and the oldest PR year
+create or replace function public.db_usage_json() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare sz numeric := pg_database_size(current_database()) / 1048576.0;
+begin
+  if public.my_role() not in ('admin', 'creator') then return jsonb_build_object('ok', false); end if;
+  return jsonb_build_object('ok', true, 'mb', round(sz, 1), 'limit_mb', 500, 'pct', round(sz * 100 / 500, 0),
+    'oldest', (select min(extract(year from pr_date))::int from public.data where pr_date is not null),
+    'rows', (select count(*) from public.data), 'tests', (select count(*) from public.test_reg));
+end $$;
+
+revoke all on function public.del_request(text), public.del_pending_json(), public.del_verify(uuid, text), public.del_ok(uuid), public.delete_pr_otp(text, text, uuid),
+  public.test_std_json(), public.test_std_set(jsonb), public.test_firms_json(text), public.test_list_json(date, date, text), public.test_save(jsonb),
+  public.test_delete(bigint, uuid), public.test_report_json(date, date, text), public.db_usage_json() from public, anon;
+grant execute on function public.del_request(text), public.del_pending_json(), public.del_verify(uuid, text), public.del_ok(uuid), public.delete_pr_otp(text, text, uuid),
+  public.test_std_json(), public.test_std_set(jsonb), public.test_firms_json(text), public.test_list_json(date, date, text), public.test_save(jsonb),
+  public.test_delete(bigint, uuid), public.test_report_json(date, date, text), public.db_usage_json() to authenticated;
+notify pgrst, 'reload schema';
