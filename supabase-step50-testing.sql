@@ -8,12 +8,12 @@ begin
   if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   if p_from is null or p_to is null or p_from > p_to then raise exception 'Choose the From and To dates.'; end if;
   select coalesce(array_agg(w), '{}') into ed from unnest(public.my_workshops()) w where public.mr_edit_ok(w);
-  select count(*) into tot from public.test_reg t where t.workshop = any ((select public.my_workshops())) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws);
+  select count(*) into tot from public.test_reg t where t.workshop = any (coalesce((select public.my_workshops()), '{}')) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws);
   return jsonb_build_object('total', tot, 'rows', coalesce((
     select jsonb_agg(jsonb_build_array(z.id, z.workshop, z.firm, z.cap, z.job_no, to_char(z.test_date, 'DD.MM.YYYY'), z.tr_r, z.tr_y, z.tr_b, z.meg_hve, z.meg_lve, z.meg_hvlv, z.dvdf, z.hv, z.nll, z.fll, z.remark,
                                          case when z.workshop = any (ed) then 1 else 0 end,
                                          (select count(*) from public.test_reg q where q.workshop = z.workshop and upper(q.job_no) = upper(z.job_no))) order by z.test_date, z.id)
-      from (select t.* from public.test_reg t where t.workshop = any ((select public.my_workshops())) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws)
+      from (select t.* from public.test_reg t where t.workshop = any (coalesce((select public.my_workshops()), '{}')) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws)
              order by t.test_date, t.id limit 3000) z), '[]'::jsonb));
 end $$;
 

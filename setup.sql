@@ -2161,7 +2161,7 @@ begin
   if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   with d as (select x.workshop, x.capacity, x.pr_date, t.dtc_no, t.dtc_date
                from public.data x left join public.dtc t on t.data_id = x.id
-              where not x.dup and x.workshop = any ((select public.my_workshops()))),
+              where not x.dup and x.workshop = any (coalesce((select public.my_workshops()), '{}'))),
   w as (select workshop,
                count(*) filter (where pr_date = p_date) today_pr,
                count(*) filter (where dtc_date = p_date and dtc_no is not null) today_dtc,
@@ -2187,7 +2187,7 @@ begin
   if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   with b as (select x.*, t.dtc_no, t.dtc_date, (nullif(btrim(t.dtc_no), '') is not null) done
                from public.data x left join public.dtc t on t.data_id = x.id
-              where not x.dup and x.workshop = any ((select public.my_workshops())) and x.pr_date between m1 and m2
+              where not x.dup and x.workshop = any (coalesce((select public.my_workshops()), '{}')) and x.pr_date between m1 and m2
                 and (p_ws is null or x.workshop = p_ws)
                 and (q is null or x.pr_no ilike '%' || q || '%' or coalesce(x.complain_no, '') ilike '%' || q || '%' or coalesce(x.place_of_damage, '') ilike '%' || q || '%' or coalesce(t.dtc_no, '') ilike '%' || q || '%')),
   f as (select * from b where p_status = 'all' or (p_status = 'pending' and not done) or (p_status = 'done' and done))
@@ -2346,7 +2346,7 @@ begin
   if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   with b as (select x.*, t.dtc_no, t.dtc_date, (nullif(btrim(t.dtc_no), '') is not null) done
                from public.data x left join public.dtc t on t.data_id = x.id
-              where not x.dup and x.workshop = any ((select public.my_workshops())) and x.pr_date between m1 and m2
+              where not x.dup and x.workshop = any (coalesce((select public.my_workshops()), '{}')) and x.pr_date between m1 and m2
                 and (p_ws is null or x.workshop = p_ws)
                 and (q is null or x.pr_no ilike '%' || q || '%' or coalesce(x.complain_no, '') ilike '%' || q || '%' or coalesce(x.place_of_damage, '') ilike '%' || q || '%' or coalesce(t.dtc_no, '') ilike '%' || q || '%')),
   f as (select * from b where p_status = 'all' or (p_status = 'pending' and not done) or (p_status = 'done' and done))
@@ -3149,7 +3149,7 @@ begin
   if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   with b as (select x.*, t.dtc_no, t.dtc_date
                from public.data x left join public.dtc t on t.data_id = x.id
-              where not x.dup and x.workshop = any ((select public.my_workshops())) and x.pr_date between p_from and p_to
+              where not x.dup and x.workshop = any (coalesce((select public.my_workshops()), '{}')) and x.pr_date between p_from and p_to
                 and nullif(btrim(t.dtc_no), '') is null
                 and (p_ws is null or x.workshop = p_ws) and (p_cap is null or coalesce(x.capacity, 0) = p_cap))
   select jsonb_build_object('total', (select count(*) from b),
@@ -3181,7 +3181,7 @@ begin
       from (select e.workshop, e.firm, e.cap, sum(e.qty)::int as qty
               from public.rr_entry e
              where e.block = p_block and e.day between p_from and p_to
-               and e.workshop = any ((select public.my_workshops()))
+               and e.workshop = any (coalesce((select public.my_workshops()), '{}'))
                and (coalesce(p_ws, '') = '' or e.workshop = p_ws)
              group by e.workshop, e.firm, e.cap having sum(e.qty) > 0) q), '[]'::jsonb));
 end $$;
@@ -3365,12 +3365,12 @@ begin
   if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   if p_from is null or p_to is null or p_from > p_to then raise exception 'Choose the From and To dates.'; end if;
   select coalesce(array_agg(w), '{}') into ed from unnest(public.my_workshops()) w where public.mr_edit_ok(w);
-  select count(*) into tot from public.test_reg t where t.workshop = any ((select public.my_workshops())) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws);
+  select count(*) into tot from public.test_reg t where t.workshop = any (coalesce((select public.my_workshops()), '{}')) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws);
   return jsonb_build_object('total', tot, 'rows', coalesce((
     select jsonb_agg(jsonb_build_array(z.id, z.workshop, z.firm, z.cap, z.job_no, to_char(z.test_date, 'DD.MM.YYYY'), z.tr_r, z.tr_y, z.tr_b, z.meg_hve, z.meg_lve, z.meg_hvlv, z.dvdf, z.hv, z.nll, z.fll, z.remark,
                                          case when z.workshop = any (ed) then 1 else 0 end,
                                          (select count(*) from public.test_reg q where q.workshop = z.workshop and upper(q.job_no) = upper(z.job_no))) order by z.test_date, z.id)
-      from (select t.* from public.test_reg t where t.workshop = any ((select public.my_workshops())) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws)
+      from (select t.* from public.test_reg t where t.workshop = any (coalesce((select public.my_workshops()), '{}')) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws)
              order by t.test_date, t.id limit 3000) z), '[]'::jsonb));
 end $$;
 
@@ -3436,7 +3436,7 @@ begin
                                 from (select round(t.fll * 100 / s.load_loss) as p) pp) end as slab,
                    count(*) as n
               from public.test_reg t left join public.test_std s on s.cap = t.cap
-             where t.workshop = any ((select public.my_workshops())) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws)
+             where t.workshop = any (coalesce((select public.my_workshops()), '{}')) and t.test_date between p_from and p_to and (coalesce(p_ws, '') = '' or t.workshop = p_ws)
              group by 1, 2, 3) q), '[]'::jsonb));
 end $$;
 

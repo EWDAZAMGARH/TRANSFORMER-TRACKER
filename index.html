@@ -4614,7 +4614,7 @@ function sgOpen() {
     '<ol class="sgl">' +
     '<li><b>Make a free Supabase account.</b> <a class="btn sm" href="https://supabase.com/dashboard" target="_blank" rel="noopener">Open Supabase &rarr;</a><br>Click "Sign up" and use your e-mail (or GitHub). Open the mail Supabase sends and confirm it.</li>' +
     '<li><b>Make a new project.</b> Click "New project". Name: anything (example: <i>tf-workshop</i>). Database password: click "Generate a password" and save it in a safe place (do not share it). Region: <i>South Asia (Mumbai)</i>. Plan: <i>Free</i>. Click "Create new project" and wait 2 minutes.</li>' +
-    '<li><b>Put the tables in.</b> <button class="btn sm" type="button" data-sgc="setup.sql">Copy setup SQL</button><br>Then in Supabase, left menu: <i>SQL Editor</i> &rarr; <i>New query</i> &rarr; paste (Ctrl+V) &rarr; click <i>Run</i>. You should see "Success. No rows returned". Run it only once.</li>' +
+    '<li><b>Put the tables in.</b> <button class="btn sm" type="button" data-sgc="setup.sql">Copy setup SQL</button><br>Then in Supabase, left menu: <i>SQL Editor</i> &rarr; <i>New query</i> &rarr; paste (Ctrl+V) &rarr; click <i>Run</i>. You should see "Success. No rows returned". If it shows an error, copy the button again and re-run: it is safe to run it more than once.</li>' +
     '<li><b>Add the user-management function.</b> <button class="btn sm" type="button" data-sgc="admin-users.ts">Copy function code</button><br>In Supabase, left menu: <i>Edge Functions</i> &rarr; <i>Deploy a new function</i> (via Editor) &rarr; name it exactly <code>admin-users</code> &rarr; delete the sample code, paste &rarr; <i>Deploy</i>.</li>' +
     '<li><b>Make your own first login.</b> In Supabase: <i>Authentication</i> &rarr; <i>Users</i> &rarr; <i>Add user</i> &rarr; <i>Create new user</i>. E-mail: your <b>own real e-mail</b> (the same e-mail of your Supabase account, for example <code>anita@gmail.com</code>). You will login with this e-mail, and a forgotten password can be reset by mail. (Your employees get simple IDs like <code>anup@tf.uppcl</code>, made by you in the Admin tab.) Type a password and <b>tick "Auto Confirm User"</b>. Click Create.</li>' +
     '<li><b>Copy the two connection values</b> from your Supabase project. Open your project first (supabase.com/dashboard &rarr; click your project). You need <b>two</b> things:<br>' +
@@ -5066,7 +5066,7 @@ $('mrbtn').onclick = mrSumLoad;
 function sumFit() {
   var t = $('t-mrsum'); if (!t || t.classList.contains('hide')) return;
   t.style.setProperty('--mz', 1); if (window.innerWidth <= 900) return;
-  var r = t.getBoundingClientRect(), z = Math.max(0.5, Math.min(1, (window.innerHeight - r.top - 14) / Math.max(1, r.height)));
+  var r = t.getBoundingClientRect(), z = Math.max(1, Math.min(1, (window.innerHeight - r.top - 14) / Math.max(1, r.height)));
   t.style.setProperty('--mz', z.toFixed(3));
 }
 window.addEventListener('resize', function () { setTimeout(sumFit, 80); });
