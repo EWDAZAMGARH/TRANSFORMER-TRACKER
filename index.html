@@ -2033,7 +2033,13 @@ details.lkd{margin:2px 0 6px}details.lkd>summary{cursor:pointer;list-style:none;
 #tsout .wrap{max-height:calc(100vh - 230px);overflow:auto;border:1px solid #cfd6f3;border-radius:10px;background:#fff}
 table.tst{border-collapse:separate;border-spacing:0;font-size:12.5px;background:#fff;color:#000;min-width:1500px}
 #gov .tqf{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}#gov .tqf label{display:block;font-size:12px;font-weight:700;margin-bottom:3px}#gov .tqf input[type=text],#gov .tqf select{width:100%;box-sizing:border-box;min-height:42px;font-size:16px}
-@media (max-width:560px){#gov .tqf{grid-template-columns:1fr}}
+#gov .tqf{gap:8px 10px}
+#gov .tqf label{font-size:11px;margin-bottom:2px}
+#gov .tqf input[type=text],#gov .tqf select{min-height:38px;height:38px;padding:0 10px;font-size:16px;border-radius:10px}
+#gov .tqf .dt{display:flex;gap:4px;width:100%;align-items:center}#gov .tqf input.dtx{width:100%;min-width:0;text-align:left}
+#gov .tqf .calw{flex:none}
+#gov .box:has(.tqf){padding:10px 12px 12px}#gov .box:has(.tqf) .hd{margin-bottom:6px}
+#gov .tqgo{padding:11px!important}
 #gov .tqf>div{animation:tqIn .5s cubic-bezier(.2,.8,.2,1) both}
 #gov .tqf>div:nth-child(1){animation-delay:.04s}#gov .tqf>div:nth-child(2){animation-delay:.08s}#gov .tqf>div:nth-child(3){animation-delay:.12s}#gov .tqf>div:nth-child(4){animation-delay:.16s}#gov .tqf>div:nth-child(5){animation-delay:.2s}#gov .tqf>div:nth-child(6){animation-delay:.24s}#gov .tqf>div:nth-child(7){animation-delay:.28s}#gov .tqf>div:nth-child(8){animation-delay:.32s}#gov .tqf>div:nth-child(9){animation-delay:.36s}#gov .tqf>div:nth-child(10){animation-delay:.4s}#gov .tqf>div:nth-child(11){animation-delay:.44s}#gov .tqf>div:nth-child(12){animation-delay:.48s}
 @keyframes tqIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
@@ -2161,6 +2167,19 @@ nav button#tmr{margin-top:auto}
   table.tst tr[data-i] td.jb.d2{background:#86efac!important}table.tst tr[data-i] td.jb.d3{background:#fde047!important}table.tst tr[data-i] td.jb.d4{background:#fb923c!important}table.tst tr[data-i] td.jb.d5{background:#ef4444!important}
   table.tst tr#tstt{display:block;padding:8px 4px;font-weight:700}table.tst tr#tstt td{display:inline;border:0!important}
 }
+/* Kitty compare on screen: same look as the Kitty table, fits the screen */
+#mkout .lkw{font-family:inherit;overflow:visible}
+#mkout .lkw .wrap{overflow:visible}
+#mkout table.lkt{width:100%;table-layout:fixed;font-family:inherit}
+#mkout table.lkt th,#mkout table.lkt td{border:1px solid #cfd6f3!important;padding:4px 2px;white-space:normal;word-break:normal;text-align:center}
+#mkout table.lkt th{background:#eef0fb!important;color:#2c3a8c!important;font-size:11px;font-weight:700}
+#mkout table.lkt th.wn{font-size:12px;padding:5px 2px}#mkout table.lkt th.wn .yr{font-size:10px}#mkout table.lkt th.yr{font-size:11px}#mkout table.lkt th.tl{font-size:11px}
+#mkout table.lkt td{height:34px;font-size:14px;background:#fff!important}
+#mkout table.lkt td.cp{font-size:13px;font-weight:700;background:#eef0fb!important;color:#2c3a8c}
+#mkout table.lkt td.df,#mkout table.lkt td.lt,#mkout table.lkt td.tt{font-weight:700}
+#mkout table.lkt tr.T td{background:linear-gradient(180deg,#d6edaa,#c2de8a)!important;color:#1a3d0a;font-size:14px;font-weight:800}
+#mkout table.lkt td.lyc input{width:100%;min-width:0;font:600 14px Inter,system-ui,sans-serif;border:1px solid #e8a672;border-radius:6px}
+#mkout details.lkd>summary{font:700 13px Inter,system-ui,sans-serif}
 .gc.sirD input{color:#0f7a4e!important;font-weight:700}.gc.sirP input{color:#b45309!important;font-weight:700}
 </style>
 </head>
@@ -5328,7 +5347,7 @@ function tqHtml(keep) {
     f('Testing date', mrDt('tqd', keep.date || fmt(new Date()))) + f('Turn ratio <i>(' + TS_DT + ')</i>', inp('tqtr', '', 'decimal').replace('<input', '<input class="tqa" value="' + au.tr + '"')) +
     f('Megger <i>(' + TS_DM + ')</i>', inp('tqmg', '', 'decimal').replace('<input', '<input class="tqa" value="' + au.mg + '"')) + f('DVDF', inp('tqdv', '', '')) + f('High voltage', inp('tqhv', '', '')) +
     f('No load losses (W)', inp('tqnl', '', 'decimal')) + f('Full load loss', inp('tqfl', '', 'decimal')) + f('Remark', inp('tqrm', '', '')) +
-    '</div><div class="bar" style="margin-top:12px"><button class="btn tqgo" id="tqgo" type="button" style="flex:1;padding:13px">Submit &#10003;</button></div>';
+    '</div><div class="bar" style="margin-top:10px"><button class="btn tqgo" id="tqgo" type="button" style="flex:1">Submit &#10003;</button></div>';
 }
 function tqOpen(keep) {
   keep = keep || {}; var ws = keep.ws || $('tsw').value || mrWs()[0] || '';
@@ -5832,9 +5851,10 @@ function mrLykDraw() {
   if (!n) { $('mklkout').innerHTML = '<div class="msg info">No workshop has a started kitty on this date.</div>'; return; }
   L.cy = W.map(function (w) { var m = {}; w.rows.forEach(function (x) { m[x[0]] = x[1]; }); return m; });
   L.ly = W.map(function (w) { var m = {}; w.rows.forEach(function (x) { m[x[0]] = x[2]; }); return m; });
-  var canAny = W.some(function (w) { return w.edit; });
+  var canAny = W.some(function (w) { return w.edit; }), isAdm = !!ME && ME.role === 'admin';
   var h = '<div class="lkw">';
   /* 1. last year's kitty: type or paste here (all workshops together) */
+  if (isAdm) {
   h += '<details class="lkd" id="mklkd"' + (MR.lkOpen ? ' open' : '') + '><summary>LAST YEAR KITTY ON ' + esc(mrDmy(L.r.ly)) + (canAny ? ' <span>- click to open, then paste or type (saved by itself)</span>' : ' <span>- click to open</span>') + '</summary>' +
     '<div class="wrap"><table class="lkt xg" id="mklky" data-lyk="1"><thead><tr><th rowspan="2">SL</th><th rowspan="2">CAPACITY OF<br>TRANSFORMERS</th><th colspan="' + n + '" class="wn">NAME OF WORKSHOP</th><th rowspan="2">TOTAL</th></tr><tr>' +
     W.map(function (w) { return '<th class="wn">' + esc(dwNm(w.ws)) + '<div class="yr">AVAILABILITY</div></th>'; }).join('') + '</tr></thead><tbody>';
@@ -5845,16 +5865,16 @@ function mrLykDraw() {
   });
   h += '<tr class="T"><td></td><td>TOTAL</td>' + W.map(function () { return '<td class="ct"></td>'; }).join('') + '<td class="rt gt"></td></tr></tbody></table></div>' +
     '<div class="muted ins" style="font-size:12.5px;margin:6px 0 4px;font-family:Inter,system-ui,sans-serif">' + (canAny ? 'Copy the Excel block (rows = capacity, columns = workshops; a copied 800 KVA row is skipped) and paste it into the first cell.' : 'View only.') + '</div></details>';
+  }
   /* 2. the comparison, like the Excel sheet */
-  h += '<div class="lkhd" style="margin-top:16px"><b>' + esc(cmpTitle()) + '</b><span class="dt">DATE-' + esc(L.d) + '</span></div>' +
-    '<div class="wrap"><table class="lkt" id="mklkt"><thead><tr><th rowspan="3">SL</th><th rowspan="3">CAPACITY OF<br>TRANSFORMERS</th><th colspan="' + (n * 2) + '" class="wn">NAME OF WORKSHOP</th>' + (n > 1 ? '<th rowspan="3" class="tl">' + ly + ' TOTAL</th><th rowspan="3" class="tl">' + ty + ' TOTAL</th>' : '') + '<th rowspan="3" class="tl">DIFF</th></tr>' +
+  h += '<div class="wrap" style="margin-top:' + (isAdm ? '12' : '0') + 'px"><table class="lkt" id="mklkt"><thead><tr><th rowspan="3">CAPACITY<br>IN KVA</th><th colspan="' + (n * 2) + '" class="wn">NAME OF WORKSHOP</th>' + (n > 1 ? '<th rowspan="3" class="tl">' + ly + ' TOTAL</th><th rowspan="3" class="tl">' + ty + ' TOTAL</th>' : '') + '<th rowspan="3" class="tl">DIFF</th></tr>' +
     '<tr>' + W.map(function (w) { return '<th colspan="2" class="wn">' + esc(dwNm(w.ws)) + '</th>'; }).join('') + '</tr><tr>' + W.map(function () { return '<th class="yr">' + ly + '</th><th class="yr">' + ty + '</th>'; }).join('') + '</tr></thead><tbody>';
   KCAPS.forEach(function (c, j) {
-    h += '<tr data-c="' + c + '"><td class="sl">' + (j + 1) + '</td><td class="cp">' + c + ' KVA</td>';
+    h += '<tr data-c="' + c + '"><td class="cp">' + c + '</td>';
     W.forEach(function (w, i) { h += '<td class="vl" data-i="' + i + '"></td><td class="vy" data-i="' + i + '">' + (L.cy[i][c] || 0) + '</td>'; });
     h += (n > 1 ? '<td class="lt"></td><td class="tt"></td>' : '') + '<td class="df"></td></tr>';
   });
-  h += '<tr class="T"><td></td><td>TOTAL</td>' + W.map(function () { return '<td class="a"></td><td class="b"></td>'; }).join('') + (n > 1 ? '<td class="lt"></td><td class="tt"></td>' : '') + '<td class="df"></td></tr></tbody></table></div>';
+  h += '<tr class="T"><td>TOTAL</td>' + W.map(function () { return '<td class="a"></td><td class="b"></td>'; }).join('') + (n > 1 ? '<td class="lt"></td><td class="tt"></td>' : '') + '<td class="df"></td></tr></tbody></table></div>';
   var notes = W.filter(function (w) { return !w.auto && w.src && w.src !== L.r.ly; }).map(function (w) {
     var d = Math.round((new Date(w.src) - new Date(L.r.ly)) / 86400000); return esc(dwNm(w.ws)) + ': figures of ' + mrDmy(w.src) + ' (' + Math.abs(d) + ' day' + (Math.abs(d) > 1 ? 's' : '') + (d < 0 ? ' before' : ' after') + ')';
   });
@@ -5864,13 +5884,15 @@ function mrLykDraw() {
   $('mklkout').innerHTML = h; $('mklkxl').classList.remove('hide'); $('mklkpr').classList.remove('hide'); mrLykPaint();
 }
 function mrLykPaint() {
-  var L = MR.lk, t = $('mklkt'), e = $('mklky'); if (!t || !e) return; var W = L.r.ws, n = W.length, i;
+  var L = MR.lk, t = $('mklkt'), e = $('mklky'); if (!t) return; var W = L.r.ws, n = W.length, i;
   var ec = W.map(function () { return 0; }), gtot = 0;
-  [].forEach.call(e.querySelectorAll('tbody tr[data-c]'), function (tr) {
-    var c = +tr.dataset.c, a = 0; for (i = 0; i < n; i++) { var v = L.ly[i][c] || 0; a += v; ec[i] += v; }
-    tr.querySelector('.rt').innerHTML = '<b>' + a + '</b>'; gtot += a;
-  });
-  var eT = e.querySelector('tr.T'); [].forEach.call(eT.querySelectorAll('.ct'), function (td, k) { td.innerHTML = '<b>' + ec[k] + '</b>'; }); eT.querySelector('.gt').innerHTML = '<b>' + gtot + '</b>';
+  if (e) {
+    [].forEach.call(e.querySelectorAll('tbody tr[data-c]'), function (tr) {
+      var c = +tr.dataset.c, a = 0; for (i = 0; i < n; i++) { var v = L.ly[i][c] || 0; a += v; ec[i] += v; }
+      tr.querySelector('.rt').innerHTML = '<b>' + a + '</b>'; gtot += a;
+    });
+    var eT = e.querySelector('tr.T'); [].forEach.call(eT.querySelectorAll('.ct'), function (td, k) { td.innerHTML = '<b>' + ec[k] + '</b>'; }); eT.querySelector('.gt').innerHTML = '<b>' + gtot + '</b>';
+  }
   var cl = W.map(function () { return 0; }), cy = W.map(function () { return 0; }), gl = 0, gt = 0;
   [].forEach.call(t.querySelectorAll('tbody tr[data-c]'), function (tr) {
     var c = +tr.dataset.c, a = 0, b = 0;
