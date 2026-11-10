@@ -2110,6 +2110,57 @@ nav button#tmr{margin-top:auto}
  #mrdt td.ed input{max-width:62%}
  .mkt th,.mkt td{padding:4px 3px;font-size:11px}.mkt input{min-width:46px;padding:4px 2px}
 }
+
+.ins{display:none!important}
+/* ---- phones: bigger numbers in the M&R summary, Kitty and Testing Register as cards ---- */
+@media (max-width:700px){
+  #mrout td,#mrout td.l{font-size:12px!important;font-weight:700!important;padding:7px 0!important;line-height:1.2;white-space:nowrap!important;word-break:normal!important;letter-spacing:-.2px}
+  #mrout th{font-size:8.5px!important;padding:4px 1px!important;line-height:1.15}
+  #mrout th.l,#mrout td.l{width:14%;font-size:11px!important}
+  #mrout .capt td{font-size:11.5px!important}
+  #mrout td.l[data-sh]::after,#mrout th[data-sh]::after,#mrout a[data-sh]::after{font-size:11px!important}
+  #mrout .card{padding:8px!important}#mrout .card h3{font-size:12px!important}#mrout .card h3 .muted{font-size:9.5px!important}
+  #mrout a.n{font-size:inherit!important}
+  #mrkpi.skpi i{font-size:30px}
+  table.tst tr[data-i] td>input{width:100%!important;min-width:0!important;margin:0!important;box-sizing:border-box;border:1.5px solid #d3dbf2!important;border-radius:10px!important;background:#f7f9ff!important;text-align:left!important;padding:0 10px!important;min-height:42px;font-size:16px!important;height:42px}
+  table.tst tr[data-i] td>input:focus{border-color:#3b5bdb!important;background:#fff!important;box-shadow:0 0 0 3px rgba(59,91,219,.16)}
+  table.tst tr[data-i] td>input.dflt{color:#8e98b3;font-style:italic}
+  /* Kitty: the same table as on the computer, made smaller so all columns are seen at once */
+  #mkout .wrap{overflow:visible}
+  #mkout table.mkt.xg{table-layout:fixed;width:100%;min-width:0}
+  #mkout table.mkt.xg th{font-size:8.5px!important;padding:5px 1px!important;line-height:1.15;word-break:normal}
+  #mkout table.mkt.xg td{font-size:13px!important;height:34px;padding:0 1px!important}
+  #mkout table.mkt.xg td b{font-size:13px!important;font-weight:700}
+  #mkout table.mkt.xg th.l,#mkout table.mkt.xg td.l{width:13%}
+  #mkout table.mkt.xg td>input.mkn{width:100%!important;min-width:0!important;margin:0!important;padding:3px 0!important;font-size:13px!important;text-align:center;border:1px solid #e8a672!important;border-radius:6px!important;height:28px;box-sizing:border-box;background:#fff!important}
+  /* Testing Register: header bar and cards */
+  #t-mrtst .bar.sbar{display:grid!important;grid-template-columns:repeat(12,1fr)!important;gap:10px!important;align-items:end}
+  #t-mrtst .bar.sbar>*{min-width:0;box-sizing:border-box}
+  #t-mrtst .bar.sbar .ptitle{grid-column:1/-1}
+  #t-mrtst .bar.sbar #tsq{grid-column:span 8;padding:13px 8px!important;font-size:16px!important;white-space:nowrap;width:100%}
+  #t-mrtst .bar.sbar #tstd{grid-column:span 4;white-space:nowrap;width:100%;padding:13px 6px!important;font-size:14px!important}
+  #t-mrtst .bar.sbar>div{grid-column:span 6!important}
+  #t-mrtst .bar.sbar>div:has(#tsw){grid-column:1/-1!important}
+  #t-mrtst .bar.sbar #tsw{width:100%}
+  #t-mrtst .bar.sbar .dt{width:100%;display:flex}#t-mrtst .bar.sbar input.dtx{width:100%!important;min-width:0;font-size:15px!important;padding:10px 6px!important;text-align:left!important}
+  #t-mrtst .bar.sbar .calw{display:inline-block!important}
+  #t-mrtst .bar.sbar #tsgo,#t-mrtst .bar.sbar #tsrep,#t-mrtst .bar.sbar #tsxl{grid-column:span 4;white-space:nowrap;min-height:44px;padding:10px 4px!important;font-size:14px!important;width:100%}
+  #tsout .wrap{max-height:none;border:0;background:none;overflow:visible}
+  table.tst{min-width:0!important;background:none}
+  table.tst thead{display:none}table.tst,table.tst tbody{display:block}
+  table.tst tr[data-i]{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px;background:#fff;border:1px solid #cfd6f3;border-radius:14px;padding:10px;margin:0 0 10px;box-shadow:0 2px 8px rgba(30,50,120,.06)}
+  table.tst tr[data-i] td{display:flex;flex-direction:column;justify-content:flex-start;border:0!important;background:none!important;padding:0!important;text-align:left;white-space:normal;height:auto!important;min-width:0}
+  table.tst tr[data-i] td::before{content:attr(data-h);font-size:10.5px;font-weight:700;color:#6b7694;margin-bottom:4px;text-align:left}
+  table.tst tr[data-i] td select{height:42px;border:1.5px solid #d3dbf2;border-radius:10px;background:#f7f9ff;font-size:16px;text-align:left;padding:0 10px}
+  table.tst tr[data-i] td.sn{grid-column:1/-1;font-size:12px;width:auto}
+  table.tst tr[data-i] td.sn::before{content:none}
+  table.tst tr[data-i] td.au{background:#f1f8f1!important;border-radius:10px;padding:6px 10px!important;min-width:0}
+  table.tst tr[data-i] td.rx{grid-column:1/-1;align-items:flex-end}
+  table.tst tr[data-i] td.rx::before{content:none}
+  table.tst tr[data-i] td.jb.d2,table.tst tr[data-i] td.jb.d3,table.tst tr[data-i] td.jb.d4,table.tst tr[data-i] td.jb.d5{border-radius:10px}
+  table.tst tr[data-i] td.jb.d2{background:#86efac!important}table.tst tr[data-i] td.jb.d3{background:#fde047!important}table.tst tr[data-i] td.jb.d4{background:#fb923c!important}table.tst tr[data-i] td.jb.d5{background:#ef4444!important}
+  table.tst tr#tstt{display:block;padding:8px 4px;font-weight:700}table.tst tr#tstt td{display:inline;border:0!important}
+}
 .gc.sirD input{color:#0f7a4e!important;font-weight:700}.gc.sirP input{color:#b45309!important;font-weight:700}
 </style>
 </head>
@@ -2389,7 +2440,7 @@ nav button#tmr{margin-top:auto}
       <div id="mkout"></div>
       <div id="mklyo" class="ov hide" style="z-index:80"><div class="md" style="max-width:460px">
         <div class="bar" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Last year repair</h2><button class="btn sec" id="mklyx" type="button">Close &#10005;</button></div>
-        <div class="muted" style="font-size:12.5px;margin:6px 0">How many transformers were repaired in each capacity in the month (total). Used for "Next month need". This button goes away by itself once the kitty has its own repair figures for that time.</div>
+        <div class="muted ins" style="font-size:12.5px;margin:6px 0">How many transformers were repaired in each capacity in the month (total). Used for "Next month need". This button goes away by itself once the kitty has its own repair figures for that time.</div>
         <div class="bar"><div><label>Month</label><input type="month" id="mklym"></div></div>
         <div id="mklyt"></div>
         <div class="bar" style="margin-top:8px"><button class="btn" id="mklys" type="button">Save last year repair</button></div>
@@ -3302,6 +3353,22 @@ function mapCols(rows) {
   // normal layout (no Category, no TIME): Workshop, Division, Substation, Feeder, Place, Capacity, Complain no, PR NO, PR DATE, JE name ...
   return { start: 0, idx: ALLCOLS.map(function (c, i) { var j = i < 6 ? i : i === 6 || i === 17 ? -1 : i < 17 ? i - 1 : i - 2; return j < 0 ? -1 : j + off; }) };
 }
+function pasteDiag(items) {      // plain-words reason summary of the pasted rows (checked in the browser) - shown when rows are skipped
+  var nk = function (v) { return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }, mine = WSL.map(nk), badWs = {}, noPr = 0, badDt = 0, badDtEx = {}, nWs = 0;
+  items.forEach(function (it) {
+    var r = it.r, w = nk(r[0]);
+    if (!String(r[8]).trim()) noPr++;
+    var d = String(r[9]).trim(); if (!/^\d{2}\.\d{2}\.\d{4}$/.test(d) || !validD(d)) { badDt++; if (Object.keys(badDtEx).length < 3) badDtEx[d || '(empty)'] = 1; }
+    var ok = w && mine.some(function (m) { return m === w || (m.length >= 3 && (w.indexOf(m) >= 0 || m.indexOf(w) >= 0)); });
+    if (!ok) { nWs++; var k = String(r[0]).trim() || '(empty)'; badWs[k] = (badWs[k] || 0) + 1; }
+  });
+  var h = '<br><b>Why (checked on your screen, ' + items.length + ' rows pasted):</b>';
+  if (nWs) h += '<br>- ' + nWs + ' rows: workshop name not in your list. Names found in the paste: ' + Object.keys(badWs).sort(function (a, b) { return badWs[b] - badWs[a]; }).slice(0, 8).map(function (k) { return esc(k) + ' (' + badWs[k] + ')'; }).join(', ') + '. <b>Your workshops here:</b> ' + (WSL.map(esc).join(', ') || '(none)') + '.';
+  if (badDt) h += '<br>- ' + badDt + ' rows: PR DATE is not a valid DD.MM.YYYY date. Examples: ' + Object.keys(badDtEx).map(esc).join(', ') + '.';
+  if (noPr) h += '<br>- ' + noPr + ' rows: PR NO is empty.';
+  if (!nWs && !badDt && !noPr) h += '<br>- The rows look fine on the screen: the reason is in the "Line ..." notes above (permission / division).';
+  return h;
+}
 $('dpaste').onclick = function () { $('xta').value = ''; msg('xmsg', ''); $('xov').classList.remove('hide'); $('xta').focus(); };
 $('xclose').onclick = function () { $('xov').classList.add('hide'); };
 $('xgo').onclick = function () {
@@ -3313,12 +3380,13 @@ $('xgo').onclick = function () {
     items.push({ r: m.idx.map(function (j, i) { var v = j >= 0 ? String(src[j] == null ? '' : src[j]).trim() : ''; return DATE_IDX.indexOf(i) >= 0 ? normDate(v) : v; }) }); lines.push(k + 1);
   }
   if (!items.length) return msg('xmsg', 'No rows found.', 'err');
+  var diag = pasteDiag(items);
   var b = $('xgo'), tot = { added: 0, updated: 0, same: 0, skipped: 0, datefix: 0 }, notes = [], pos = 0, B = 500;
   busy(b, true, 'Saving...');
   (function next() {
     if (pos >= items.length) {
       busy(b, false); cclear();
-      msg('xmsg', '<b>Done.</b> ' + tot.added + ' added, ' + tot.updated + ' updated, ' + tot.same + ' unchanged, ' + tot.skipped + ' skipped.' + (tot.datefix ? '<br>' + tot.datefix + ' date(s) were not valid dates: left empty, and the text you wrote is kept in the Remark.' : '') + (notes.length ? '<br>' + notes.slice(0, 15).map(esc).join('<br>') : ''), tot.skipped ? 'info' : 'ok');
+      msg('xmsg', '<b>Done.</b> ' + tot.added + ' added, ' + tot.updated + ' updated, ' + tot.same + ' unchanged, ' + tot.skipped + ' skipped.' + (tot.datefix ? '<br>' + tot.datefix + ' date(s) were not valid dates: left empty, and the text you wrote is kept in the Remark.' : '') + (notes.length ? '<br>' + notes.slice(0, 15).map(esc).join('<br>') : '') + (tot.skipped ? diag : ''), tot.skipped ? 'info' : 'ok');
       return loadData();
     }
     var part = items.slice(pos, pos + B), base = pos; pos += B;
@@ -5046,7 +5114,7 @@ function trDraw() {
   if (!wk.length) { $('trout').innerHTML = '<div class="msg info">No transformer was tested in this period.</div>'; return; }
   var C2 = {}; ck.forEach(function (k) { C2[k + ' KVA'] = C[k]; });
   $('trout').innerHTML = '<div id="trboth" style="overflow:auto"><b style="font-size:12px;color:#1c3d7a">WORKSHOP WISE</b>' + trTable('NAME OF WORKSHOP', W, wk, 'trt1') + '<b style="font-size:12px;color:#1c3d7a">CAPACITY WISE</b>' + trTable('CAPACITY', C2, ck.map(function (k) { return k + ' KVA'; }), 'trt2') +
-    '<div class="muted" style="font-size:12px">% LOSSES = FULL LOAD LOSS x 100 / STD load loss. "% NOT KNOWN" = no full load loss typed or no STD for that capacity.</div></div>';
+    '<div class="muted ins" style="font-size:12px">% LOSSES = FULL LOAD LOSS x 100 / STD load loss. "% NOT KNOWN" = no full load loss typed or no STD for that capacity.</div></div>';
 }
 document.addEventListener('click', function (e) {
   var t = e.target; if (!t.closest) return;
@@ -5146,14 +5214,14 @@ function tsInp(k, v, ph, dflt, i, dis) { return '<input type="text" data-k="' + 
 function tsRowHtml(r, i) {
   var d = !r.edit, dt = function (v, def) { return v === def; };
   var h = '<tr data-i="' + i + '"><td class="sn">' + (i + 1) + '</td>' +
-    '<td><select data-k="ws"' + (d || r.id ? ' disabled' : '') + '>' + tsOpts(mrWs(), r.ws) + '</select></td>' +
-    '<td><select data-k="firm"' + (d ? ' disabled' : '') + '>' + tsOpts(TS.firms[r.ws] || [], r.firm, '(choose firm)') + '</select></td>' +
-    '<td><select data-k="cap"' + (d ? ' disabled' : '') + '>' + tsOpts(TS_CAPS, r.cap, '') + '</select></td>' +
-    '<td class="jb">' + tsInp('job', r.job, '', false, i, d) + '</td><td>' + tsInp('date', r.date, 'DD.MM.YYYY', false, i, d) + '</td>';
-  h += '<td>' + tsInp('tr0', r.tr[0], TS_DT, false, i, d) + '</td><td>' + tsInp('mg0', r.mg[0], '2000-5000', false, i, d) + '</td>';
-  h += '<td>' + tsInp('dvdf', r.dvdf, '', false, i, d) + '</td><td>' + tsInp('hv', r.hv, '', false, i, d) + '</td><td>' + tsInp('nll', r.nll, '', false, i, d) + '</td><td>' + tsInp('fll', r.fll, '', false, i, d) + '</td>';
-  h += '<td class="au q"></td><td class="au p"></td>';
-  h += '<td>' + tsInp('remark', r.remark, '', false, i, d) + '</td><td class="rx">' + (r.edit ? '<button type="button" title="Delete this row">&times;</button>' : '') + '</td></tr>';
+    '<td data-h="WORKSHOP"><select data-k="ws"' + (d || r.id ? ' disabled' : '') + '>' + tsOpts(mrWs(), r.ws) + '</select></td>' +
+    '<td data-h="FIRM"><select data-k="firm"' + (d ? ' disabled' : '') + '>' + tsOpts(TS.firms[r.ws] || [], r.firm, '(choose firm)') + '</select></td>' +
+    '<td data-h="CAPACITY (KVA)"><select data-k="cap"' + (d ? ' disabled' : '') + '>' + tsOpts(TS_CAPS, r.cap, '') + '</select></td>' +
+    '<td class="jb" data-h="JOB NO / UNIQUE NO">' + tsInp('job', r.job, '', false, i, d) + '</td><td data-h="TESTING DATE">' + tsInp('date', r.date, 'DD.MM.YYYY', false, i, d) + '</td>';
+  h += '<td data-h="TURN RATIO">' + tsInp('tr0', r.tr[0], TS_DT, false, i, d) + '</td><td data-h="MEGGER">' + tsInp('mg0', r.mg[0], '2000-5000', false, i, d) + '</td>';
+  h += '<td data-h="DVDF">' + tsInp('dvdf', r.dvdf, '', false, i, d) + '</td><td data-h="HIGH VOLTAGE">' + tsInp('hv', r.hv, '', false, i, d) + '</td><td data-h="NO LOAD LOSS (W)">' + tsInp('nll', r.nll, '', false, i, d) + '</td><td data-h="FULL LOAD LOSS">' + tsInp('fll', r.fll, '', false, i, d) + '</td>';
+  h += '<td class="au q" data-h="IS LOSSES"></td><td class="au p" data-h="% LOSSES"></td>';
+  h += '<td data-h="REMARK" style="grid-column:1/-1">' + tsInp('remark', r.remark, '', false, i, d) + '</td><td class="rx">' + (r.edit ? '<button type="button" title="Delete this row">&times;</button>' : '') + '</td></tr>';
   return h;
 }
 function tsStd(cap) { var x = TS.std[cap]; return x && x[2] ? +x[2] : 0; }
@@ -5163,7 +5231,7 @@ function tsDraw() {
   var h = '<div class="wrap"><table class="tst xg" id="tstb" data-ts="1"><thead><tr><th>S.No.</th><th>NAME OF WORKSHOP</th><th>FIRM NAME</th><th>CAPACITY<br>(IN KVA)</th><th>JOB NO / UNIQUE NO</th><th>TESTING DATE</th><th>TURN RATIO</th><th>MEGGER</th><th>DVDF</th><th>HIGH VOLTAGE</th><th>NO LOAD LOSSES (W)</th><th>FULL LOAD LOSS</th><th style="background:#dff3df">IS LOSSES</th><th style="background:#dff3df">% LOSSES</th><th>REMARK</th><th></th></tr></thead><tbody>';
   TS.rows.forEach(function (r, i) { h += tsRowHtml(r, i); });
   h += '<tr class="tt" id="tstt"><td colspan="12" style="text-align:right">TOTAL &nbsp;</td><td class="n" colspan="2"></td><td colspan="2"></td></tr></tbody></table></div>' +
-    '<div class="bar" style="margin-top:8px"><button class="btn sec" id="tsadd" type="button">+ 10 rows</button><span class="muted" style="font-size:12.5px;flex:1">Fill up to FULL LOAD LOSS (job no, capacity and workshop are needed to save). Typing is saved by itself. <b>Turn ratio</b> (' + TS_DT + ') and <b>megger</b> (' + TS_DM + ') - if you leave them empty, one value between the two limits is filled by itself (grey). IS LOSSES and % LOSSES are calculated from the STD; the slab counts are in the Report. You can paste a block from Excel (columns from NAME OF WORKSHOP to FULL LOAD LOSS). <b>Job no colour:</b> <span class="jbk d2">2 times</span> <span class="jbk d3">3 times</span> <span class="jbk d4">4 times</span> <span class="jbk d5">more than 4</span></span></div>';
+    '<div class="bar" style="margin-top:8px"><button class="btn sec" id="tsadd" type="button">+ 10 rows</button><span class="muted" style="font-size:12.5px;flex:1">Job no: <span class="jbk d2">2 times</span> <span class="jbk d3">3 times</span> <span class="jbk d4">4 times</span> <span class="jbk d5">more than 4</span></span></div>';
   $('tsout').innerHTML = h; tsPaintAll();
 }
 function tsKey(r) { var j = String(r.job || '').trim().toUpperCase(); return j && r.ws ? r.ws + '|' + j : ''; }
@@ -5260,7 +5328,7 @@ function tqHtml(keep) {
     f('Testing date', mrDt('tqd', keep.date || fmt(new Date()))) + f('Turn ratio <i>(' + TS_DT + ')</i>', inp('tqtr', '', 'decimal').replace('<input', '<input class="tqa" value="' + au.tr + '"')) +
     f('Megger <i>(' + TS_DM + ')</i>', inp('tqmg', '', 'decimal').replace('<input', '<input class="tqa" value="' + au.mg + '"')) + f('DVDF', inp('tqdv', '', '')) + f('High voltage', inp('tqhv', '', '')) +
     f('No load losses (W)', inp('tqnl', '', 'decimal')) + f('Full load loss', inp('tqfl', '', 'decimal')) + f('Remark', inp('tqrm', '', '')) +
-    '</div><div class="tqn">Turn ratio and megger are shown faded: that value is saved as it is. Type over it to change.</div><div class="bar" style="margin-top:12px"><button class="btn tqgo" id="tqgo" type="button" style="flex:1;padding:13px">Submit &#10003;</button></div>';
+    '</div><div class="bar" style="margin-top:12px"><button class="btn tqgo" id="tqgo" type="button" style="flex:1;padding:13px">Submit &#10003;</button></div>';
 }
 function tqOpen(keep) {
   keep = keep || {}; var ws = keep.ws || $('tsw').value || mrWs()[0] || '';
@@ -5295,7 +5363,7 @@ function tsStdOpen() {
   var go = function () {
     var ed = TS.stdEdit, h = '<table class="mkt" id="tsstd" style="min-width:420px"><thead><tr><th>CAPACITY OF DT (KVA)</th><th>NO LOAD (W)</th><th>LOAD LOSS (W)</th></tr></thead><tbody>';
     TS_CAPS.forEach(function (c) { var x = TS.std[c] || [c, null, null]; h += '<tr data-c="' + c + '"><td><b>' + c + '</b></td>' + ['nl', 'll'].map(function (k, j) { var v = x[j + 1] == null ? '' : x[j + 1]; return '<td>' + (ed ? '<input type="text" class="sdi" data-k="' + k + '" inputmode="decimal" value="' + v + '" style="width:110px;text-align:center">' : v) + '</td>'; }).join('') + '</tr>'; });
-    h += '</tbody></table><div class="muted" style="font-size:12.5px;margin-top:8px">The % LOSSES of the Testing Register = FULL LOAD LOSS x 100 / LOAD LOSS of this table (rounded). ' + (ed ? 'Change a figure here and the register is recalculated. It saves by itself.' : 'Only the Admin can change it.') + '</div>';
+    h += '</tbody></table><div class="muted ins" style="font-size:12.5px;margin-top:8px">The % LOSSES of the Testing Register = FULL LOAD LOSS x 100 / LOAD LOSS of this table (rounded). ' + (ed ? 'Change a figure here and the register is recalculated. It saves by itself.' : 'Only the Admin can change it.') + '</div>';
     govOpen('<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px;margin-right:6px"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>STD - standard losses (IS LOSSES)', h, true);
   };
   if (Object.keys(TS.std).length) go(); else rpc('test_std_json').then(function (r) { TS.std = {}; (r.rows || []).forEach(function (x) { TS.std[x[0]] = x; }); TS.stdEdit = !!r.edit; go(); }).catch(function (er) { msg('tsmsg', esc(er.message), 'err'); });
@@ -5592,13 +5660,13 @@ function mrKitDraw() {
   h += '<div class="card"><div class="wrap"><table class="mkt xg"><thead><tr><th class="l">CAPACITY IN KVA</th><th>OPENING KITTY</th><th>ISSUE</th><th>REPAIR</th><th class="ed">ISSUE TO OTHER WORKSHOP</th><th class="ed">RECEIVE FROM OTHER W/S</th><th>NET KITTY</th></tr></thead><tbody>';
   KCAPS.forEach(function (c) {
     var x = R[c] || [c, 0, 0, 0, 0, 0, 0, 0];
-    h += '<tr data-c="' + c + '"><td class="l">' + c + '</td><td class="o">' + x[1] + '</td><td class="i">' + x[3] + '</td><td class="repair"><b>' + x[4] + '</b></td><td class="ed to_other">' + mrKitInp(c, 'to_other', x[5], can) + '</td><td class="ed from_other">' + mrKitInp(c, 'from_other', x[6], can) + '</td><td class="n"><b>' + x[7] + '</b></td></tr>';
+    h += '<tr data-c="' + c + '"><td class="l" data-h="CAPACITY KVA">' + c + '</td><td class="o" data-h="OPENING">' + x[1] + '</td><td class="i" data-h="ISSUE">' + x[3] + '</td><td class="repair" data-h="REPAIR"><b>' + x[4] + '</b></td><td class="ed to_other" data-h="ISSUE TO OTHER W/S">' + mrKitInp(c, 'to_other', x[5], can) + '</td><td class="ed from_other" data-h="RECEIVE FROM OTHER W/S">' + mrKitInp(c, 'from_other', x[6], can) + '</td><td class="n" data-h="NET KITTY"><b>' + x[7] + '</b></td></tr>';
   });
   h += '<tr class="t" id="mktot"><td class="l">TOTAL</td><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table></div>';
-  h += '<div class="bar" style="margin-top:10px"><span class="muted" style="font-size:12px;flex:1">Issue comes from the Data Sheet. <b>Repair comes from the Repair tab</b> (all firms, every day); here type only the issue to / receive from other workshop. Unrepaired T/F is shown only in the Chamber Assembly report. Typing is saved by itself. Net kitty = opening + repair + receive &minus; issue &minus; issue to other workshop.</span>' +
+  h += '<div class="bar" style="margin-top:10px"><span class="muted ins" style="font-size:12px;flex:1">Issue comes from the Data Sheet. <b>Repair comes from the Repair tab</b> (all firms, every day); here type only the issue to / receive from other workshop. Unrepaired T/F is shown only in the Chamber Assembly report. Typing is saved by itself. Net kitty = opening + repair + receive &minus; issue &minus; issue to other workshop.</span>' +
     (can ? '<button class="btn" id="mksave" type="button" disabled>Save kitty</button>' : '') + (adm ? '<button class="btn sec" id="mkbase" type="button">Start figures (Admin)</button>' : '') + '<button class="btn sec" id="mkpr" type="button">&#128424; Print</button><button class="btn sec" id="mkxl" type="button">&#11015; Excel</button></div></div>';
   h += mrLykHtml();
-  h += (isAll ? '<div class="muted" style="font-size:12.5px">All workshops together (view only). Choose one workshop to type, save or check the need.</div>' : mrNeedHtml());
+  h += (isAll ? '<div class="muted ins" style="font-size:12.5px">All workshops together (view only). Choose one workshop to type, save or check the need.</div>' : mrNeedHtml());
   $('mkout').innerHTML = h + (adm ? '<div id="mkbw" class="hide"></div>' : ''); mrKitTotal(); if (MR.lkOn !== false) mrLykLoad();
 }
 function mrKitTotal() {
@@ -5614,7 +5682,7 @@ function mrKitTotal() {
 }
 document.addEventListener('input', function (e) { var t = e.target; if (t.classList && t.classList.contains('mkn')) { mrKitTotal(); var b = $('mksave'); if (b) b.disabled = false; } });
 function mrBaseHtml(cur) {
-  var day = MR.kd ? MR.kd.d : fmt(new Date()), h = '<div class="card" id="mkbc"><h3>Start figures <span class="muted" style="text-transform:none">(Admin) - ' + esc(MR.kd ? MR.kd.ws : '') + '</span></h3><div class="muted" style="font-size:12.5px;margin-bottom:8px">Type the opening kitty and the unrepaired T/F as they are on the start date. From that day the app counts forward by itself.</div>' +
+  var day = MR.kd ? MR.kd.d : fmt(new Date()), h = '<div class="card" id="mkbc"><h3>Start figures <span class="muted" style="text-transform:none">(Admin) - ' + esc(MR.kd ? MR.kd.ws : '') + '</span></h3><div class="muted ins" style="font-size:12.5px;margin-bottom:8px">Type the opening kitty and the unrepaired T/F as they are on the start date. From that day the app counts forward by itself.</div>' +
     '<div class="bar"><div><label>Start date</label>' + mrDt('mkbd', day) + '</div></div><div class="wrap"><table class="mkt xg"><thead><tr><th class="l">CAPACITY IN KVA</th><th class="ed">OPENING KITTY</th><th class="ed">UNREPAIRED T/F</th></tr></thead><tbody>';
   KCAPS.forEach(function (c) { var x = cur && cur[c] ? cur[c] : [c, 0, 0]; h += '<tr><td class="l">' + c + '</td><td class="ed"><input type="text" inputmode="numeric" autocomplete="off" class="mkb" data-c="' + c + '" data-k="opening" value="' + (x[1] || 0) + '"></td><td class="ed"><input type="text" inputmode="numeric" autocomplete="off" class="mkb" data-c="' + c + '" data-k="unrep" value="' + (x[2] || 0) + '"></td></tr>'; });
   return h + '</tbody></table></div><div class="bar" style="margin-top:10px"><button class="btn" id="mkbsave" type="button">Save start figures</button></div><div id="mkbmsg"></div></div>';
@@ -5658,7 +5726,7 @@ function mrKitTop(K, r) {
 }
 function mrNeedHtml() {
   return '<div class="card" id="mkneed"><h3>Next month need <span class="muted" style="text-transform:none;font-weight:600">- last year same month</span></h3>' +
-    '<div class="muted" style="font-size:12.5px;margin-bottom:8px">Takes the kitty of this date, <b>adds</b> last year\'s repair of the next days and <b>subtracts</b> last year\'s PR of the same days (made a little more). It tells how many transformers you still need.</div>' +
+    '<div class="muted ins" style="font-size:12.5px;margin-bottom:8px">Takes the kitty of this date, <b>adds</b> last year\'s repair of the next days and <b>subtracts</b> last year\'s PR of the same days (made a little more). It tells how many transformers you still need.</div>' +
     '<div class="bar"><div><label>Days</label><input type="number" id="mkdays" min="1" max="120" step="1" value="' + (MR.ndays || 30) + '" style="width:90px"></div><div><label>PR increase %</label><input type="number" id="mkpct" min="0" max="5" step="0.5" value="' + (MR.npct == null ? 5 : MR.npct) + '" style="width:90px"></div><button class="btn" id="mkneedb" type="button">Check need</button></div><div id="mkneedmsg"></div><div id="mkneedout"></div></div>';
 }
 function mrNeedLoad() {
@@ -5776,17 +5844,17 @@ function mrLykDraw() {
     h += '<td class="rt"></td></tr>';
   });
   h += '<tr class="T"><td></td><td>TOTAL</td>' + W.map(function () { return '<td class="ct"></td>'; }).join('') + '<td class="rt gt"></td></tr></tbody></table></div>' +
-    '<div class="muted" style="font-size:12.5px;margin:6px 0 4px;font-family:Inter,system-ui,sans-serif">' + (canAny ? 'Copy the Excel block (rows = capacity, columns = workshops; a copied 800 KVA row is skipped) and paste it into the first cell.' : 'View only.') + '</div></details>';
+    '<div class="muted ins" style="font-size:12.5px;margin:6px 0 4px;font-family:Inter,system-ui,sans-serif">' + (canAny ? 'Copy the Excel block (rows = capacity, columns = workshops; a copied 800 KVA row is skipped) and paste it into the first cell.' : 'View only.') + '</div></details>';
   /* 2. the comparison, like the Excel sheet */
   h += '<div class="lkhd" style="margin-top:16px"><b>' + esc(cmpTitle()) + '</b><span class="dt">DATE-' + esc(L.d) + '</span></div>' +
-    '<div class="wrap"><table class="lkt" id="mklkt"><thead><tr><th rowspan="3">SL</th><th rowspan="3">CAPACITY OF<br>TRANSFORMERS</th><th colspan="' + (n * 2) + '" class="wn">NAME OF WORKSHOP</th><th rowspan="3" class="tl">' + ly + ' TOTAL</th><th rowspan="3" class="tl">' + ty + ' TOTAL</th><th rowspan="3" class="tl">DIFF</th></tr>' +
+    '<div class="wrap"><table class="lkt" id="mklkt"><thead><tr><th rowspan="3">SL</th><th rowspan="3">CAPACITY OF<br>TRANSFORMERS</th><th colspan="' + (n * 2) + '" class="wn">NAME OF WORKSHOP</th>' + (n > 1 ? '<th rowspan="3" class="tl">' + ly + ' TOTAL</th><th rowspan="3" class="tl">' + ty + ' TOTAL</th>' : '') + '<th rowspan="3" class="tl">DIFF</th></tr>' +
     '<tr>' + W.map(function (w) { return '<th colspan="2" class="wn">' + esc(dwNm(w.ws)) + '</th>'; }).join('') + '</tr><tr>' + W.map(function () { return '<th class="yr">' + ly + '</th><th class="yr">' + ty + '</th>'; }).join('') + '</tr></thead><tbody>';
   KCAPS.forEach(function (c, j) {
     h += '<tr data-c="' + c + '"><td class="sl">' + (j + 1) + '</td><td class="cp">' + c + ' KVA</td>';
     W.forEach(function (w, i) { h += '<td class="vl" data-i="' + i + '"></td><td class="vy" data-i="' + i + '">' + (L.cy[i][c] || 0) + '</td>'; });
-    h += '<td class="lt"></td><td class="tt"></td><td class="df"></td></tr>';
+    h += (n > 1 ? '<td class="lt"></td><td class="tt"></td>' : '') + '<td class="df"></td></tr>';
   });
-  h += '<tr class="T"><td></td><td>TOTAL</td>' + W.map(function () { return '<td class="a"></td><td class="b"></td>'; }).join('') + '<td class="lt"></td><td class="tt"></td><td class="df"></td></tr></tbody></table></div>';
+  h += '<tr class="T"><td></td><td>TOTAL</td>' + W.map(function () { return '<td class="a"></td><td class="b"></td>'; }).join('') + (n > 1 ? '<td class="lt"></td><td class="tt"></td>' : '') + '<td class="df"></td></tr></tbody></table></div>';
   var notes = W.filter(function (w) { return !w.auto && w.src && w.src !== L.r.ly; }).map(function (w) {
     var d = Math.round((new Date(w.src) - new Date(L.r.ly)) / 86400000); return esc(dwNm(w.ws)) + ': figures of ' + mrDmy(w.src) + ' (' + Math.abs(d) + ' day' + (Math.abs(d) > 1 ? 's' : '') + (d < 0 ? ' before' : ' after') + ')';
   });
@@ -5807,10 +5875,10 @@ function mrLykPaint() {
   [].forEach.call(t.querySelectorAll('tbody tr[data-c]'), function (tr) {
     var c = +tr.dataset.c, a = 0, b = 0;
     for (i = 0; i < n; i++) { var x = L.ly[i][c] || 0, y = L.cy[i][c] || 0; tr.querySelector('.vl[data-i="' + i + '"]').textContent = x; a += x; b += y; cl[i] += x; cy[i] += y; }
-    tr.querySelector('.lt').innerHTML = '<b>' + a + '</b>'; tr.querySelector('.tt').innerHTML = '<b>' + b + '</b>'; tr.querySelector('.df').innerHTML = '<b>' + (b - a) + '</b>'; gl += a; gt += b;
+    if (tr.querySelector('.lt')) { tr.querySelector('.lt').innerHTML = '<b>' + a + '</b>'; tr.querySelector('.tt').innerHTML = '<b>' + b + '</b>'; } tr.querySelector('.df').innerHTML = '<b>' + (b - a) + '</b>'; gl += a; gt += b;
   });
   var T = t.querySelector('tr.T'), A = T.querySelectorAll('.a'), B = T.querySelectorAll('.b'); for (i = 0; i < n; i++) { A[i].innerHTML = '<b>' + cl[i] + '</b>'; B[i].innerHTML = '<b>' + cy[i] + '</b>'; }
-  T.querySelector('.lt').innerHTML = '<b>' + gl + '</b>'; T.querySelector('.tt').innerHTML = '<b>' + gt + '</b>'; T.querySelector('.df').innerHTML = '<b>' + (gt - gl) + '</b>';
+  if (T.querySelector('.lt')) { T.querySelector('.lt').innerHTML = '<b>' + gl + '</b>'; T.querySelector('.tt').innerHTML = '<b>' + gt + '</b>'; } T.querySelector('.df').innerHTML = '<b>' + (gt - gl) + '</b>';
 }
 function mrLykSave() {
   var L = MR.lk; if (!L) return; var ws = Object.keys(L.dirty); if (!ws.length) return; L.dirty = {};
@@ -6155,7 +6223,7 @@ document.addEventListener('keydown', function (e) {
 /* start figures (Admin, once) - inside the pop-up */
 function mrChmBaseHtml(ws, day, cur) {
   var o = mrWs().map(function (w) { return '<option' + (w === ws ? ' selected' : '') + '>' + esc(w) + '</option>'; }).join('');
-  var h = '<div class="card"><h3>Start figures <span class="muted" style="text-transform:none">(Admin, typed once)</span></h3><div class="muted" style="font-size:12.5px;margin-bottom:8px">Type how many transformers are in ASSEMBLY and in OVEN on the start date (in the morning). From that day the Repair tab entries move them: ASSEMBLY entries reduce Unrepaired and add to Assembly; OVEN entries reduce Assembly and add to Oven. The Kitty "unrepaired" start figure should not include these.</div>' +
+  var h = '<div class="card"><h3>Start figures <span class="muted" style="text-transform:none">(Admin, typed once)</span></h3><div class="muted ins" style="font-size:12.5px;margin-bottom:8px">Type how many transformers are in ASSEMBLY and in OVEN on the start date (in the morning). From that day the Repair tab entries move them: ASSEMBLY entries reduce Unrepaired and add to Assembly; OVEN entries reduce Assembly and add to Oven. The Kitty "unrepaired" start figure should not include these.</div>' +
     '<div class="bar"><div><label>Workshop</label><select id="mhbws">' + o + '</select></div><div><label>Start date</label>' + mrDt('mhbd', day) + '</div></div><div class="wrap"><table class="mkt xg"><thead><tr><th class="l">CAPACITY IN KVA</th><th class="ed">ASSEMBLY</th><th class="ed">OVEN</th></tr></thead><tbody>';
   CH_CAPS.forEach(function (c) { var x = cur[c] || [0, 0]; h += '<tr><td class="l">' + c + '</td><td class="ed"><input type="text" inputmode="numeric" autocomplete="off" class="mhb" data-c="' + c + '" data-k="a" value="' + (x[0] || 0) + '"></td><td class="ed"><input type="text" inputmode="numeric" autocomplete="off" class="mhb" data-c="' + c + '" data-k="o" value="' + (x[1] || 0) + '"></td></tr>'; });
   return h + '</tbody></table></div><div class="bar" style="margin-top:10px"><button class="btn" id="mhbsave" type="button">Save start figures</button></div><div id="mhbmsg"></div></div>';
@@ -6284,7 +6352,7 @@ function mrScDraw() {
   });
   h += '<tr class="t" id="mstot"><td class="l">TOTAL</td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table></div>';
   if (r.nobase.length) h += '<div class="muted" style="font-size:12px;margin-top:6px">Opening scrap is not set for: ' + esc(r.nobase.join(', ')) + ' (it counts as 0; the Admin sets it once with "Opening scrap / standard").</div>';
-  h += '<div class="bar" style="margin-top:10px"><span class="muted" style="font-size:12px;flex:1">Receive = repaired T/F of the Repair tab (10 to 250 aluminium) &times; standard recovery. Remaining of a day becomes the opening scrap of the next day.</span>' +
+  h += '<div class="bar" style="margin-top:10px"><span class="muted ins" style="font-size:12px;flex:1">Receive = repaired T/F of the Repair tab (10 to 250 aluminium) &times; standard recovery. Remaining of a day becomes the opening scrap of the next day.</span>' +
     (can ? '<button class="btn" id="mssave" type="button" disabled>Save</button>' : '') + (adm ? '<button class="btn sec" id="msbase" type="button">Opening scrap / standard (Admin)</button>' : '') + '<button class="btn sec" id="msxl" type="button">&#11015; Excel</button></div></div>';
   $('msout').innerHTML = h; $('msbw').classList.add('hide'); $('msbw').innerHTML = '';
   mrScTotal();
@@ -6352,9 +6420,9 @@ document.addEventListener('change', function (e) { var t = e.target; if (t && t.
 function mrScBaseHtml() {
   var S = MR.sd, c = S.c, w = S.w, base = c && c.base, o = mrWs().map(function (x) { return '<option' + (x === w ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('');
   var h = '<div class="card"><h3>Opening scrap / standard <span class="muted" style="text-transform:none">(Admin)</span></h3>' +
-    '<div class="muted" style="font-size:12.5px;margin-bottom:8px">1) Type the scrap lying in the workshop in the MORNING of a start date (kg). After that the opening of every day is the remaining of the day before.</div>' +
+    '<div class="muted ins" style="font-size:12.5px;margin-bottom:8px">1) Type the scrap lying in the workshop in the MORNING of a start date (kg). After that the opening of every day is the remaining of the day before.</div>' +
     '<div class="bar" style="align-items:flex-end"><div><label>Workshop</label><select id="msbws">' + o + '</select></div><div><label>Start date</label>' + mrDt('msbd', base ? mrDmy(base.day) : S.d) + '</div><div><label>Opening scrap (kg)</label><input type="text" inputmode="decimal" class="msn0" id="msbo" value="' + (base ? scF(base.opening) : '0.00') + '" style="max-width:130px"></div><button class="btn" id="msbsave" type="button">Save opening scrap</button></div><div id="msbmsg"></div>' +
-    '<div class="muted" style="font-size:12.5px;margin:12px 0 8px">2) Standard (from the standard sheet): kg of scrap per transformer and the recovery %. Scrap receive = repaired T/F &times; standard qty &times; recovery %. (One standard for all workshops.)</div>' +
+    '<div class="muted ins" style="font-size:12.5px;margin:12px 0 8px">2) Standard (from the standard sheet): kg of scrap per transformer and the recovery %. Scrap receive = repaired T/F &times; standard qty &times; recovery %. (One standard for all workshops.)</div>' +
     '<div class="wrap"><table class="mkt"><thead><tr><th class="l">CAPACITY IN KVA</th><th class="ed">STANDARD QTY (kg)</th></tr></thead><tbody>';
   (c ? c.rows : []).forEach(function (x) { h += '<tr><td class="l">' + esc(String(x[0]).replace('250AL', '250 AL')) + '</td><td class="ed"><input type="text" inputmode="decimal" class="msn0 mssd" data-c="' + esc(x[0]) + '" value="' + scF(x[2]).replace(/\.00$/, '') + '"></td></tr>'; });
   return h + '</tbody></table></div><div class="bar" style="margin-top:10px;align-items:flex-end"><div><label>Recovery %</label><input type="text" inputmode="decimal" class="msn0" id="mspct" value="' + (+(c ? c.pct : 97)) + '" style="max-width:90px"></div><button class="btn" id="msssave" type="button">Save standard</button></div><div id="msbmsg2"></div></div>';
