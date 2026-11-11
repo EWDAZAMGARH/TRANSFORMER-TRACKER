@@ -4905,12 +4905,26 @@ function arDraw() {
   $('arbox').innerHTML = h;
 }
 function arFy(m) { var y = +m.slice(0, 4), mo = +m.slice(5, 7), s = mo >= 4 ? y : y - 1; return s + '-' + String(s + 1).slice(-2); }
-function arPost(body) {
-  return fetch($('aru') ? $('aru').value.trim() : AR.cfg.url, { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+function arPost(body) {                       // a hidden form + postMessage: it works without CORS (fetch to Apps Script is blocked in many browsers)
+  var url = $('aru') ? $('aru').value.trim() : AR.cfg.url, id = 'a' + Date.now() + Math.random().toString(36).slice(2, 8);
+  body.id = id;
+  return new Promise(function (res, rej) {
+    var fr = document.createElement('iframe'), fm = document.createElement('form'), inp = document.createElement('input'), done = false, to;
+    fr.name = 'arfr' + id; fr.style.display = 'none'; fm.method = 'POST'; fm.action = url; fm.target = fr.name; fm.style.display = 'none';
+    inp.type = 'hidden'; inp.name = 'payload'; inp.value = JSON.stringify(body); fm.appendChild(inp);
+    function end(f, v) { if (done) return; done = true; clearTimeout(to); window.removeEventListener('message', on); setTimeout(function () { fr.remove(); fm.remove(); }, 50); f(v); }
+    function on(ev) {
+      if (!/^https:\/\/([a-z0-9-]+\.)*(googleusercontent|google)\.com$/.test(ev.origin) || !ev.data || ev.data.id !== id) return;
+      end(res, ev.data);
+    }
+    window.addEventListener('message', on);
+    to = setTimeout(function () { end(rej, new Error('timeout')); }, 120000);
+    document.body.appendChild(fr); document.body.appendChild(fm); fm.submit();
+  });
 }
 function arGo(btn) {
   var m = AR.st && AR.st.months[0] && AR.st.months[0].m; if (!m || AR.run) return;
-  var tok = AR.cfg.token;
+  var tok = ($('art') && $('art').value.trim()) || AR.cfg.token;
   if (!window.confirm('Save ' + m.slice(5) + '.' + m.slice(0, 4) + ' (Repair + Testing Register) to Google Drive and then DELETE it from Supabase?\n\nIt is deleted only after Drive has confirmed every row.')) return;
   AR.run = true; busy(btn, true, 'Saving to Drive...'); msg('armsg', '');
   var d, sent = 0, tot = 0;
@@ -4945,7 +4959,7 @@ document.addEventListener('click', function (e) {
   } else if (t.id === 'artest') {
     busy(t, true, 'Testing...');
     arPost({ token: $('art').value.trim(), ping: true }).then(function (r) { msg('armsg', r && r.ok ? 'Google Drive link works.' : 'The link answered, but: ' + esc((r && r.error) || 'unknown'), r && r.ok ? 'ok' : 'err'); })
-      .catch(function () { msg('armsg', 'The browser could not read the answer of the link. Open the same link in a new tab: it must show {"ok":true,...}. If it shows a Google sign-in or an error page: run <b>authorizeOnce</b> in the script editor once, then Deploy &rarr; New deployment with <b>Who has access: Anyone</b> and paste the NEW link here. (If your Google account belongs to a company / school, the admin may block "Anyone": then use a personal Google account for the script.)', 'err'); }).then(function () { busy(t, false); });
+      .catch(function () { msg('armsg', 'No answer from your Google script (waited 2 minutes). Open the same link in a new tab: it must show {"ok":true,...}. Then: copy the newest <b>drive-archive.gs</b> from the button above into the script, keep your SECRET, Deploy &rarr; Manage deployments &rarr; pencil &rarr; Version <b>New version</b> &rarr; Deploy, and press Test again.', 'err'); }).then(function () { busy(t, false); });
   } else if (t.id === 'arrm') {
     if (!window.confirm('Remove the Google Drive link? Nothing in your Drive is deleted.')) return;
     rpc('arch_cfg_clear').then(function () { msg('armsg', 'Link removed.', 'info'); arLoad(); }).catch(function (er) { msg('armsg', esc(er.message), 'err'); });

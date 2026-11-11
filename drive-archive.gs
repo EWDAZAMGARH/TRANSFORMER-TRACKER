@@ -22,6 +22,11 @@ var KEEP_FY = 5;
 var FILE_PREFIX = 'repair&testing register FY-';
 
 function out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+// The app posts with a hidden form and reads the answer through postMessage (this works in every browser; fetch() is often blocked by CORS).
+function reply_(o, id) {
+  var j = JSON.stringify(o).replace(/</g, '\\u003c'), i = JSON.stringify(String(id || '')).replace(/</g, '\\u003c');
+  return HtmlService.createHtmlOutput('<script>var r=' + j + ';r.id=' + i + ';window.top.postMessage(r,"*");</script>OK');
+}
 function authorizeOnce() {                    // run this ONCE in the editor (select it above, press Run) so Google asks for your permission
   DriveApp.getRootFolder(); SpreadsheetApp.create('tf-tracker-permission-test').getId();
   var it = DriveApp.getFilesByName('tf-tracker-permission-test'); while (it.hasNext()) it.next().setTrashed(true);
@@ -71,23 +76,24 @@ function rotate_(folder) {                    // keep the 5 newest FY files, mov
 }
 
 function doPost(e) {
-  var lock = LockService.getScriptLock();
+  var lock = LockService.getScriptLock(), id = '', out = function (o) { return id ? reply_(o, id) : out_(o); };
   try { lock.waitLock(30000); } catch (x) { return out_({ ok: false, error: 'Busy, try again.' }); }
   try {
-    var b = JSON.parse(e.postData.contents);
-    if (SECRET === 'CHANGE-THIS-CODE' || String(SECRET).length < 8) return out_({ ok: false, error: 'Set your own SECRET in the script first.' });
-    if (!b || b.token !== SECRET) return out_({ ok: false, error: 'Wrong secret code.' });
-    if (b.ping) return out_({ ok: true, ping: true });
-    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(b.month || '')) return out_({ ok: false, error: 'Wrong month.' });
-    if (b.kind !== 'rr' && b.kind !== 'tr') return out_({ ok: false, error: 'Wrong kind.' });
-    if (!Array.isArray(b.rows) || !Array.isArray(b.header)) return out_({ ok: false, error: 'No rows.' });
+    var raw = (e.parameter && e.parameter.payload) || (e.postData && e.postData.contents), b = JSON.parse(raw);
+    id = (b && b.id) ? String(b.id) : '';
+    if (SECRET === 'CHANGE-THIS-CODE' || String(SECRET).length < 8) return out({ ok: false, error: 'Set your own SECRET in the script first.' });
+    if (!b || b.token !== SECRET) return out({ ok: false, error: 'Wrong secret code.' });
+    if (b.ping) return out({ ok: true, ping: true });
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(b.month || '')) return out({ ok: false, error: 'Wrong month.' });
+    if (b.kind !== 'rr' && b.kind !== 'tr') return out({ ok: false, error: 'Wrong kind.' });
+    if (!Array.isArray(b.rows) || !Array.isArray(b.header)) return out({ ok: false, error: 'No rows.' });
     var fy = fyOf_(b.month), folder = folder_(null, FOLDER_NAME), ss = ssFor_(folder, fy);
     var tab = (b.kind === 'rr' ? 'Repair ' : 'Testing ') + b.month;
     var r = put_(ss, tab, b.header, b.rows);
     dropFirstBlank_(ss); rotate_(folder);
     r.ok = r.confirmed === r.sent; r.file = FILE_PREFIX + fy; r.tab = tab;
-    return out_(r);
+    return out(r);
   } catch (err) {
-    return out_({ ok: false, error: String(err && err.message || err) });
+    return out({ ok: false, error: String(err && err.message || err) });
   } finally { lock.release(); }
 }
