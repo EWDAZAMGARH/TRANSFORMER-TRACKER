@@ -2298,7 +2298,7 @@ nav button#tmr{margin-top:auto}
     <!-- ADMIN -->
     <section id="t-adm" class="hide">
       <div id="amsg"></div>
-      <div id="sirtop" class="hide" style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn" id="sirtg" title="SIR linked Google Sheet" style="padding:3px 10px;font-size:12px">&#128203; SIR <span class="tag" id="sirst"></span></button></div>
+      <div id="sirtop" style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn hide" id="artg" title="Google Drive archive (M&R)" style="padding:3px 10px;font-size:12px;margin-right:6px">&#9729; Google Drive <span class="tag" id="arst"></span></button><button class="btn" id="sirtg" title="SIR linked Google Sheet" style="padding:3px 10px;font-size:12px">&#128203; SIR <span class="tag" id="sirst"></span></button></div>
       <div class="card acard hide" id="sircfg"><h3>SIR - Site Inspection Report (linked Google Sheet)</h3>
         <div class="muted" style="font-size:12px;line-height:1.5;margin-bottom:8px">
           <b>How to link:</b> 1) Open the Google Sheet where the SIR form saves its answers. 2) File &gt; Share &gt; <b>Publish to web</b> &gt; choose the sheet tab and <b>Comma-separated values (.csv)</b> &gt; Publish. 3) Paste that link below (or the normal sheet link, if the sheet is shared as "Anyone with the link - Viewer"). 4) Write the exact heading of the column that holds the INDENT NO (PR number). 5) Press Test, then Save.<br>
@@ -2321,6 +2321,7 @@ nav button#tmr{margin-top:auto}
         <div class="bar"><input type="text" id="wcn" placeholder="Short name, e.g. azamgarh" autocapitalize="off" spellcheck="false" style="max-width:240px"><button class="btn" id="wcr" type="button">Get workshop code</button></div>
         <div id="wcshow"></div>
       </div>
+      <div class="card acard hide" id="archard"><h3>Google Drive archive <span class="muted" style="font-weight:400">(M&amp;R Repair + Testing Register)</span></h3><div id="arbox"></div><div id="armsg"></div></div>
       <div class="card acard hide" id="stcard"><h3>Structure: Circles and Divisions</h3><div id="stbox"></div></div>
       <div class="card acard"><h3>Create a new user</h3>
         <div class="bar" style="align-items:flex-end">
@@ -4843,8 +4844,101 @@ function stBuild() {
     });
   });
 }
+
+/* ---- Admin: Google Drive archive of the M&R Repair + Testing Register (oldest month -> Drive -> only then deleted here) ---- */
+var AR = { st: null, cfg: { url: '', token: '' }, run: false };
+var AR_HR = ['key', 'workshop', 'day', 'block', 'firm', 'capacity', 'qty', 'entered by', 'entered at'];
+var AR_HT = ['id', 'workshop', 'firm', 'capacity', 'job no', 'test date', 'turn ratio R', 'turn ratio Y', 'turn ratio B', 'megger HV/E', 'megger LV/E', 'megger HV/LV', 'DVDF', 'high voltage', 'no load loss', 'full load loss', 'remark', 'entered by', 'created at'];
+function arOn() { return !!ME && (ME.role === 'admin' || ME.role === 'creator'); }
+function arLoad() {
+  var card = $('archard'), bt = $('artg'); if (!card || !bt) return;
+  bt.classList.toggle('hide', !arOn()); if (!arOn()) { card.classList.add('hide'); return; }
+  $('sirtop').classList.remove('hide');
+  Promise.all([rpc('arch_status_json'), rpc('arch_cfg_get')]).then(function (a) { AR.st = a[0]; AR.cfg = a[1]; arDraw(); var ok = a[1].url && a[1].token; $('arst').textContent = ok ? 'Linked' : 'Not linked'; $('arst').className = 'tag ' + (ok ? 'ok' : ''); })
+    .catch(function (e) { $('arbox').innerHTML = ''; msg('armsg', esc(e.message) + ' (If the SQL step 51 was not run yet, run setup.sql again.)', 'err'); });
+}
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#artg')) { var c = $('archard'); c.classList.toggle('hide'); if (!c.classList.contains('hide')) arLoad(); } });
+function arDraw() {
+  var s = AR.st, c = AR.cfg, ok = c.url && c.token, h = '', i;
+  h += '<div class="muted" style="font-size:12.5px;line-height:1.55;margin-bottom:8px">R&amp;R PRs are deleted by themselves (oldest 12 months at a time, only when the storage is 90% full) and the <b>last 3 years always stay</b>. Repair and Testing Register are never deleted by themselves. When R&amp;R is down to 3 years and the storage is still full, save the <b>oldest month</b> to <b>your own Google Drive</b> (steps below). It is deleted from Supabase only after Drive has confirmed every row. A month is never saved twice.</div>';
+  h += '<details' + (ok ? '' : ' open') + ' style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:700">How to set up your Google Drive (one time, 5 minutes)</summary><ol class="sgl" style="margin-top:8px">' +
+    '<li>Open <b>script.google.com</b> in the browser where your own Google account is logged in. Click <b>New project</b>.</li>' +
+    '<li>Click this button, then in the script page delete the sample code and paste (Ctrl+V): <button class="btn sm" type="button" data-sgc="drive-archive.gs">Copy script (.gs)</button></li>' +
+    '<li>At the top of the pasted code find <code>var SECRET = \'CHANGE-THIS-CODE\';</code> and write a code of your own between the quotes (8 or more letters / digits, example <code>Tf7kQ92mWa</code>). Keep it private. Click the Save icon.</li>' +
+    '<li>Click <b>Deploy</b> &rarr; <b>New deployment</b>. At "Select type" click the gear icon &rarr; <b>Web app</b>. Set <b>Execute as: Me</b> and <b>Who has access: Anyone</b>. Click <b>Deploy</b>. When Google asks, click <b>Authorize access</b>, choose your account, then <i>Advanced</i> &rarr; <i>Go to ... (unsafe)</i> &rarr; <i>Allow</i> (it is your own script; it only needs your Drive).</li>' +
+    '<li>Copy the <b>Web app URL</b> (ends with <code>/exec</code>).</li>' +
+    '<li>Paste the URL and the same secret code in the boxes below, click <b>Save</b> and then <b>Test Drive link</b>. It must say "Google Drive link works".</li>' +
+    '</ol><div class="muted" style="font-size:12px">In your Drive a folder <b>TF-Tracker Archive</b> is made. In it one Google Sheet per financial year: <b>repair&amp;testing register FY-2024-25</b>, with two tabs for every month (Repair, Testing). The 5 newest financial years stay there; older files are moved to a sub-folder (never deleted).</div></details>';
+  h += '<h4 style="margin:6px 0 4px">Link to your Google Drive</h4>';
+  h += '<div class="bar" style="align-items:flex-end"><div style="flex:1;min-width:240px"><label>Web app URL (ends with /exec)</label><input type="text" id="aru" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec" value="' + esc(c.url) + '"></div>' +
+    '<div style="min-width:160px"><label>Secret code</label><input type="password" id="art" autocomplete="off" value="' + esc(c.token) + '"></div></div>' +
+    '<div class="bar" style="margin-top:8px"><button class="btn" id="arsv" type="button">Save</button><button class="btn sec" id="artest" type="button"' + (ok ? '' : ' disabled') + '>Test Drive link</button><button class="btn sec" id="arrm" type="button"' + (ok ? '' : ' disabled') + '>Remove link</button></div>';
+  h += '<div class="muted" style="margin:10px 0 2px"><b>Storage:</b> ' + s.mb + ' of ' + s.limit_mb + ' MB (' + s.pct + '%) &nbsp; <b>R&amp;R older than 3 years:</b> ' + (s.rr_old ? '<span style="color:#b45309">' + s.rr_old + ' PRs (they go first)</span>' : '<span style="color:#15803d">none</span>') + '</div>';
+  h += '<h4 style="margin:12px 0 4px">Months that can be archived <span class="muted" style="font-weight:400">(older than 12 months, oldest first)</span></h4>';
+  if (!s.months.length) h += '<div class="muted">No Repair / Testing Register month older than 12 months.</div>';
+  else {
+    h += '<div class="wrap"><table class="mt"><thead><tr><th>Month</th><th>Repair rows</th><th>Testing rows</th><th>Financial year file</th></tr></thead><tbody>';
+    s.months.slice(0, 12).forEach(function (m) { h += '<tr><td>' + m.m.slice(5) + '.' + m.m.slice(0, 4) + '</td><td>' + m.rr + '</td><td>' + m.tr + '</td><td>repair&amp;testing register FY-' + arFy(m.m) + '</td></tr>'; });
+    h += '</tbody></table></div>';
+    var can = ok && !s.rr_old;
+    h += '<div class="bar" style="margin-top:10px"><button class="btn" id="argo" type="button"' + (can ? '' : ' disabled') + '>Save oldest month (' + s.months[0].m.slice(5) + '.' + s.months[0].m.slice(0, 4) + ') to Drive and delete it here</button></div>';
+    if (!ok) h += '<div class="muted" style="margin-top:4px">First save the Apps Script link and the secret code.</div>';
+    else if (s.rr_old) h += '<div class="muted" style="margin-top:4px">R&amp;R still has PRs older than 3 years. They are deleted first (Sunday). The archive opens after that.</div>';
+  }
+  if (s.log && s.log.length) { h += '<h4 style="margin:12px 0 4px">Last archived</h4>'; s.log.forEach(function (l) { h += '<div class="muted">' + esc(l.at) + ' &nbsp; ' + l.month.slice(5) + '.' + l.month.slice(0, 4) + ' &nbsp; Repair ' + l.rr + ', Testing ' + l.tr + ' rows</div>'; }); }
+  $('arbox').innerHTML = h;
+}
+function arFy(m) { var y = +m.slice(0, 4), mo = +m.slice(5, 7), s = mo >= 4 ? y : y - 1; return s + '-' + String(s + 1).slice(-2); }
+function arPost(body) {
+  return fetch($('aru') ? $('aru').value.trim() : AR.cfg.url, { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+}
+function arGo(btn) {
+  var m = AR.st && AR.st.months[0] && AR.st.months[0].m; if (!m || AR.run) return;
+  var tok = AR.cfg.token;
+  if (!window.confirm('Save ' + m.slice(5) + '.' + m.slice(0, 4) + ' (Repair + Testing Register) to Google Drive and then DELETE it from Supabase?\n\nIt is deleted only after Drive has confirmed every row.')) return;
+  AR.run = true; busy(btn, true, 'Saving to Drive...'); msg('armsg', '');
+  var d, sent = 0, tot = 0;
+  rpc('arch_month_json', { p_month: m }).then(function (x) {
+    d = x;
+    var jobs = [], CH = 1000, i;
+    var rr = d.rr.map(function (r) { return [[r[0], r[1], r[2], r[3], r[4]].join('|')].concat(r); }), tr = d.tr.map(function (r) { return [String(r[0])].concat(r.slice(1)); });
+    for (i = 0; i < rr.length; i += CH) jobs.push({ kind: 'rr', header: AR_HR, rows: rr.slice(i, i + CH) });
+    for (i = 0; i < tr.length; i += CH) jobs.push({ kind: 'tr', header: AR_HT, rows: tr.slice(i, i + CH) });
+    tot = rr.length + tr.length;
+    return jobs.reduce(function (p, j) {
+      return p.then(function () {
+        return arPost({ token: tok, month: m, kind: j.kind, header: j.header, rows: j.rows }).then(function (r) {
+          if (!r || !r.ok || r.confirmed !== j.rows.length) throw new Error('Google Drive did not confirm all rows' + (r && r.error ? ' (' + r.error + ')' : '') + '. Nothing was deleted.');
+          sent += j.rows.length; btn.innerHTML = '<span class="sp"></span>Saved ' + sent + ' of ' + tot + '...';
+        });
+      });
+    }, Promise.resolve());
+  }).then(function () {
+    if (sent !== tot) throw new Error('Not all rows were confirmed. Nothing was deleted.');
+    return rpc('arch_delete', { p_month: m, p_rr: d.rr.map(function (r) { return [r[0], r[1], r[2], r[3], r[4]]; }), p_tr: d.tr.map(function (r) { return r[0]; }) });
+  }).then(function (x) {
+    msg('armsg', 'Done: ' + m.slice(5) + '.' + m.slice(0, 4) + ' is in your Google Drive (repair&amp;testing register FY-' + arFy(m) + '). Deleted here: Repair ' + x.rr + ', Testing ' + x.tr + ' rows. The space is freed on Sunday.', 'ok');
+  }).catch(function (e) { msg('armsg', esc(e.message || String(e)), 'err'); }).then(function () { AR.run = false; arLoad(); });
+}
+document.addEventListener('click', function (e) {
+  var t = e.target && e.target.closest ? e.target.closest('#arsv,#artest,#argo,#arrm') : null; if (!t) return;
+  if (t.id === 'arsv') {
+    busy(t, true, 'Saving...');
+    rpc('arch_cfg_set', { p_url: $('aru').value, p_token: $('art').value }).then(function () { msg('armsg', 'Saved. Now press Test Drive link.', 'ok'); arLoad(); })
+      .catch(function (er) { msg('armsg', esc(er.message), 'err'); }).then(function () { busy(t, false); });
+  } else if (t.id === 'artest') {
+    busy(t, true, 'Testing...');
+    arPost({ token: $('art').value.trim(), ping: true }).then(function (r) { msg('armsg', r && r.ok ? 'Google Drive link works.' : 'The link answered, but: ' + esc((r && r.error) || 'unknown'), r && r.ok ? 'ok' : 'err'); })
+      .catch(function () { msg('armsg', 'Could not reach the link. Check that the web app is deployed with "Who has access: Anyone".', 'err'); }).then(function () { busy(t, false); });
+  } else if (t.id === 'arrm') {
+    if (!window.confirm('Remove the Google Drive link? Nothing in your Drive is deleted.')) return;
+    rpc('arch_cfg_clear').then(function () { msg('armsg', 'Link removed.', 'info'); arLoad(); }).catch(function (er) { msg('armsg', esc(er.message), 'err'); });
+  } else if (t.id === 'argo') arGo(t);
+});
+
 function stLoad() {
   if (typeof slLoad === 'function') slLoad();
+  if (typeof arLoad === 'function') arLoad();
   var card = $('stcard'); if (!card) return;
   var on = ME && (ME.role === 'admin' || ME.role === 'creator');
   card.classList.toggle('hide', !on); if (!on) return;
@@ -5133,7 +5227,7 @@ function stoCheck() {
   rpc('db_usage_json').then(function (u) {
     var el = $('stobar'); if (!el) { el = document.createElement('div'); el.id = 'stobar'; el.style.cssText = 'position:fixed;left:10px;bottom:10px;z-index:390;max-width:420px;background:#fff7e0;border:2px solid #d97706;border-radius:12px;padding:10px 34px 10px 12px;font-size:13px;color:#7c2d12;box-shadow:0 8px 24px rgba(217,119,6,.3)'; document.body.appendChild(el); }
     if (!u || !u.ok || u.pct < 80 || el.dataset.off === '1') { el.style.display = 'none'; return; }
-    el.style.display = 'block'; el.innerHTML = '<b>&#9888; Storage is ' + u.pct + '% full</b> (' + u.mb + ' of ' + u.limit_mb + ' MB).<br>At 90% the oldest PRs' + (u.oldest ? ' (from ' + u.oldest + ')' : '') + ' are deleted by themselves on Sunday. <b>Download the old data (Data Sheet &rarr; All dates &rarr; Excel) now</b>, or upgrade the plan.<button type="button" onclick="this.parentNode.dataset.off=\'1\';this.parentNode.style.display=\'none\'" style="position:absolute;top:4px;right:8px;border:0;background:none;font-size:18px;cursor:pointer">&times;</button>';
+    el.style.display = 'block'; el.innerHTML = '<b>&#9888; Storage is ' + u.pct + '% full</b> (' + u.mb + ' of ' + u.limit_mb + ' MB).<br>At 90% the oldest PRs' + (u.oldest ? ' (from ' + u.oldest + ')' : '') + ' older than 3 years are deleted by themselves on Sunday (R&R always keeps the last 3 years). If R&R is already at 3 years, open <b>Admin &rarr; Google Drive archive</b> to save the oldest M&R month to Drive. Or upgrade the plan.<button type="button" onclick="this.parentNode.dataset.off=\'1\';this.parentNode.style.display=\'none\'" style="position:absolute;top:4px;right:8px;border:0;background:none;font-size:18px;cursor:pointer">&times;</button>';
   }).catch(function () { });
 }
 setInterval(stoCheck, 600000); setTimeout(stoCheck, 8000);
@@ -5277,8 +5371,9 @@ function tsSet(r, k, v) {
 function tsEdit(e) {
   var t = e.target, tr = t.closest && t.closest('#tstb tr[data-i]'); if (!tr || !t.dataset.k) return; var r = TS.rows[+tr.dataset.i], k = t.dataset.k;
   if (k === 'date' && /^[\d.]*$/.test(t.value)) { var f = dotFmt(t.value); if (f !== t.value) t.value = f; }
-  if (k === 'nll' || k === 'fll') { var v2 = t.value.replace(/[^\d.,]/g, ''); if (v2 !== t.value) t.value = v2; }
-  if ((k === 'tr0' || k === 'mg0') && /,/.test(t.value)) t.value = t.value.replace(/,/g, '.');
+  if (k === 'nll' || k === 'fll') { var v2 = t.value.replace(/[,\u066B\u060C]/g, '.').replace(/[^\d.]/g, ''); if (v2 !== t.value) t.value = v2; }
+  if (k === 'tr0') { var v3 = t.value.replace(/[,\u066B\u060C]/g, '.').replace(/[^\d.\-\s]/g, ''); if (v3 !== t.value) t.value = v3; }
+  if (k === 'mg0' && /[,\u066B\u060C]/.test(t.value)) t.value = t.value.replace(/[,\u066B\u060C]/g, '.');
   t.classList.remove('dflt'); tsSet(r, k, t.value); tsPaint(tr); tsPaintAll();
   if (k === 'ws') { r.firm = ''; tsFirms(r.ws).then(function (l) { var s = tr.querySelector('[data-k="firm"]'); s.innerHTML = tsOpts(l, '', '(choose firm)'); }); }
   asRun('ts', tsSave, 1000);
@@ -6276,7 +6371,7 @@ function xgSelect(td, extend) {
 }
 function xgFocus(td) { var i = td.querySelector('input'); if (i) { i.focus(); try { i.select(); } catch (x) { } } else { td.tabIndex = -1; td.focus({ preventScroll: true }); } }
 function xgVal(td) { var i = td.querySelector('input'); return i ? i.value : td.textContent.trim(); }
-function xgSet(td, v) { var i = td.querySelector('input'); if (!i) return false; if (!i.classList.contains('rf')) v = String(v).replace(/[^0-9]/g, ''); i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); return true; }
+function xgSet(td, v) { var i = td.querySelector('input'); if (!i) return false; if (!i.classList.contains('rf') && !(td.closest && td.closest('#tstb'))) v = String(v).replace(/[^0-9]/g, ''); i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); return true; }
 document.addEventListener('mousedown', function (e) {
   var td = e.target.closest && e.target.closest('.xg td'); if (!td || td.classList.contains('x') || td.classList.contains('bl')) return;
   if (e.shiftKey && XG.t && td.closest('table') === XG.t) { e.preventDefault(); xgSelect(td, true); XG.t.tabIndex = -1; XG.t.focus({ preventScroll: true }); return; }
@@ -6294,7 +6389,7 @@ document.addEventListener('focusin', function (e) {
   if (!XG.drag) { var p = xgPos(td); if (p && !(XG.t === p.t && xgMulti())) xgSelect(td, false); }
   if (e.target.tagName === 'INPUT' && !e.target.classList.contains('rf')) { XG.fresh = e.target; try { e.target.select(); } catch (x) { } }
 });
-document.addEventListener('input', function (e) { var t = e.target; if (t.tagName === 'INPUT' && t.closest && t.closest('.xg') && !t.classList.contains('rf') && /[^0-9]/.test(t.value)) t.value = t.value.replace(/[^0-9]/g, ''); });
+document.addEventListener('input', function (e) { var t = e.target; if (t.tagName === 'INPUT' && t.closest && t.closest('.xg') && !t.closest('#tstb') && !t.classList.contains('rf') && /[^0-9]/.test(t.value)) t.value = t.value.replace(/[^0-9]/g, ''); });
 document.addEventListener('keydown', function (e) {
   var t = e.target.closest && e.target.closest('table.xg'); if (!t || XG.t !== t) return;
   var k = e.key, inp = e.target.tagName === 'INPUT' ? e.target : null, ctrl = e.ctrlKey || e.metaKey, g = xgGrid(t), b = xgBox();
@@ -6512,7 +6607,7 @@ function sirCfgLoad() { return rpc('sir_cfg_get').then(function (a) { a = a || [
 /* ---- Admin panel ---- */
 function sirAdmInit() {
   var top = $('sirtop'); if (!top) return;
-  var on = ME.role === 'admin'; top.classList.toggle('hide', !on); if (!on) { $('sircfg').classList.add('hide'); return; }
+  var on = ME.role === 'admin'; top.classList.toggle('hide', !(on || arOn())); $('sirtg').classList.toggle('hide', !on); if (!on) { $('sircfg').classList.add('hide'); return; }
   sirCfgLoad().then(function (c) { $('sirurl').value = c ? c.url : ''; $('sircol').value = c ? c.col : 'INDENT NO'; $('sirst').textContent = c ? 'Linked' : 'Not linked'; $('sirst').className = 'tag ' + (c ? 'ok' : ''); }).catch(function () { });
 }
 function sirSave(clear) {
