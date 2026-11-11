@@ -25,7 +25,7 @@ function out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).set
 // The app posts with a hidden form and reads the answer through postMessage (this works in every browser; fetch() is often blocked by CORS).
 function reply_(o, id) {
   var j = JSON.stringify(o).replace(/</g, '\\u003c'), i = JSON.stringify(String(id || '')).replace(/</g, '\\u003c');
-  return HtmlService.createHtmlOutput('<script>var r=' + j + ';r.id=' + i + ';window.top.postMessage(r,"*");</script>OK');
+  return HtmlService.createHtmlOutput('<script>var r=' + j + ';r.id=' + i + ';window.top.postMessage(r,"*");</script>OK').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 function authorizeOnce() {                    // run this ONCE in the editor (select it above, press Run) so Google asks for your permission
   DriveApp.getRootFolder(); SpreadsheetApp.create('tf-tracker-permission-test').getId();

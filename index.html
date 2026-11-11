@@ -4914,11 +4914,11 @@ function arPost(body) {                       // a hidden form + postMessage: it
     inp.type = 'hidden'; inp.name = 'payload'; inp.value = JSON.stringify(body); fm.appendChild(inp);
     function end(f, v) { if (done) return; done = true; clearTimeout(to); window.removeEventListener('message', on); setTimeout(function () { fr.remove(); fm.remove(); }, 50); f(v); }
     function on(ev) {
-      if (!/^https:\/\/([a-z0-9-]+\.)*(googleusercontent|google)\.com$/.test(ev.origin) || !ev.data || ev.data.id !== id) return;
+      if (!(ev.origin === 'null' || /^https:\/\/([a-z0-9-]+\.)*(googleusercontent|google)\.com$/.test(ev.origin)) || !ev.data || ev.data.id !== id) return;   /* the Apps Script page is sandboxed, so its origin is "null"; the random id proves it is our answer */
       end(res, ev.data);
     }
     window.addEventListener('message', on);
-    to = setTimeout(function () { end(rej, new Error('timeout')); }, 120000);
+    to = setTimeout(function () { end(rej, new Error('timeout')); }, 60000);
     document.body.appendChild(fr); document.body.appendChild(fm); fm.submit();
   });
 }
@@ -4959,7 +4959,7 @@ document.addEventListener('click', function (e) {
   } else if (t.id === 'artest') {
     busy(t, true, 'Testing...');
     arPost({ token: $('art').value.trim(), ping: true }).then(function (r) { msg('armsg', r && r.ok ? 'Google Drive link works.' : 'The link answered, but: ' + esc((r && r.error) || 'unknown'), r && r.ok ? 'ok' : 'err'); })
-      .catch(function () { msg('armsg', 'No answer from your Google script (waited 2 minutes). Open the same link in a new tab: it must show {"ok":true,...}. Then: copy the newest <b>drive-archive.gs</b> from the button above into the script, keep your SECRET, Deploy &rarr; Manage deployments &rarr; pencil &rarr; Version <b>New version</b> &rarr; Deploy, and press Test again.', 'err'); }).then(function () { busy(t, false); });
+      .catch(function () { msg('armsg', 'No answer from your Google script (waited 1 minute). Open the same link in a new tab: it must show {"ok":true,...}. Then: copy the newest <b>drive-archive.gs</b> from the button above into the script, keep your SECRET, Deploy &rarr; Manage deployments &rarr; pencil &rarr; Version <b>New version</b> &rarr; Deploy, and press Test again.', 'err'); }).then(function () { busy(t, false); });
   } else if (t.id === 'arrm') {
     if (!window.confirm('Remove the Google Drive link? Nothing in your Drive is deleted.')) return;
     rpc('arch_cfg_clear').then(function () { msg('armsg', 'Link removed.', 'info'); arLoad(); }).catch(function (er) { msg('armsg', esc(er.message), 'err'); });
