@@ -2336,6 +2336,8 @@ nav button#tmr{margin-top:auto}
         <div class="bar"><input type="text" id="wcn" placeholder="Short name, e.g. azamgarh" autocapitalize="off" spellcheck="false" style="max-width:240px"><button class="btn" id="wcr" type="button">Get workshop code</button></div>
         <div id="wcshow"></div>
       </div>
+      <div class="card acard hide" id="ulcard"><h3>Login without code <span class="muted" style="font-weight:400">(ID and password only)</span></h3><div id="ulbox"></div><div id="ulmsg"></div></div>
+      <div class="card acard hide" id="udcard"><h3>Admin directory <span class="muted" style="font-weight:400">(App Creator)</span></h3><div id="udbox"></div><div id="udmsg"></div></div>
       <div class="card acard hide" id="archard"><h3>Google Drive archive <span class="muted" style="font-weight:400">(M&amp;R Repair + Testing Register)</span></h3><div id="arbox"></div><div id="armsg"></div></div>
       <div class="card acard hide" id="stcard"><h3>Structure: Circles and Divisions</h3><div id="stbox"></div></div>
       <div class="card acard" id="nucard"><h3>Create a new user</h3>
@@ -2726,13 +2728,33 @@ function enter(user) {
     });
   });
 }
+/* ---- login with only the ID and password: the DEFAULT project keeps a directory "ID -> the Admin's project" (SQL step 53) ---- */
+function udLookup(id) {
+  var l = String(id || '').trim().toLowerCase();
+  if (!/^[a-z0-9._@+-]{2,80}$/.test(l) || !window.supabase || !window.TT_SB_URL) return Promise.resolve(null);
+  return wcDefault().rpc('ud_find', { p_login: l }).then(function (r) { return r.error ? null : r.data; }).catch(function () { return null; });
+}
+function ttConnSet(c) { try { if (c) localStorage.setItem('tt_conn', JSON.stringify({ u: c.u, k: c.k })); else localStorage.removeItem('tt_conn'); } catch (e) { } ttInitClient(); }
+function ttTryLogin(id, pw, cands) {                       // cands: connections to try in order (null = the default project)
+  var i = 0;
+  function next() {
+    ttConnSet(cands[i++]);
+    return SB.auth.signInWithPassword({ email: idMail(id), password: pw }).then(function (r) { return r.error && /invalid login/i.test(r.error.message) && i < cands.length ? next() : r; });
+  }
+  return next();
+}
 $('lbtn').onclick = function () {
   var id = $('lu').value.trim(), pw = $('lp').value, b = $('lbtn');
   if (!id || !pw) return msg('lmsg', 'Enter your ID and password.', 'err');
   busy(b, true, 'Logging in...'); msg('lmsg', '');
-  SB.auth.signInWithPassword({ email: idMail(id), password: pw }).then(function (r) {
-    if (r.error) { busy(b, false); return msg('lmsg', /invalid login/i.test(r.error.message) ? 'Wrong ID or password.' : esc(friendly(r.error)), 'err'); }
-    return enter(r.data.user).then(function () { busy(b, false); });
+  var cur = ttConn(), orig = cur.own ? { u: cur.u, k: cur.k } : null;
+  udLookup(id).then(function (f) {
+    if (f && f.n > 1) { busy(b, false); return msg('lmsg', 'This ID is used by more than one Admin, so it cannot log in. Ask your Admin to change the ID.', 'err'); }
+    var cands = f && f.n === 1 && wcOk(f.u, f.k) ? [{ u: f.u, k: f.k }] : (orig ? [orig, null] : [null]);
+    return ttTryLogin(id, pw, cands).then(function (r) {
+      if (r.error) { ttConnSet(orig); busy(b, false); return msg('lmsg', /invalid login/i.test(r.error.message) ? 'Wrong ID or password.' : esc(friendly(r.error)), 'err'); }
+      return enter(r.data.user).then(function () { busy(b, false); });
+    });
   }).catch(function (e) { busy(b, false); msg('lmsg', esc(friendly(e)), 'err'); });
 };
 ['lu', 'lp'].forEach(function (i) { $(i).addEventListener('keydown', function (e) { if (e.key === 'Enter') $('lbtn').click(); }); });
@@ -3423,11 +3445,15 @@ function ttConn() {
   return { u: window.TT_SB_URL, k: window.TT_SB_KEY, own: false };
 }
 var TT_REC = /type=recovery/.test(location.hash || '');   // opened from the 'reset password' mail
+function ttInitClient() {
+  var C = ttConn();
+  SB = window.supabase.createClient(C.u, C.k, { auth: { persistSession: true, autoRefreshToken: true } });
+  SB.auth.onAuthStateChange(function (ev) { if (ev === 'PASSWORD_RECOVERY' && typeof ttRecovery === 'function') setTimeout(ttRecovery, 0); if (ev === 'SIGNED_OUT' && ME) setTimeout(function () { showLogin(''); }, 0); });
+}
 function boot() {
   var C = ttConn();
   if (!window.supabase || !C.u || !C.k) { showLogin('The app is not connected to a database yet. Tap "Set up your own free account" below.'); return; }
-  SB = window.supabase.createClient(C.u, C.k, { auth: { persistSession: true, autoRefreshToken: true } });
-  SB.auth.onAuthStateChange(function (ev) { if (ev === 'PASSWORD_RECOVERY' && typeof ttRecovery === 'function') setTimeout(ttRecovery, 0); if (ev === 'SIGNED_OUT' && ME) setTimeout(function () { showLogin(''); }, 0); });
+  ttInitClient();
   SB.auth.getSession().then(function (r) {
     var s = r.data && r.data.session;
     if (s && TT_REC && typeof ttRecovery === 'function') { ttRecovery(); return; }
@@ -3699,7 +3725,7 @@ $('ncreate').onclick = function () {
   var body = { action: 'create', login: id, name: $('nn').value.trim() || id, role: role, div: divOf(), scope: chkGet($('ns')), edit: $('ne').value === '1', tabs: role === 'discom' || all ? null : tabs.concat(mr ? ['mr'] : []) };
   if (role === 'je' && !body.scope.length) return msg('amsg', 'Choose at least one workshop for this user.', 'err');
   busy(b, true, 'Creating...');
-  fnCall(body).then(function (r) { busy(b, false); showPw('User created', id, r.password); newUserForm(); return admLoad(); }).catch(function (e) { busy(b, false); msg('amsg', esc(e.message), 'err'); try { $('amsg').scrollIntoView({ block: 'center' }); } catch (x) { } });
+  udOtherUse(id).then(function (used) { if (used) throw new Error('This ID is already used by another Admin. Please choose a different ID.'); return fnCall(body); }).then(function (r) { busy(b, false); showPw('User created', id, r.password); newUserForm(); return admLoad(); }).catch(function (e) { busy(b, false); msg('amsg', esc(e.message), 'err'); try { $('amsg').scrollIntoView({ block: 'center' }); } catch (x) { } });
 };
 function fnCall(body) {
   return SB.functions.invoke('admin-users', { body: body }).then(function (r) {
@@ -4991,6 +5017,8 @@ var ADM_DEFS = [
   { k: 'ws', card: 'wscard', t: 'Workshops', s: 'Add your workshops', i: '\u{1F3ED}', c: '#fdebd8' },
   { k: 'staff', card: 'slcard', t: 'Staff link', s: 'Link and workshop code', i: '\u{1F517}', c: '#efe6ff' },
   { k: 'struct', card: 'stcard', t: 'Structure', s: 'Circles and divisions', i: '\u{1F9E9}', c: '#fff1c9' },
+  { k: 'ul', card: 'ulcard', t: 'Login without code', s: function () { return UD.tile || 'ID + password only'; }, i: '\u{1F511}', c: '#e4f6e8' },
+  { k: 'dir', card: 'udcard', t: 'Admin directory', s: function () { return UD.dtile || 'Approve Admins'; }, i: '\u{1F4D2}', c: '#fdebd8' },
   { k: 'sir', card: 'sircfg', t: 'SIR sheet', s: function () { return ($('sirst') || {}).textContent || 'Google Sheet link'; }, i: '\u{1F4CB}', c: '#e0f4f4' },
   { k: 'drive', card: 'archard', t: 'Google Drive', s: function () { var st = AR && AR.st, t = ($('arst') || {}).textContent || 'Archive (M&R)'; return st && st.pct >= 90 ? '⚠ Storage ' + st.pct + '% full' : t; }, i: '☁️', c: '#e6eefc' }
 ];
@@ -5000,7 +5028,7 @@ function admChips() {
   ADM_DEFS.forEach(function (d) { var c = $(d.card); if (c && !c.classList.contains('hide')) { ok[d.k] = 1; if (!first) first = d.k; } });
   if (!ok[ADM_SEL]) ADM_SEL = first;
   ADM_DEFS.forEach(function (d) {
-    if (!ok[d.k]) return; var sub = typeof d.s === 'function' ? d.s() : d.s, cls = /^Linked/.test(sub) ? ' ok' : (/⚠|Not linked/.test(sub) ? ' wn' : '');
+    if (!ok[d.k]) return; var sub = typeof d.s === 'function' ? d.s() : d.s, cls = /^(Linked|Published)/.test(sub) ? ' ok' : (/⚠|Not linked|Waiting|Not published|to approve|Blocked/.test(sub) ? ' wn' : '');
     h += '<button type="button" class="achip' + (d.k === ADM_SEL ? ' on' : '') + '" data-k="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + d.t + '</b><small class="' + cls.trim() + '">' + esc(sub) + '</small></span></button>';
   });
   if (box.innerHTML !== h) box.innerHTML = h;
@@ -5011,9 +5039,88 @@ document.addEventListener('click', function (e) {
   ADM_SEL = b.dataset.k; msg('amsg', ''); admChips(); if (ADM_SEL === 'drive') arLoad();
 });
 
+/* ---- Admin: "Login without code" (the Admin publishes his IDs) and "Admin directory" (the App Creator approves the Admins) ---- */
+var UD = { tile: '', dtile: '', token: null, st: null, ids: [] };
+function udOtherUse(id) {
+  var C = ttConn(); if (!C.own || !window.supabase) return Promise.resolve(false);
+  return wcDefault().rpc('ud_find', { p_login: String(id || '').trim().toLowerCase(), p_url: C.u }).then(function (r) { return !r.error && r.data && r.data.other > 0; }).catch(function () { return false; });
+}
+function udOwnAdmin() { return !!ME && ME.role === 'admin' && ttConn().own; }
+function udCreatorDefault() { return !!ME && ME.role === 'creator' && !ttConn().own; }
+function udLoad() {
+  var a = $('ulcard'), d = $('udcard'); if (!a || !d) return;
+  a.classList.toggle('hide', !udOwnAdmin()); d.classList.toggle('hide', !udCreatorDefault());
+  if (udOwnAdmin()) udOwnLoad();
+  if (udCreatorDefault()) udDirLoad();
+  admChips();
+}
+function udTile(st) {
+  UD.tile = !st || st.status === 'none' ? 'Not published' : st.status === 'approved' ? 'Published ✓' : st.status === 'blocked' ? 'Blocked' : 'Waiting for approval';
+}
+function udOwnLoad() {
+  var C = ttConn();
+  Promise.all([rpc('ud_cfg_get'), rpc('ud_logins_json')]).then(function (a) {
+    UD.token = a[0] || null; UD.ids = a[1] || [];
+    if (!UD.token) return { status: 'none' };
+    return wcDefault().rpc('ud_status', { p_url: C.u, p_token: UD.token }).then(function (r) { return r.error ? { status: 'none', err: r.error.message } : r.data; });
+  }).then(function (st) {
+    UD.st = st; udTile(st);
+    var h = '<div class="muted" style="font-size:12.5px;line-height:1.55;margin-bottom:8px">With this, your employees open the app and type <b>only their ID and password</b>. They do not need the workshop code or the staff link. Press <b>Publish my IDs</b> once. After that every new or deleted user is published by itself. The App Creator approves your Admin ID once; until then the workshop code still works.</div>';
+    h += '<div style="margin-bottom:8px"><b>Status:</b> ' + (st.status === 'approved' ? '<span style="color:#15803d">Published and approved (' + st.count + ' IDs)</span>' : st.status === 'pending' ? '<span style="color:#b45309">Published (' + st.count + ' IDs), waiting for the App Creator to approve</span>' : st.status === 'blocked' ? '<span style="color:#b91c1c">Blocked by the App Creator</span>' : '<span style="color:#b45309">Not published yet</span>') + ' &nbsp; <span class="muted">IDs in this project: ' + UD.ids.length + '</span></div>';
+    if (st.conflicts && st.conflicts.length) h += '<div class="msg err">These IDs are also used by another Admin, so they <b>cannot log in</b> until one Admin changes the ID: <b>' + st.conflicts.map(esc).join(', ') + '</b></div>';
+    h += '<div class="bar"><button class="btn" id="ulpub" type="button">' + (UD.token ? 'Publish my IDs again' : 'Publish my IDs') + '</button></div>';
+    $('ulbox').innerHTML = h; admChips();
+  }).catch(function (e) { $('ulbox').innerHTML = ''; msg('ulmsg', esc(e.message) + ' (Run setup.sql again, SQL step 53, in this project and in the default project.)', 'err'); });
+}
+function udPublish() {
+  var C = ttConn();
+  return Promise.all([rpc('ud_logins_json'), rpc('ud_cfg_get')]).then(function (a) {
+    return wcDefault().rpc('ud_register', { p_url: C.u, p_key: C.k, p_label: (ME.login || '') + (ME.div ? ' · ' + ME.div : ''), p_logins: a[0], p_token: a[1] || null }).then(function (r) {
+      if (r.error) throw new Error(/function|schema cache/i.test(r.error.message) ? 'The directory is not switched on in the default project yet. The App Creator must run setup.sql (step 53) there.' : r.error.message);
+      var d = r.data; try { localStorage.setItem('tt_udh', a[0].slice().sort().join('|')); } catch (x) { }
+      return (d.token ? rpc('ud_cfg_set', { p_token: d.token }) : Promise.resolve()).then(function () { return d; });
+    });
+  });
+}
+function udAuto() {                                           // after users were added / deleted: publish again by itself (only if the Admin published once)
+  if (!udOwnAdmin()) return;
+  Promise.all([rpc('ud_logins_json'), rpc('ud_cfg_get')]).then(function (a) {
+    var h = a[0].slice().sort().join('|'), old = ''; try { old = localStorage.getItem('tt_udh') || ''; } catch (x) { }
+    if (a[1] && h !== old) return udPublish().then(function () { udOwnLoad(); });
+  }).catch(function () { });
+}
+function udDirLoad() {
+  rpc('ud_admin_list').then(function (L) {
+    var pend = L.filter(function (x) { return x.status === 'pending'; }).length; UD.dtile = pend ? pend + ' to approve' : (L.length + ' Admins');
+    var h = '<div class="muted" style="font-size:12.5px;line-height:1.55;margin-bottom:8px">Every Admin who publishes his IDs appears here as <b>pending</b>. Check that you know this Admin, then press <b>Approve</b>. Only approved Admins are used by the login page. An ID that is in two approved Admins cannot log in.</div>';
+    if (!L.length) h += '<div class="muted">No Admin has published yet.</div>';
+    else {
+      h += '<div class="wrap"><table class="mt"><thead><tr><th>Admin</th><th>Project</th><th>IDs</th><th>Same ID elsewhere</th><th>Status</th><th></th></tr></thead><tbody>';
+      L.forEach(function (x) {
+        h += '<tr><td>' + esc(x.label || '-') + '<br><span class="muted">' + esc(x.at) + '</span></td><td style="word-break:break-all">' + esc(x.url.replace('https://', '').replace('.supabase.co', '')) + '</td><td>' + x.ids + '</td><td>' + (x.conf ? '<b style="color:#b91c1c">' + x.conf + '</b>' : '0') + '</td><td><b>' + esc(x.status) + '</b></td><td style="white-space:nowrap">' +
+          (x.status !== 'approved' ? '<button class="btn sm" type="button" data-ud="approved" data-p="' + esc(x.pid) + '">Approve</button> ' : '<button class="btn sm sec" type="button" data-ud="blocked" data-p="' + esc(x.pid) + '">Block</button> ') +
+          '<button class="btn sm sec" type="button" data-ud="remove" data-p="' + esc(x.pid) + '">Remove</button></td></tr>';
+      });
+      h += '</tbody></table></div>';
+    }
+    $('udbox').innerHTML = h; admChips();
+  }).catch(function (e) { $('udbox').innerHTML = ''; msg('udmsg', esc(e.message) + ' (Run setup.sql again in this project: SQL step 53.)', 'err'); });
+}
+document.addEventListener('click', function (e) {
+  var t = e.target.closest && e.target.closest('#ulpub,[data-ud]'); if (!t) return;
+  if (t.id === 'ulpub') {
+    busy(t, true, 'Publishing...'); msg('ulmsg', '');
+    udPublish().then(function () { msg('ulmsg', 'Published.', 'ok'); udOwnLoad(); }).catch(function (er) { msg('ulmsg', esc(er.message), 'err'); }).then(function () { busy(t, false); });
+  } else {
+    if (t.dataset.ud === 'remove' && !window.confirm('Remove this Admin from the directory? His users will need the workshop code again until he publishes and you approve again.')) return;
+    busy(t, true, '...'); rpc('ud_admin_set', { p_pid: t.dataset.p, p_action: t.dataset.ud }).then(function () { udDirLoad(); }).catch(function (er) { msg('udmsg', esc(er.message), 'err'); busy(t, false); });
+  }
+});
+
 function stLoad() {
   if (typeof slLoad === 'function') slLoad();
   if (typeof arLoad === 'function') arLoad();
+  if (typeof udLoad === 'function') { udLoad(); udAuto(); }
   admChips(); setTimeout(admChips, 400); setTimeout(admChips, 1500);
   var card = $('stcard'); if (!card) return;
   var on = ME && (ME.role === 'admin' || ME.role === 'creator');
