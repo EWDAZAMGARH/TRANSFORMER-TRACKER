@@ -4880,8 +4880,9 @@ function arDraw() {
     '<li>Open <b>script.google.com</b> in the browser where your own Google account is logged in. Click <b>New project</b>.</li>' +
     '<li>Click this button, then in the script page delete the sample code and paste (Ctrl+V): <button class="btn sm" type="button" data-sgc="drive-archive.gs">Copy script (.gs)</button></li>' +
     '<li>At the top of the pasted code find <code>var SECRET = \'CHANGE-THIS-CODE\';</code> and write a code of your own between the quotes (8 or more letters / digits, example <code>Tf7kQ92mWa</code>). Keep it private. Click the Save icon.</li>' +
-    '<li>Click <b>Deploy</b> &rarr; <b>New deployment</b>. At "Select type" click the gear icon &rarr; <b>Web app</b>. Set <b>Execute as: Me</b> and <b>Who has access: Anyone</b>. Click <b>Deploy</b>. When Google asks, click <b>Authorize access</b>, choose your account, then <i>Advanced</i> &rarr; <i>Go to ... (unsafe)</i> &rarr; <i>Allow</i> (it is your own script; it only needs your Drive).</li>' +
-    '<li>Copy the <b>Web app URL</b> (ends with <code>/exec</code>).</li>' +
+    '<li>In the toolbar of the script page choose the function <code>authorizeOnce</code> and press <b>Run</b>. Click <b>Review permissions</b> &rarr; your account &rarr; <i>Advanced</i> &rarr; <i>Go to ... (unsafe)</i> &rarr; <i>Allow</i> (it is your own script; it only needs your Drive).</li>' +
+    '<li>Click <b>Deploy</b> &rarr; <b>New deployment</b>. At "Select type" click the gear icon &rarr; <b>Web app</b>. Set <b>Execute as: Me</b> and <b>Who has access: Anyone</b>. Click <b>Deploy</b>. If you change the code later: Deploy &rarr; Manage deployments &rarr; pencil &rarr; Version: <b>New version</b> &rarr; Deploy.</li>' +
+    '<li>Copy the <b>Web app URL</b> (ends with <code>/exec</code>). Open it in a new browser tab: it must show <code>{"ok":true,"msg":"TF-Tracker archive is running"}</code>. If you see a Google sign-in or an error page instead, the access is wrong: repeat step 4 and choose <b>Who has access: Anyone</b> (not "Anyone with Google account" and not "within your organisation").</li>' +
     '<li>Paste the URL and the same secret code in the boxes below, click <b>Save</b> and then <b>Test Drive link</b>. It must say "Google Drive link works".</li>' +
     '</ol><div class="muted" style="font-size:12px">In your Drive a folder <b>TF-Tracker Archive</b> is made. In it one Google Sheet per financial year: <b>repair&amp;testing register FY-2024-25</b>, with two tabs for every month (Repair, Testing). The 5 newest financial years stay there; older files are moved to a sub-folder (never deleted).</div></details>';
   h += '<h4 style="margin:6px 0 4px">Link to your Google Drive</h4>';
@@ -4944,7 +4945,7 @@ document.addEventListener('click', function (e) {
   } else if (t.id === 'artest') {
     busy(t, true, 'Testing...');
     arPost({ token: $('art').value.trim(), ping: true }).then(function (r) { msg('armsg', r && r.ok ? 'Google Drive link works.' : 'The link answered, but: ' + esc((r && r.error) || 'unknown'), r && r.ok ? 'ok' : 'err'); })
-      .catch(function () { msg('armsg', 'Could not reach the link. Check that the web app is deployed with "Who has access: Anyone".', 'err'); }).then(function () { busy(t, false); });
+      .catch(function () { msg('armsg', 'The browser could not read the answer of the link. Open the same link in a new tab: it must show {"ok":true,...}. If it shows a Google sign-in or an error page: run <b>authorizeOnce</b> in the script editor once, then Deploy &rarr; New deployment with <b>Who has access: Anyone</b> and paste the NEW link here. (If your Google account belongs to a company / school, the admin may block "Anyone": then use a personal Google account for the script.)', 'err'); }).then(function () { busy(t, false); });
   } else if (t.id === 'arrm') {
     if (!window.confirm('Remove the Google Drive link? Nothing in your Drive is deleted.')) return;
     rpc('arch_cfg_clear').then(function () { msg('armsg', 'Link removed.', 'info'); arLoad(); }).catch(function (er) { msg('armsg', esc(er.message), 'err'); });
@@ -4977,7 +4978,7 @@ function admChips() {
 }
 document.addEventListener('click', function (e) {
   var b = e.target.closest && e.target.closest('.achip[data-k]'); if (!b) return;
-  ADM_SEL = b.dataset.k; admChips(); if (ADM_SEL === 'drive') arLoad();
+  ADM_SEL = b.dataset.k; msg('amsg', ''); admChips(); if (ADM_SEL === 'drive') arLoad();
 });
 
 function stLoad() {
@@ -5161,28 +5162,30 @@ function mrSumLoad() {
   if (!validD(d) || !validD(f) || !validD(t)) return msg('mrsmsg', 'Enter all three dates in DD.MM.YYYY format.', 'err');
   if (parseD(f) > parseD(t)) return msg('mrsmsg', 'The "From" date cannot be later than the "To" date.', 'err');
   msg('mrsmsg', ''); var b = $('mrbtn'); busy(b, true, 'Loading...');
-  rpc('mr_summary_json', { p_date: mrIso(d), p_from: mrIso(f), p_to: mrIso(t) }).then(function (r) { busy(b, false); MR.sum = { r: r, d: d, f: f, t: t }; mrSumDraw(); })
+  Promise.all([rpc('mr_summary_json', { p_date: mrIso(d), p_from: mrIso(f), p_to: mrIso(t) }), rpc('mr_repair_json', { p_date: mrIso(d), p_from: mrIso(f), p_to: mrIso(t) }).catch(function () { return { ws: [], cap: [], off: true }; })]).then(function (a) { busy(b, false); MR.sum = { r: a[0], rp: a[1], d: d, f: f, t: t }; mrSumDraw(); })
     .catch(function (er) { busy(b, false); msg('mrsmsg', esc(er.message), 'err'); });
 }
 function mrSumDraw() {
-  var S = MR.sum; if (!S) return; var r = S.r, ws = mrWs().filter(function (w) { return r.ws.some(function (x) { return x[0] === w; }); }), W = {}, h = '', i;
-  r.ws.forEach(function (x) { W[x[0]] = x; });
+  var S = MR.sum; if (!S) return; var r = S.r, rp = S.rp || { ws: [], cap: [] }, ws = mrWs().filter(function (w) { return r.ws.some(function (x) { return x[0] === w; }) || rp.ws.some(function (x) { return x[0] === w; }); }), W = {}, RW = {}, RC = {}, h = '', i;
+  r.ws.forEach(function (x) { W[x[0]] = x; }); ws.forEach(function (w) { if (!W[w]) W[w] = [w, 0, 0, 0, 0, 0]; });
+  rp.ws.forEach(function (x) { RW[x[0]] = x; }); rp.cap.forEach(function (x) { (RC[x[1]] = RC[x[1]] || {})[x[0]] = x[2]; });
+  var rt = [0, 0]; ws.forEach(function (w) { rt[0] += RW[w] ? RW[w][1] : 0; rt[1] += RW[w] ? RW[w][2] : 0; });
   var tot = [0, 0, 0, 0, 0]; ws.forEach(function (w) { for (i = 0; i < 5; i++) tot[i] += W[w][i + 1]; });
-  $('mrkpi').innerHTML = [['a1', 'Total PR', tot[2], S.f + ' to ' + S.t], ['a2', 'Total DTC', tot[3], 'DTC no entered'], ['a4', 'Pending for DTC', tot[4], 'PR without DTC']]
+  $('mrkpi').innerHTML = [['a1', 'Total PR', tot[2], S.f + ' to ' + S.t], ['a2', 'Total DTC', tot[3], 'DTC no entered'], ['a3', 'Total Repair', rt[1], 'repaired in period'], ['a4', 'Pending for DTC', tot[4], 'PR without DTC']]
     .map(function (k) { var pd = k[0] === 'a4'; return '<div class="' + k[0] + (pd && k[2] ? ' pdk' : '') + '"' + (pd ? ' data-w="" data-c="" title="Click to open the pending DTC list"' : '') + '><b>' + k[1] + '</b><i>' + k[2] + '</i><u>' + esc(k[3]) + '</u></div>'; }).join('');
   $('mrsub').textContent = S.d + ' · from ' + S.f + ' to ' + S.t;
-  h += '<div class="card k-ws"><h3>Workshop wise summary</h3><div class="wrap tbl11d"><table><thead><tr><th class="l" rowspan="2">WORKSHOP NAME</th><th class="g1" colspan="2">TODAY (' + esc(S.d) + ')</th><th class="g2" colspan="3">TILL TODAY (' + esc(S.f) + ' - ' + esc(S.t) + ')</th></tr>' +
-    '<tr><th class="g1">TODAY PR</th><th class="g1">TODAY DTC</th><th class="g2">TOTAL PR</th><th class="g2">TOTAL DTC</th><th class="g2 pe">PENDING FOR DTC</th></tr></thead><tbody>';
-  ws.forEach(function (w) { var x = W[w]; h += '<tr><td class="l">' + esc(w) + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td><td>' + x[3] + '</td><td>' + x[4] + '</td><td class="pe' + (x[5] ? ' pdk' : '') + '" data-w="' + esc(w) + '" data-c="">' + x[5] + '</td></tr>'; });
-  if (ws.length > 1) h += '<tr class="t"><td class="l">TOTAL</td><td>' + tot[0] + '</td><td>' + tot[1] + '</td><td>' + tot[2] + '</td><td>' + tot[3] + '</td><td class="pe' + (tot[4] ? ' pdk' : '') + '" data-w="" data-c="">' + tot[4] + '</td></tr>';
+  h += '<div class="card k-ws"><h3>Workshop wise summary</h3><div class="wrap tbl11d"><table><thead><tr><th class="l" rowspan="2">WORKSHOP NAME</th><th class="g1" colspan="3">TODAY (' + esc(S.d) + ')</th><th class="g2" colspan="4">TILL TODAY (' + esc(S.f) + ' - ' + esc(S.t) + ')</th></tr>' +
+    '<tr><th class="g1">TODAY PR</th><th class="g1">TODAY DTC</th><th class="g1">TODAY REPAIR</th><th class="g2">TOTAL PR</th><th class="g2">TOTAL DTC</th><th class="g2">TOTAL REPAIR</th><th class="g2 pe">PENDING FOR DTC</th></tr></thead><tbody>';
+  ws.forEach(function (w) { var x = W[w]; var q = RW[w] || [w, 0, 0]; h += '<tr><td class="l">' + esc(w) + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td><td>' + q[1] + '</td><td>' + x[3] + '</td><td>' + x[4] + '</td><td>' + q[2] + '</td><td class="pe' + (x[5] ? ' pdk' : '') + '" data-w="' + esc(w) + '" data-c="">' + x[5] + '</td></tr>'; });
+  if (ws.length > 1) h += '<tr class="t"><td class="l">TOTAL</td><td>' + tot[0] + '</td><td>' + tot[1] + '</td><td>' + rt[0] + '</td><td>' + tot[2] + '</td><td>' + tot[3] + '</td><td>' + rt[1] + '</td><td class="pe' + (tot[4] ? ' pdk' : '') + '" data-w="" data-c="">' + tot[4] + '</td></tr>';
   h += '</tbody></table></div></div>';
   h += '<div class="card k-kit" id="mrkit"><div class="msg info">Loading kitty...</div></div>';
   // capacity wise: PR received, DTC done, pending DTC
-  var capSet = {}; STD_CAPS.forEach(function (c) { capSet[c] = 1; }); r.cap.forEach(function (x) { if (x[1]) capSet[x[1]] = 1; });
+  var capSet = {}; STD_CAPS.forEach(function (c) { capSet[c] = 1; }); r.cap.forEach(function (x) { if (x[1]) capSet[x[1]] = 1; }); rp.cap.forEach(function (x) { if (x[1]) capSet[x[1]] = 1; });
   var caps = Object.keys(capSet).map(Number).sort(function (a, b) { return a - b; }), C = {};
   r.cap.forEach(function (x) { (C[x[1]] = C[x[1]] || {})[x[0]] = x; });
   // one table like the R&R "Capacity wise summary": capacity rows; groups PR RECEIVED / DTC DONE / PENDING FOR DTC, each with the workshops and a TOTAL
-  var G = [['PR RECEIVED', 2, 'g2', ''], ['DTC DONE', 3, 'g2', ''], ['PENDING FOR DTC', 4, 'g1', 'pe']], nw = ws.length, span = nw + (nw > 1 ? 1 : 0), GT = G.map(function () { return zero(nw); });
+  var G = [['PR RECEIVED', 2, 'g2', ''], ['DTC DONE', 3, 'g2', ''], ['REPAIR', -1, 'g2', ''], ['PENDING FOR DTC', 4, 'g1', 'pe']], nw = ws.length, span = nw + (nw > 1 ? 1 : 0), GT = G.map(function () { return zero(nw); });
   h += '<div class="card k-cap"><h3>Capacity wise summary <span class="muted" style="text-transform:none">(PR date ' + esc(S.f) + ' to ' + esc(S.t) + ')</span></h3><div class="wrap tbl11d capt"><table><tbody><tr><th class="l" rowspan="2">CAPACITY IN KVA</th>' +
     G.map(function (g) { return '<th class="' + g[2] + '" colspan="' + span + '">' + g[0] + '</th>'; }).join('') + '</tr><tr>' +
     G.map(function () { return ws.map(function (w) { return '<th>' + esc(w) + '</th>'; }).join('') + (nw > 1 ? '<th>TOTAL</th>' : ''); }).join('') + '</tr>';
@@ -5190,13 +5193,13 @@ function mrSumDraw() {
     h += '<tr><td class="l"><b>' + c + '</b></td>';
     G.forEach(function (g, gi) {
       var row = 0;
-      ws.forEach(function (w, j) { var v = C[c] && C[c][w] ? C[c][w][g[1]] : 0; row += v; GT[gi][j] += v; h += '<td class="' + (j === 0 ? 'gs ' : '') + (v ? g[3] : '') + (gi === 2 && v ? ' pdk' : '') + '"' + (gi === 2 && v ? ' data-w="' + esc(w) + '" data-c="' + c + '"' : '') + '>' + (v ? v : '<span class="z">0</span>') + '</td>'; });
-      if (nw > 1) h += '<td class="sub' + (gi === 2 && row ? ' pdk' : '') + '"' + (gi === 2 && row ? ' data-w="" data-c="' + c + '"' : '') + '><b>' + (row ? row : '<span class="z">0</span>') + '</b></td>';
+      ws.forEach(function (w, j) { var v = g[1] < 0 ? ((RC[c] && RC[c][w]) || 0) : (C[c] && C[c][w] ? C[c][w][g[1]] : 0); row += v; GT[gi][j] += v; h += '<td class="' + (j === 0 ? 'gs ' : '') + (v ? g[3] : '') + (gi === 3 && v ? ' pdk' : '') + '"' + (gi === 3 && v ? ' data-w="' + esc(w) + '" data-c="' + c + '"' : '') + '>' + (v ? v : '<span class="z">0</span>') + '</td>'; });
+      if (nw > 1) h += '<td class="sub' + (gi === 3 && row ? ' pdk' : '') + '"' + (gi === 3 && row ? ' data-w="" data-c="' + c + '"' : '') + '><b>' + (row ? row : '<span class="z">0</span>') + '</b></td>';
     });
     h += '</tr>';
   });
   h += '<tr class="t"><td class="l">TOTAL</td>';
-  G.forEach(function (g, gi) { var all = 0; GT[gi].forEach(function (v, j) { all += v; h += '<td' + (gi === 2 && v ? ' class="pdk" data-w="' + esc(ws[j]) + '" data-c=""' : '') + '>' + (v ? v : '<span class="z">0</span>') + '</td>'; }); if (nw > 1) h += '<td' + (gi === 2 && all ? ' class="pdk" data-w="" data-c=""' : '') + '>' + (all ? all : '<span class="z">0</span>') + '</td>'; });
+  G.forEach(function (g, gi) { var all = 0; GT[gi].forEach(function (v, j) { all += v; h += '<td' + (gi === 3 && v ? ' class="pdk" data-w="' + esc(ws[j]) + '" data-c=""' : '') + '>' + (v ? v : '<span class="z">0</span>') + '</td>'; }); if (nw > 1) h += '<td' + (gi === 3 && all ? ' class="pdk" data-w="" data-c=""' : '') + '>' + (all ? all : '<span class="z">0</span>') + '</td>'; });
   h += '</tr></tbody></table></div></div>';
   $('mrout').innerHTML = h; mrSumKit(); setTimeout(sumFit, 60);
 }

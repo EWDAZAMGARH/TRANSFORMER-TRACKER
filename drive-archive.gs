@@ -9,8 +9,10 @@
 
  SETUP (once):  1) script.google.com > New project > delete the sample code > paste this whole file.
                 2) Change SECRET below to a code of your own (8 or more letters / digits).  Do not share it.
-                3) Deploy > New deployment > type: Web app > Execute as: Me > Who has access: Anyone > Deploy.  Allow the access it asks for.
-                4) Copy the "Web app" link (ends with /exec).  Paste the link and the same SECRET in the app: Admin tab > Google Drive archive.
+                3) In the toolbar choose the function  authorizeOnce  and press Run. Click Review permissions > your account > Advanced > Go to ... > Allow.
+                4) Deploy > New deployment > type: Web app > Execute as: Me > Who has access: Anyone > Deploy.  Allow the access it asks for.
+                5) Copy the "Web app" link (ends with /exec).  Open it once in a browser tab: it must show  {"ok":true,"msg":"TF-Tracker archive is running"}.
+                6) Paste the link and the same SECRET in the app: Admin tab > Google Drive archive.
  After you change this code, use Deploy > Manage deployments > Edit > Version: New version > Deploy (the link stays the same).
 */
 var SECRET = 'CHANGE-THIS-CODE';
@@ -20,6 +22,11 @@ var KEEP_FY = 5;
 var FILE_PREFIX = 'repair&testing register FY-';
 
 function out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+function authorizeOnce() {                    // run this ONCE in the editor (select it above, press Run) so Google asks for your permission
+  DriveApp.getRootFolder(); SpreadsheetApp.create('tf-tracker-permission-test').getId();
+  var it = DriveApp.getFilesByName('tf-tracker-permission-test'); while (it.hasNext()) it.next().setTrashed(true);
+  return 'OK';
+}
 function doGet() { return out_({ ok: true, msg: 'TF-Tracker archive is running' }); }
 
 function fyOf_(month) {                       // '2024-04' -> '2024-25',  '2025-02' -> '2024-25'
