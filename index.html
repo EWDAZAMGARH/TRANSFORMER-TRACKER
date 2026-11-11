@@ -4614,6 +4614,13 @@ function sgCopy(file, btn) {
     });
   }).then(function (n) { btn.textContent = 'Copied ✓ (' + Math.round(n / 1024) + ' KB)'; }).catch(function () { btn.textContent = 'Could not copy - tap to try again'; }).then(function () { btn.disabled = false; setTimeout(function () { btn.textContent = old; }, 5000); });
 }
+document.addEventListener('click', function (e) {
+  var d = e.target.closest && e.target.closest('[data-sgd]'); if (!d) return;
+  var f = d.dataset.sgd, old = d.innerHTML; d.disabled = true;
+  fetch(f + '?v=' + Date.now()).then(function (r) { if (!r.ok) throw new Error('file'); return r.blob(); }).then(function (bl) {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(bl); a.download = f; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }).catch(function () { d.textContent = 'Could not download - try Copy script'; }).then(function () { d.disabled = false; setTimeout(function () { d.innerHTML = old; }, 3500); });
+});
 function sgSite() { return location.origin + location.pathname.replace(/[^\/]*$/, ''); }   // the address of THIS site, e.g. https://ewdazamgarh.github.io/TRANSFORMER-TRACKER/
 function sgCopyTxt(txt, btn) {
   var old = btn.textContent;
@@ -4876,15 +4883,24 @@ function arLoad() {
 function arDraw() {
   var s = AR.st, c = AR.cfg, ok = c.url && c.token, h = '', i;
   h += '<div class="muted" style="font-size:12.5px;line-height:1.55;margin-bottom:8px">R&amp;R PRs are deleted by themselves (oldest 12 months at a time, only when the storage is 90% full) and the <b>last 3 years always stay</b>. Repair and Testing Register are never deleted by themselves. When R&amp;R is down to 3 years and the storage is still full, save the <b>oldest month</b> to <b>your own Google Drive</b> (steps below). It is deleted from Supabase only after Drive has confirmed every row. A month is never saved twice.</div>';
-  h += '<details' + (ok ? '' : ' open') + ' style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:700">How to set up your Google Drive (one time, 5 minutes)</summary><ol class="sgl" style="margin-top:8px">' +
-    '<li>Open <b>script.google.com</b> in the browser where your own Google account is logged in. Click <b>New project</b>.</li>' +
-    '<li>Click this button, then in the script page delete the sample code and paste (Ctrl+V): <button class="btn sm" type="button" data-sgc="drive-archive.gs">Copy script (.gs)</button></li>' +
-    '<li>At the top of the pasted code find <code>var SECRET = \'CHANGE-THIS-CODE\';</code> and write a code of your own between the quotes (8 or more letters / digits, example <code>Tf7kQ92mWa</code>). Keep it private. Click the Save icon.</li>' +
-    '<li>In the toolbar of the script page choose the function <code>authorizeOnce</code> and press <b>Run</b>. Click <b>Review permissions</b> &rarr; your account &rarr; <i>Advanced</i> &rarr; <i>Go to ... (unsafe)</i> &rarr; <i>Allow</i> (it is your own script; it only needs your Drive).</li>' +
-    '<li>Click <b>Deploy</b> &rarr; <b>New deployment</b>. At "Select type" click the gear icon &rarr; <b>Web app</b>. Set <b>Execute as: Me</b> and <b>Who has access: Anyone</b>. Click <b>Deploy</b>. If you change the code later: Deploy &rarr; Manage deployments &rarr; pencil &rarr; Version: <b>New version</b> &rarr; Deploy.</li>' +
-    '<li>Copy the <b>Web app URL</b> (ends with <code>/exec</code>). Open it in a new browser tab: it must show <code>{"ok":true,"msg":"TF-Tracker archive is running"}</code>. If you see a Google sign-in or an error page instead, the access is wrong: repeat step 4 and choose <b>Who has access: Anyone</b> (not "Anyone with Google account" and not "within your organisation").</li>' +
-    '<li>Paste the URL and the same secret code in the boxes below, click <b>Save</b> and then <b>Test Drive link</b>. It must say "Google Drive link works".</li>' +
-    '</ol><div class="muted" style="font-size:12px">In your Drive a folder <b>TF-Tracker Archive</b> is made. In it one Google Sheet per financial year: <b>repair&amp;testing register FY-2024-25</b>, with two tabs for every month (Repair, Testing). The 5 newest financial years stay there; older files are moved to a sub-folder (never deleted).</div></details>';
+  h += '<details' + (ok ? '' : ' open') + ' class="drg" style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:700">First time? How to set up your Google Drive (one time, about 5 minutes)</summary>' +
+    '<div class="muted" style="font-size:12.5px;margin:6px 0">You need your <b>own Google (Gmail) account</b>. Your data goes only to <b>your</b> Drive. Nobody else can see it.</div>' +
+    '<div class="bar" style="margin:6px 0"><button class="btn sm" type="button" data-sgc="drive-archive.gs">&#128203; Copy script (.gs)</button><button class="btn sm sec" type="button" data-sgd="drive-archive.gs">&#11015; Download file (drive-archive.gs)</button></div>' +
+    '<ol class="sgl" style="margin-top:8px">' +
+    '<li><b>Open the script page.</b> Go to <b>script.google.com</b> (logged in with your own Gmail) and click <b>New project</b>. Click "Untitled project" at the top and name it <b>TF-Tracker Drive</b>.</li>' +
+    '<li><b>Put the code in.</b> Press the <b>Copy script</b> button above. In the script page, select everything in the editor (Ctrl+A), delete it, and paste (Ctrl+V). If you downloaded the file instead, open it in Notepad, copy all, and paste the same way. Keep only this one file.</li>' +
+    '<li><b>Write your secret code.</b> At the top find the line <code>var SECRET = \'CHANGE-THIS-CODE\';</code> and write a code of your own between the quotes (8 or more letters and digits, e.g. <code>Tf7kQ92mWa</code>). Keep it private; you will type the same code in the app in step 7. Press <b>Ctrl+S</b> to save.</li>' +
+    '<li><b>Give permission (once).</b> In the toolbar choose the function <code>authorizeOnce</code> from the drop-down and press <b>Run</b>. Click <b>Review permissions</b> &rarr; your account &rarr; <i>Advanced</i> &rarr; <i>Go to TF-Tracker Drive (unsafe)</i> &rarr; <b>Allow</b>. It is your own script; it only creates files in your Drive.</li>' +
+    '<li><b>Publish it.</b> Click <b>Deploy</b> &rarr; <b>New deployment</b>. Click the gear icon &rarr; <b>Web app</b>. Set <b>Execute as: Me</b> and <b>Who has access: Anyone</b>. Click <b>Deploy</b>.</li>' +
+    '<li><b>Copy the link.</b> Copy the <b>Web app URL</b> (it ends with <code>/exec</code>). Open it in a new browser tab: you must see <code>{"ok":true,"msg":"TF-Tracker archive is running"}</code>.</li>' +
+    '<li><b>Link it here.</b> Paste the URL and your secret code in the boxes below, press <b>Save</b>, then <b>Test Drive link</b>. It must say <b>"Google Drive link works"</b>. Done.</li>' +
+    '</ol>' +
+    '<div class="muted" style="font-size:12.5px;line-height:1.55;margin-top:6px"><b>If the test fails</b><br>' +
+    '&bull; <i>Wrong secret code</i>: the code in the script (step 3) and in the box below must be exactly the same. After you change the script, do Deploy &rarr; Manage deployments &rarr; pencil &rarr; Version: <b>New version</b> &rarr; Deploy.<br>' +
+    '&bull; <i>You do not have permission ...</i>: repeat step 4 (run <code>authorizeOnce</code>), then deploy a New version.<br>' +
+    '&bull; <i>No answer from your Google script</i>: the Web app must be deployed with <b>Who has access: Anyone</b> (step 5). A school / office Google account may block "Anyone": use a personal Gmail.<br>' +
+    '&bull; The script page shows each call under <b>Executions</b> (left side); open a red "Failed" row to read the reason.</div>' +
+    '<div class="muted" style="font-size:12px;margin-top:6px">In your Drive a folder <b>TF-Tracker Archive</b> is made. In it one Google Sheet per financial year: <b>repair&amp;testing register FY-2024-25</b>, with two tabs for every month (Repair, Testing). The 5 newest financial years stay there; older files are moved to a sub-folder (never deleted).</div></details>';
   h += '<h4 style="margin:6px 0 4px">Link to your Google Drive</h4>';
   h += '<div class="bar" style="align-items:flex-end"><div style="flex:1;min-width:240px"><label>Web app URL (ends with /exec)</label><input type="text" id="aru" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec" value="' + esc(c.url) + '"></div>' +
     '<div style="min-width:160px"><label>Secret code</label><input type="password" id="art" autocomplete="off" value="' + esc(c.token) + '"></div></div>' +

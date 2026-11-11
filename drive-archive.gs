@@ -28,6 +28,7 @@ function reply_(o, id) {
   return HtmlService.createHtmlOutput('<script>var r=' + j + ';r.id=' + i + ';window.top.postMessage(r,"*");</script>OK').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 function authorizeOnce() {                    // run this ONCE in the editor (select it above, press Run) so Google asks for your permission
+  var lk = LockService.getScriptLock(); lk.waitLock(5000); lk.releaseLock();
   DriveApp.getRootFolder(); SpreadsheetApp.create('tf-tracker-permission-test').getId();
   var it = DriveApp.getFilesByName('tf-tracker-permission-test'); while (it.hasNext()) it.next().setTrashed(true);
   return 'OK';
@@ -76,17 +77,17 @@ function rotate_(folder) {                    // keep the 5 newest FY files, mov
 }
 
 function doPost(e) {
-  var lock = LockService.getScriptLock(), id = '', out = function (o) { return id ? reply_(o, id) : out_(o); };
-  try { lock.waitLock(30000); } catch (x) { return out_({ ok: false, error: 'Busy, try again.' }); }
+  var id = '', out = function (o) { return id ? reply_(o, id) : out_(o); }, lock = null;
   try {
-    var raw = (e.parameter && e.parameter.payload) || (e.postData && e.postData.contents), b = JSON.parse(raw);
+    var raw = (e && e.parameter && e.parameter.payload) || (e && e.postData && e.postData.contents), b = JSON.parse(raw);
     id = (b && b.id) ? String(b.id) : '';
     if (SECRET === 'CHANGE-THIS-CODE' || String(SECRET).length < 8) return out({ ok: false, error: 'Set your own SECRET in the script first.' });
     if (!b || b.token !== SECRET) return out({ ok: false, error: 'Wrong secret code.' });
-    if (b.ping) return out({ ok: true, ping: true });
+    if (b.ping) return out({ ok: true, ping: true });                    // the link test needs no Drive and no lock
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(b.month || '')) return out({ ok: false, error: 'Wrong month.' });
     if (b.kind !== 'rr' && b.kind !== 'tr') return out({ ok: false, error: 'Wrong kind.' });
     if (!Array.isArray(b.rows) || !Array.isArray(b.header)) return out({ ok: false, error: 'No rows.' });
+    lock = LockService.getScriptLock(); lock.waitLock(30000);
     var fy = fyOf_(b.month), folder = folder_(null, FOLDER_NAME), ss = ssFor_(folder, fy);
     var tab = (b.kind === 'rr' ? 'Repair ' : 'Testing ') + b.month;
     var r = put_(ss, tab, b.header, b.rows);
@@ -95,5 +96,5 @@ function doPost(e) {
     return out(r);
   } catch (err) {
     return out({ ok: false, error: String(err && err.message || err) });
-  } finally { lock.release(); }
+  } finally { if (lock) { try { lock.releaseLock(); } catch (x) { /* ignore */ } } }
 }
