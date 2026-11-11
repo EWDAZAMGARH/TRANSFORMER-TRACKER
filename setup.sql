@@ -3734,3 +3734,40 @@ end $$;
 revoke all on function public.ud_status(text, text) from public, anon, authenticated;
 grant execute on function public.ud_status(text, text) to anon, authenticated;
 notify pgrst, 'reload schema';
+
+-- ################ STEP 39 : WORKSHOP CODE (registry).  Only needed in the DEFAULT project; it is created only if it is not there yet ################
+do $reg$
+begin
+  if to_regprocedure('public.registry_lookup(text)') is null then
+    create table if not exists public.registry (code text primary key, url text not null unique, key text not null, created_at timestamptz not null default now());
+    alter table public.registry enable row level security;
+    revoke all on public.registry from public, anon, authenticated;
+    execute $f$
+      create function public.registry_lookup(p_code text) returns jsonb language sql stable security definer set search_path = public as
+      $b$ select (select jsonb_build_object('u', r.url, 'k', r.key) from public.registry r where r.code = lower(btrim(coalesce(p_code, '')))) $b$ $f$;
+    execute $f$
+      create function public.registry_add(p_name text, p_url text, p_key text) returns text language plpgsql security definer set search_path = public as
+      $b$
+      declare c text; n text := lower(regexp_replace(coalesce(p_name, ''), '[^a-zA-Z0-9]', '', 'g')); v_role text; v_pl text;
+      begin
+        p_url := lower(btrim(coalesce(p_url, ''))); p_key := btrim(coalesce(p_key, ''));
+        if length(n) < 3 then raise exception 'Write a short name of 3 or more letters.'; end if;
+        n := left(n, 20);
+        if p_url !~ '^https://[a-z0-9-]+\.supabase\.co$' then raise exception 'Wrong project address.'; end if;
+        if length(p_key) < 20 or p_key ~* 'service_role' or p_key ~ '^sb_secret_' then raise exception 'Wrong key (only the publishable / anon key is allowed).'; end if;
+        if position('.' in p_key) > 0 then
+          begin v_pl := translate(split_part(p_key, '.', 2), '-_', '+/'); v_pl := v_pl || repeat('=', (4 - length(v_pl) % 4) % 4); v_role := convert_from(decode(v_pl, 'base64'), 'utf8')::jsonb ->> 'role';
+          exception when others then v_role := null; end;
+          if v_role is distinct from 'anon' then raise exception 'Wrong key (only the publishable / anon key is allowed).'; end if;
+        end if;
+        select code into c from public.registry where url = p_url;
+        if c is not null then return c; end if;
+        c := n || '-' || substr(md5(gen_random_uuid()::text), 1, 6);
+        insert into public.registry (code, url, key) values (c, p_url, p_key);
+        return c;
+      end $b$ $f$;
+    revoke all on function public.registry_lookup(text), public.registry_add(text, text, text) from public;
+    grant execute on function public.registry_lookup(text), public.registry_add(text, text, text) to anon, authenticated;
+  end if;
+end $reg$;
+notify pgrst, 'reload schema';
