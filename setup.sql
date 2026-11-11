@@ -1428,6 +1428,15 @@ grant execute on function public.dashboard_json(date, date) to authenticated;
 --   Anybody else (or a deactivated login) gets an error.
 -- Typing the Install numbers stays Admin only (set_installed from step 15 is not changed).
 
+-- Comparison history: when the weekly job deletes old PRs (older than 3 years), their DAILY counts (workshop, division, capacity, PR date) are kept here,
+-- so the Comparison tab can still compare any old period.  Tiny table (about 10 rows per workshop and day).  No PR details are kept.
+create table if not exists public.cmp_hist (
+  workshop text not null, division text not null, capacity int not null, d date not null, n int not null check (n > 0),
+  primary key (workshop, division, capacity, d)
+);
+alter table public.cmp_hist enable row level security;
+revoke all on public.cmp_hist from public, anon, authenticated;
+
 create or replace function public.compare_all(p_from date, p_to date)
 returns jsonb language plpgsql stable security definer set search_path = public as
 $$
@@ -1441,13 +1450,23 @@ begin
        and (c.role in ('discom', 'creator') or c.org_division is null
             or d.workshop in (select name from public.workshops where org_division = c.org_division))
   ),
+  hh as (          -- deleted (old) PRs, counted per day; a day that has live PRs again is taken from the live data only
+    select h.* from public.cmp_hist h
+     where not exists (select 1 from public.data x where x.pr_date = h.d)
+       and (c.role in ('discom', 'creator') or c.org_division is null
+            or h.workshop in (select name from public.workshops where org_division = c.org_division))
+  ),
   x as (
-    select 'c'::text as period, d.workshop, d.division, d.capacity from dd d, w where d.pr_date between w.f  and w.t
+    select 'c'::text as period, d.workshop, d.division, d.capacity, 1 as n from dd d, w where d.pr_date between w.f  and w.t
     union all
-    select 'p',                 d.workshop, d.division, d.capacity from dd d, w where d.pr_date between w.pf and w.pt
+    select 'p',                 d.workshop, d.division, d.capacity, 1 from dd d, w where d.pr_date between w.pf and w.pt
+    union all
+    select 'c', h.workshop, h.division, h.capacity, h.n from hh h, w where h.d between w.f  and w.t
+    union all
+    select 'p', h.workshop, h.division, h.capacity, h.n from hh h, w where h.d between w.pf and w.pt
   )
   select coalesce(jsonb_agg(jsonb_build_array(period, workshop, dv, cap, n)), '[]'::jsonb) into r
-    from (select period, workshop, upper(btrim(regexp_replace(coalesce(division,''), '\s+', ' ', 'g'))) as dv, coalesce(capacity, 0) as cap, count(*) as n
+    from (select period, workshop, upper(btrim(regexp_replace(coalesce(division,''), '\s+', ' ', 'g'))) as dv, coalesce(capacity, 0) as cap, sum(n)::bigint as n
             from x group by 1, 2, 3, 4 order by 1, 2, 3, 4) q;
   return r;
 end $$;
@@ -1888,6 +1907,10 @@ begin
     return 0;
   end if;
   hi := least(cut, (lo + make_interval(months => p_step_months))::date);            -- the OLDEST 12 months, never a PR newer than the 3 years
+  insert into public.cmp_hist (workshop, division, capacity, d, n)       -- keep the daily counts for the Comparison tab BEFORE the PRs go
+    select workshop, upper(btrim(regexp_replace(coalesce(division, ''), '\s+', ' ', 'g'))), coalesce(capacity, 0), pr_date, count(*)
+      from public.data where pr_date is not null and pr_date < hi and not dup group by 1, 2, 3, 4
+    on conflict (workshop, division, capacity, d) do update set n = greatest(public.cmp_hist.n, excluded.n);
   delete from public.data where pr_date is not null and pr_date < hi;
   get diagnostics n = row_count;
   insert into public.purge_log (db_mb, limit_mb, deleted, note) values (round(sz, 1), p_limit_mb, n, 'Deleted ' || n || ' PRs older than ' || to_char(hi, 'DD.MM.YYYY') || ' (storage was at or above ' || p_pct || '%; R&R keeps the last ' || p_keep_months || ' months).');

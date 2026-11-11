@@ -824,6 +824,20 @@ body.kdrag{user-select:none;-webkit-user-select:none;cursor:cell}
 .asub{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;position:sticky;top:0;z-index:5;background:var(--bg,#f3f5fb);padding:6px 0}
 .asub button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;color:var(--mut);cursor:pointer}
 .asub button.on{background:linear-gradient(135deg,#3b5bdb,#5c7cfa);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(59,91,219,.28)}
+.achips{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:2px 0 14px}
+.achip{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border:1px solid #e3d8c8;background:#fffdf8;border-radius:14px;cursor:pointer;color:#2a2118;font:inherit;transition:transform .15s,box-shadow .15s,border-color .15s,background .15s}
+.achip:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(120,80,30,.12)}
+.achip .ic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:18px;background:var(--c,#eef1ff)}
+.achip b{display:block;font-size:13.5px;line-height:1.2}
+.achip small{display:block;font-size:11px;color:#7a6a58;margin-top:2px;line-height:1.25}
+.achip small.ok{color:#15803d;font-weight:700}.achip small.wn{color:#b45309;font-weight:700}
+.achip.on{border-color:#c2410c;background:#fff3e8;box-shadow:0 6px 18px rgba(194,65,12,.18)}
+.achip.on b{color:#9a3412}
+#t-adm .acard:not(.apg):not(.hide){animation:admIn .25s ease both}
+.apg{display:none!important}
+@keyframes admIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:700px){.achips{grid-template-columns:1fr 1fr;gap:8px}.achip{padding:8px 9px;gap:8px}.achip .ic{width:30px;height:30px;font-size:16px}.achip b{font-size:12.5px}.achip small{font-size:10.5px}}
+@media(prefers-reduced-motion:reduce){#t-adm .acard{animation:none!important}.achip{transition:none}}
 .acard{border-top:3px solid #4c6ef5;border-radius:14px;margin-bottom:14px}.acard h3{margin:0 0 6px;font-size:15px}
 .meter{height:12px;border-radius:99px;background:#e8ecf6;overflow:hidden}.meter i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width .6s}
 .meter i.mid{background:linear-gradient(90deg,#fbbf24,#f59e0b)}.meter i.hi{background:linear-gradient(90deg,#f87171,#dc2626)}
@@ -2298,8 +2312,9 @@ nav button#tmr{margin-top:auto}
     <!-- ADMIN -->
     <section id="t-adm" class="hide">
       <div id="amsg"></div>
-      <div id="sirtop" style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn hide" id="artg" title="Google Drive archive (M&R)" style="padding:3px 10px;font-size:12px;margin-right:6px">&#9729; Google Drive <span class="tag" id="arst"></span></button><button class="btn" id="sirtg" title="SIR linked Google Sheet" style="padding:3px 10px;font-size:12px">&#128203; SIR <span class="tag" id="sirst"></span></button></div>
-      <div class="card acard hide" id="sircfg"><h3>SIR - Site Inspection Report (linked Google Sheet)</h3>
+      <div id="admchips" class="achips"></div>
+      <div id="sirtop" style="display:none!important"><button class="btn hide" id="artg" title="Google Drive archive (M&R)" style="padding:3px 10px;font-size:12px;margin-right:6px">&#9729; Google Drive <span class="tag" id="arst"></span></button><button class="btn" id="sirtg" title="SIR linked Google Sheet" style="padding:3px 10px;font-size:12px">&#128203; SIR <span class="tag" id="sirst"></span></button></div>
+      <div class="card acard" id="sircfg"><h3>SIR - Site Inspection Report (linked Google Sheet)</h3>
         <div class="muted" style="font-size:12px;line-height:1.5;margin-bottom:8px">
           <b>How to link:</b> 1) Open the Google Sheet where the SIR form saves its answers. 2) File &gt; Share &gt; <b>Publish to web</b> &gt; choose the sheet tab and <b>Comma-separated values (.csv)</b> &gt; Publish. 3) Paste that link below (or the normal sheet link, if the sheet is shared as "Anyone with the link - Viewer"). 4) Write the exact heading of the column that holds the INDENT NO (PR number). 5) Press Test, then Save.<br>
           <b>Rule:</b> if a PR number of 100 KVA &amp; above is found in that column, its SIR is <b>done</b>, otherwise it is <b>pending</b>. The result is shown in the Summary screen under "SIR Summary". Only the PR number column is read.</div>
@@ -2308,7 +2323,7 @@ nav button#tmr{margin-top:auto}
           <div><label>Column heading of INDENT NO</label><input type="text" id="sircol" value="INDENT NO"></div></div>
         <div class="bar" style="margin-top:10px"><button class="btn" id="sirtest">Test</button><button class="btn" id="sirsave">Save</button><button class="btn" id="sirrm">Remove link</button></div>
       </div>
-      <div class="card acard"><h3>Workshops</h3>
+      <div class="card acard" id="wscard"><h3>Workshops</h3>
         <div class="muted" style="font-size:12px;margin-bottom:6px">Write the names of your own workshops here. Then give each user the workshops he works for.</div>
         <div class="bar"><input type="text" id="wn" placeholder="New workshop name" style="max-width:240px"><span id="wdw" class="hide"><input type="text" id="wd" list="dvl" placeholder="Division name" style="max-width:240px"></span><button class="btn" id="wadd">Add workshop</button></div>
         <div class="wrap"><table id="wlt" class="mt"></table></div>
@@ -2323,7 +2338,7 @@ nav button#tmr{margin-top:auto}
       </div>
       <div class="card acard hide" id="archard"><h3>Google Drive archive <span class="muted" style="font-weight:400">(M&amp;R Repair + Testing Register)</span></h3><div id="arbox"></div><div id="armsg"></div></div>
       <div class="card acard hide" id="stcard"><h3>Structure: Circles and Divisions</h3><div id="stbox"></div></div>
-      <div class="card acard"><h3>Create a new user</h3>
+      <div class="card acard" id="nucard"><h3>Create a new user</h3>
         <div class="bar" style="align-items:flex-end">
           <div><label>User ID</label><input type="text" id="nu" autocapitalize="off" spellcheck="false" placeholder="e.g. je.mau1"></div>
           <div><label>Name</label><input type="text" id="nn" placeholder="Full name"></div>
@@ -2337,7 +2352,7 @@ nav button#tmr{margin-top:auto}
         <div class="bar" style="margin-top:10px"><button class="btn" id="ncreate">Create user</button></div>
         <datalist id="dvl"></datalist>
       </div>
-      <div class="card acard"><h3>Users</h3>
+      <div class="card acard" id="uscard"><h3>Users</h3>
         <div class="bar"><input type="text" id="auq" placeholder="Search user..." style="max-width:260px"></div>
         <div class="wrap"><table id="aut" class="mt"></table></div>
       </div>
@@ -4852,12 +4867,12 @@ var AR_HT = ['id', 'workshop', 'firm', 'capacity', 'job no', 'test date', 'turn 
 function arOn() { return !!ME && (ME.role === 'admin' || ME.role === 'creator'); }
 function arLoad() {
   var card = $('archard'), bt = $('artg'); if (!card || !bt) return;
-  bt.classList.toggle('hide', !arOn()); if (!arOn()) { card.classList.add('hide'); return; }
+  bt.classList.toggle('hide', !arOn()); if (!arOn()) { card.classList.add('hide'); admChips(); return; }
+  card.classList.remove('hide');
   $('sirtop').classList.remove('hide');
-  Promise.all([rpc('arch_status_json'), rpc('arch_cfg_get')]).then(function (a) { AR.st = a[0]; AR.cfg = a[1]; arDraw(); var ok = a[1].url && a[1].token; $('arst').textContent = ok ? 'Linked' : 'Not linked'; $('arst').className = 'tag ' + (ok ? 'ok' : ''); })
+  Promise.all([rpc('arch_status_json'), rpc('arch_cfg_get')]).then(function (a) { AR.st = a[0]; AR.cfg = a[1]; arDraw(); var ok = a[1].url && a[1].token; $('arst').textContent = ok ? 'Linked' : 'Not linked'; $('arst').className = 'tag ' + (ok ? 'ok' : ''); admChips(); })
     .catch(function (e) { $('arbox').innerHTML = ''; msg('armsg', esc(e.message) + ' (If the SQL step 51 was not run yet, run setup.sql again.)', 'err'); });
 }
-document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#artg')) { var c = $('archard'); c.classList.toggle('hide'); if (!c.classList.contains('hide')) arLoad(); } });
 function arDraw() {
   var s = AR.st, c = AR.cfg, ok = c.url && c.token, h = '', i;
   h += '<div class="muted" style="font-size:12.5px;line-height:1.55;margin-bottom:8px">R&amp;R PRs are deleted by themselves (oldest 12 months at a time, only when the storage is 90% full) and the <b>last 3 years always stay</b>. Repair and Testing Register are never deleted by themselves. When R&amp;R is down to 3 years and the storage is still full, save the <b>oldest month</b> to <b>your own Google Drive</b> (steps below). It is deleted from Supabase only after Drive has confirmed every row. A month is never saved twice.</div>';
@@ -4936,9 +4951,39 @@ document.addEventListener('click', function (e) {
   } else if (t.id === 'argo') arGo(t);
 });
 
+
+/* ---- Admin: the jobs are shown as tiles at the top; the tapped job opens below ---- */
+var ADM_SEL = 'users';
+var ADM_DEFS = [
+  { k: 'users', card: 'uscard', t: 'Users', s: 'Search, edit, reset password', i: '\u{1F465}', c: '#e6f0ff' },
+  { k: 'new', card: 'nucard', t: 'New user', s: 'Create a login ID', i: '➕', c: '#e4f6e8' },
+  { k: 'ws', card: 'wscard', t: 'Workshops', s: 'Add your workshops', i: '\u{1F3ED}', c: '#fdebd8' },
+  { k: 'staff', card: 'slcard', t: 'Staff link', s: 'Link and workshop code', i: '\u{1F517}', c: '#efe6ff' },
+  { k: 'struct', card: 'stcard', t: 'Structure', s: 'Circles and divisions', i: '\u{1F9E9}', c: '#fff1c9' },
+  { k: 'sir', card: 'sircfg', t: 'SIR sheet', s: function () { return ($('sirst') || {}).textContent || 'Google Sheet link'; }, i: '\u{1F4CB}', c: '#e0f4f4' },
+  { k: 'drive', card: 'archard', t: 'Google Drive', s: function () { var st = AR && AR.st, t = ($('arst') || {}).textContent || 'Archive (M&R)'; return st && st.pct >= 90 ? '⚠ Storage ' + st.pct + '% full' : t; }, i: '☁️', c: '#e6eefc' }
+];
+function admChips() {
+  var box = $('admchips'); if (!box) return;
+  var ok = {}, first = null, h = '';
+  ADM_DEFS.forEach(function (d) { var c = $(d.card); if (c && !c.classList.contains('hide')) { ok[d.k] = 1; if (!first) first = d.k; } });
+  if (!ok[ADM_SEL]) ADM_SEL = first;
+  ADM_DEFS.forEach(function (d) {
+    if (!ok[d.k]) return; var sub = typeof d.s === 'function' ? d.s() : d.s, cls = /^Linked/.test(sub) ? ' ok' : (/⚠|Not linked/.test(sub) ? ' wn' : '');
+    h += '<button type="button" class="achip' + (d.k === ADM_SEL ? ' on' : '') + '" data-k="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + d.t + '</b><small class="' + cls.trim() + '">' + esc(sub) + '</small></span></button>';
+  });
+  if (box.innerHTML !== h) box.innerHTML = h;
+  ADM_DEFS.forEach(function (d) { var c = $(d.card); if (c) c.classList.toggle('apg', d.k !== ADM_SEL); });
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('.achip[data-k]'); if (!b) return;
+  ADM_SEL = b.dataset.k; admChips(); if (ADM_SEL === 'drive') arLoad();
+});
+
 function stLoad() {
   if (typeof slLoad === 'function') slLoad();
   if (typeof arLoad === 'function') arLoad();
+  admChips(); setTimeout(admChips, 400); setTimeout(admChips, 1500);
   var card = $('stcard'); if (!card) return;
   var on = ME && (ME.role === 'admin' || ME.role === 'creator');
   card.classList.toggle('hide', !on); if (!on) return;
@@ -4948,7 +4993,7 @@ function stLoad() {
 function stMsg(t, k) { var e = $('stmsg'); if (e) e.innerHTML = t ? '<div class="msg ' + (k || 'info') + '">' + t + '</div>' : ''; }
 function stDraw() {
   var b = $('stbox'); if (!b) return;
-  if (!STW.length) { b.innerHTML = '<div class="muted">Add a workshop first (Workshops box above).</div>'; return; }
+  if (!STW.length) { b.innerHTML = '<div class="muted">Add a workshop first (Workshops).</div>'; return; }
   if (!STRUCT_OK) { b.innerHTML = '<div class="msg err">The Structure is not switched on yet: the owner must run SQL step 37 (supabase-step37-structure.sql).</div>'; return; }
   var h = '<div class="muted" style="font-size:12.5px;margin:0 0 8px">Make your Circles, then put every Division in a Circle. The order here is the order in the Comparison tab and in the Division wise table. Write the <b>division name exactly as it is in your PRs</b> (if you change it here, it is changed in all PRs too). The <b>short name</b> is what is shown on the screen. Tip: tap <b>Fill from my data</b> to bring the divisions that are already in your PRs.</div><div id="stmsg"></div>';
   STW.forEach(function (w, wi) {
@@ -6607,8 +6652,8 @@ function sirCfgLoad() { return rpc('sir_cfg_get').then(function (a) { a = a || [
 /* ---- Admin panel ---- */
 function sirAdmInit() {
   var top = $('sirtop'); if (!top) return;
-  var on = ME.role === 'admin'; top.classList.toggle('hide', !(on || arOn())); $('sirtg').classList.toggle('hide', !on); if (!on) { $('sircfg').classList.add('hide'); return; }
-  sirCfgLoad().then(function (c) { $('sirurl').value = c ? c.url : ''; $('sircol').value = c ? c.col : 'INDENT NO'; $('sirst').textContent = c ? 'Linked' : 'Not linked'; $('sirst').className = 'tag ' + (c ? 'ok' : ''); }).catch(function () { });
+  var on = ME.role === 'admin'; top.classList.toggle('hide', !(on || arOn())); $('sirtg').classList.toggle('hide', !on); $('sircfg').classList.toggle('hide', !on); if (!on) { admChips(); return; }
+  sirCfgLoad().then(function (c) { $('sirurl').value = c ? c.url : ''; $('sircol').value = c ? c.col : 'INDENT NO'; $('sirst').textContent = c ? 'Linked' : 'Not linked'; $('sirst').className = 'tag ' + (c ? 'ok' : ''); admChips(); }).catch(function () { });
 }
 function sirSave(clear) {
   var u = clear ? '' : $('sirurl').value.trim(), c = $('sircol').value.trim() || 'INDENT NO';
@@ -6620,7 +6665,7 @@ function sirTest() {
   msg('sirmsg', 'Checking the sheet...', 'info');
   sirLoadSheet({ url: u, col: c }, true).then(function (r) { msg('sirmsg', 'Sheet opened. Column "' + esc(c) + '" found, ' + r.n + ' SIR entries read. Now press Save.', 'info'); }).catch(function (er) { msg('sirmsg', esc(er.message), 'err'); });
 }
-$('sirtg').onclick = function () { $('sircfg').classList.toggle('hide'); };
+$('sirtg').onclick = function () { ADM_SEL = 'sir'; admChips(); };
 $('sirsave').onclick = function () { sirSave(false); };
 $('sirrm').onclick = function () { if (confirm('Remove the SIR sheet link?')) sirSave(true); };
 $('sirtest').onclick = sirTest;
