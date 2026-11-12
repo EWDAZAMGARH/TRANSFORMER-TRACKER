@@ -3733,6 +3733,14 @@ begin
 end $$;
 revoke all on function public.ud_status(text, text) from public, anon, authenticated;
 grant execute on function public.ud_status(text, text) to anon, authenticated;
+
+-- (default project) the PR / Complaint search on the login page (no login) asks which approved projects exist, so a person with a fresh
+-- app is searched in ALL approved Admins' projects.  Only the publishable key + the division part of the label leave the database (never an e-mail).
+create or replace function public.ud_public_list() returns jsonb language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object('u', p.url, 'k', p.key, 'l', btrim(split_part(p.label, ' · ', 2))) order by p.created_at), '[]'::jsonb)
+  from (select * from public.ud_project where status = 'approved' order by created_at limit 200) p $$;
+revoke all on function public.ud_public_list() from public, anon, authenticated;
+grant execute on function public.ud_public_list() to anon, authenticated;
 notify pgrst, 'reload schema';
 
 -- ################ STEP 39 : WORKSHOP CODE (registry).  Only needed in the DEFAULT project; it is created only if it is not there yet ################

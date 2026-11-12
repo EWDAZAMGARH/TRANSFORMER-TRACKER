@@ -4465,18 +4465,52 @@ window.addEventListener('load', function () { var on = ''; try { on = localStora
     if (!r.dup) h += call(r.je, 'JE', r.je_mob) + (r.issue ? call(r.drv, 'Driver' + (r.firm ? ' · ' + esc(r.firm) : ''), r.drv_mob) : '');
     return h + '</div>';
   }
+  /* ---- which projects are searched: a device linked to one Admin searches only his data; a fresh app searches every approved Admin (directory) ---- */
+  var PJ = null, PJK = '';
+  function pjList() {
+    var C = ttConn(), key = C.own ? C.u : 'default';
+    if (PJ && PJK === key) return Promise.resolve(PJ);
+    var base = [{ u: C.u, k: C.k, l: '', main: true, c: null }];
+    if (!window.supabase) return Promise.resolve(base);
+    if (C.own) { PJ = base; PJK = key; return Promise.resolve(base); }
+    return wcDefault().rpc('ud_public_list').then(function (r) {
+      var L = !r.error && Array.isArray(r.data) ? r.data : [], seen = {}, P = base.slice(); seen[String(C.u).toLowerCase()] = 1;
+      L.forEach(function (x) { var u = String(x && x.u || '').toLowerCase(); if (u && !seen[u] && wcOk(x.u, x.k)) { seen[u] = 1; P.push({ u: x.u, k: x.k, l: x.l || '', main: false, c: null }); } });
+      PJ = P; PJK = key; return P;
+    }).catch(function () { PJ = base; PJK = key; return base; });
+  }
+  function pjClient(p) {
+    if (p.main) return SB;
+    if (!p.c) p.c = window.supabase.createClient(p.u, p.k, { auth: { persistSession: false, autoRefreshToken: false } });
+    return p.c;
+  }
+  function withTimeout(pr, ms) { return Promise.race([pr, new Promise(function (_, no) { setTimeout(function () { no(new Error('timeout')); }, ms); })]); }
+  function findAll(q) {                                    // -> { rows, tried, failed, first } : the list from every project, 6 at a time
+    return pjList().then(function (P) {
+      var rows = [], failed = 0, firstErr = null, i = 0;
+      function one(p) {
+        return withTimeout(pjClient(p).rpc('pr_find', { p_q: q }), 9000).then(function (r) {
+          if (r.error || (r.data && r.data.error)) { failed++; if (!firstErr) firstErr = r.error ? r.error.message : r.data.error; return; }
+          ((r.data && r.data.rows) || []).forEach(function (x) { x._p = p; rows.push(x); });
+        }).catch(function (e) { failed++; if (!firstErr) firstErr = (e && e.message) || 'Failed'; });
+      }
+      function worker() { if (i >= P.length) return Promise.resolve(); return one(P[i++]).then(worker); }
+      var w = []; for (var n = 0; n < Math.min(6, P.length); n++) w.push(worker());
+      return Promise.all(w).then(function () { return { rows: rows.slice(0, 40), tried: P.length, failed: failed, first: firstErr }; });
+    });
+  }
   /* ---- short list (no mobile numbers) -> tap one -> full card with Call buttons ---- */
-  var timer = null, runId = 0, LIST = [], lastQ = '';
+  var timer = null, runId = 0, LIST = [], lastQ = '', MULTI = false;
   var CH = { R: ['Installed', 'gn'], I: ['Issued', 'am'], P: ['Not issued', 'bl'], D: ['Wrong / duplicate', 'gr'] };
   function listHtml(rows, q) {
     return '<div class="psm ok">' + rows.length + (rows.length >= 15 ? '+' : '') + ' found for "' + esc(q) + '" - tap one</div>' + rows.map(function (r, i) {
       var c = CH[r.st] || CH.P;
-      return '<button type="button" class="psl" data-i="' + i + '"><span class="pslm"><b>' + esc(r.place || '-') + '</b><small>PR ' + esc(r.pr) + (r.complain ? ' · ' + esc(r.complain) : '') + '</small><small>' + esc(r.workshop) + (r.substation ? ' · ' + esc(r.substation) : '') + (r.cap ? ' · ' + esc(r.cap) + ' kVA' : '') + ' · ' + esc(r.pr_date || '') + '</small></span><span class="psch ' + c[1] + '">' + c[0] + '</span></button>';
+      return '<button type="button" class="psl" data-i="' + i + '"><span class="pslm"><b>' + esc(r.place || '-') + '</b><small>PR ' + esc(r.pr) + (r.complain ? ' · ' + esc(r.complain) : '') + '</small><small>' + esc(r.workshop) + (r.substation ? ' · ' + esc(r.substation) : '') + (r.cap ? ' · ' + esc(r.cap) + ' kVA' : '') + ' · ' + esc(r.pr_date || '') + (r._p && r._p.l && MULTI ? ' · ' + esc(r._p.l) : '') + '</small></span><span class="psch ' + c[1] + '">' + c[0] + '</span></button>';
     }).join('');
   }
   function openOne(row) {
     out.innerHTML = '<div class="psm">Opening...</div>';
-    SB.rpc('pr_lookup', { p_q: row.pr }).then(function (r) {
+    (row._p ? pjClient(row._p) : SB).rpc('pr_lookup', { p_q: row.pr }).then(function (r) {
       var d = (r && r.data) || {}, rows = (d.rows || []).filter(function (x) { return !row.workshop || x.workshop === row.workshop; });
       if (!rows.length) rows = d.rows || [];
       out.innerHTML = (LIST.length > 1 ? '<button type="button" class="psback" id="psback">&larr; Back to list</button>' : '') + (rows.length ? rows.map(card).join('') : '<div class="psm err">Could not open this record.</div>');
@@ -4488,18 +4522,21 @@ window.addEventListener('load', function () { var on = ''; try { on = localStora
     if (q.length < 4) { out.innerHTML = quiet ? '' : '<div class="psm">Type at least 4 letters or digits of the PR number, complaint number or place of damage.</div>'; return; }
     if (!SB) { out.innerHTML = '<div class="psm err">Search is not ready. Check your internet.</div>'; return; }
     btn.disabled = true; if (!quiet || !out.innerHTML) out.innerHTML = '<div class="psm">Searching...</div>';
-    SB.rpc('pr_find', { p_q: q }).then(function (r) {
+    findAll(q).then(function (R) {
       if (my !== runId) return; btn.disabled = false;
-      if (r.error) { out.innerHTML = '<div class="psm err">' + esc(/pr_find/.test(r.error.message) ? 'Search is not switched on yet (the admin must run SQL step 32).' : r.error.message) + '</div>'; return; }
-      var d = r.data || {}; if (d.error) { out.innerHTML = '<div class="psm err">' + esc(d.error) + '</div>'; return; }
-      var rows = d.rows || []; LIST = rows; lastQ = q;
-      if (!rows.length) { out.innerHTML = '<div class="psm err">No record found for "' + esc(q) + '". Try another part of the number or the place name.</div>'; return; }
+      MULTI = R.tried > 1;
+      var rows = R.rows; LIST = rows; lastQ = q;
+      if (!rows.length) {
+        if (R.failed >= R.tried) { out.innerHTML = '<div class="psm err">' + esc(/pr_find/.test(R.first || '') ? 'Search is not switched on yet (the admin must run setup.sql).' : (R.first || 'Search failed')) + '</div>'; return; }
+        out.innerHTML = '<div class="psm err">No record found for "' + esc(q) + '"' + (MULTI ? ' (searched ' + (R.tried - R.failed) + ' of ' + R.tried + ' Admins)' : '') + '. Try another part of the number or the place name.</div>'; return;
+      }
       if (rows.length === 1) { openOne(rows[0]); return; }
       out.innerHTML = listHtml(rows, q);
     }).catch(function (e) { if (my !== runId) return; btn.disabled = false; out.innerHTML = '<div class="psm err">' + esc(e.message || 'Search failed') + '</div>'; });
   }
+  window.addEventListener('load', function () { pjList().then(function (P) { MULTI = P.length > 1; }); });
   btn.addEventListener('click', function () { go(false); });
-  inp.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { go(true); }, 400); });
+  inp.addEventListener('input', function () { clearTimeout(timer); if (MULTI) return; timer = setTimeout(function () { go(true); }, 400); });   // many Admins: only the Search button / Enter (one request per Admin)
   inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(timer); go(false); } });
   out.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('.psl'); if (b) openOne(LIST[+b.dataset.i]); });
 })();
