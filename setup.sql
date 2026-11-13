@@ -58,6 +58,9 @@ create table if not exists public.workshops (
   org_division text not null                -- which Admin's division owns this workshop
 );
 
+-- the short name of a workshop for phones (Admin > Workshops), e.g. AZAMGARH -> AZM
+alter table public.workshops add column if not exists short_name text;
+
 create table if not exists public.profiles (
   user_id      uuid primary key references auth.users(id) on delete cascade,
   login_id     text not null unique,         -- what the person types as User ID
@@ -846,6 +849,23 @@ begin
   update public.profiles set scope = array_replace(scope, p_old, n) where p_old = any(scope);
   return n;
 end $$;
+
+create or replace function public.ws_set_short(p_name text, p_short text) returns text
+language plpgsql security definer set search_path = public as
+$$
+declare c public.profiles := public.tf_caller(); w public.workshops; sh text := upper(regexp_replace(btrim(coalesce(p_short,'')), '\s+', ' ', 'g'));
+begin
+  if c.user_id is null or c.role not in ('admin','creator') then raise exception 'Only an Admin can set a short name.'; end if;
+  select * into w from public.workshops where name = p_name;
+  if w.name is null or (c.role = 'admin' and w.org_division is distinct from c.org_division) then raise exception 'Workshop not found in your division.'; end if;
+  if sh = '' then update public.workshops set short_name = null where name = p_name; return ''; end if;
+  if sh !~ '^[A-Z0-9][A-Z0-9 ._&()/-]{0,7}$' then raise exception 'Short name: 1-8 characters (letters, numbers, space . - & ( ) /).'; end if;
+  if exists (select 1 from public.workshops x where x.org_division = w.org_division and x.name <> p_name and upper(coalesce(x.short_name, '')) = sh) then raise exception 'The short name % is already used by another workshop.', sh; end if;
+  update public.workshops set short_name = sh where name = p_name;
+  return sh;
+end $$;
+revoke all on function public.ws_set_short(text,text) from public, anon;
+grant execute on function public.ws_set_short(text,text) to authenticated;
 
 create or replace function public.ws_delete(p_name text) returns text
 language plpgsql security definer set search_path = public as
