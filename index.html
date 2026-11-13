@@ -3662,7 +3662,7 @@ function roleName(r) { return { creator: 'App Creator', discom: 'DISCOM head', a
 function reloadWs() {
   return SB.from('workshops').select('name,org_division').order('name').then(function (w) {
     WSDIV = {}; (w.data || []).forEach(function (x) { WSDIV[x.name] = sp(x.org_division); }); WSL = (w.data || []).map(function (x) { return x.name; });
-    fillWs(); cclear();
+    fillWs(); cclear(); if (typeof mrFillWs === 'function') mrFillWs();
   });
 }
 function divOf() { return ME.role === 'admin' ? ME.div : sp($('nv').value); }
@@ -5321,6 +5321,20 @@ function mrAfterLogin() {
   $('mrout').innerHTML = ''; $('mrdt').innerHTML = ''; $('mkout').innerHTML = '';
   $('msd').value = td; $('msw').innerHTML = o; MR.sd = null; $('msout').innerHTML = ''; $('msbw').classList.add('hide'); 
   if (mrOnly()) mrEnter('msum');
+}
+/* the Admin adds / renames / deletes a workshop while logged in -> the M&R lists (Kitty, Repair, Scrap, Dtc) follow at once, no new login needed */
+function mrFillWs() {
+  if (typeof MR === 'undefined' || !MR || !$('mkw')) return;
+  var ws = mrWs(), o = ws.map(function (w) { return '<option>' + esc(w) + '</option>'; }).join(''),
+      oa = (ME && ME.role === 'admin' && ws.length > 1) ? '<option value="__ALL__">All workshops</option>' : '',
+      keep = { mrw: $('mrw').value, mkw: $('mkw').value, mpw: $('mpw').value, msw: $('msw').value };
+  $('mrw').innerHTML = '<option value="">All workshops</option>' + o; $('mkw').innerHTML = oa + o; $('mpw').innerHTML = oa + o; $('msw').innerHTML = o;
+  Object.keys(keep).forEach(function (id) {
+    var el = $(id), v = keep[id];
+    if (v && [].some.call(el.options, function (x) { return x.value === v; })) el.value = v; else if (id !== 'mrw' && ws[0]) el.value = ws[0]; else if (id === 'mrw') el.value = '';
+  });
+  MR.kws = $('mkw').value || ''; MR.pws = $('mpw').value || ''; MR.ws = $('mrw').value || '';
+  if (MR.on && MR.tab && MR.tab !== 'msum') { try { mrShow(MR.tab); } catch (e) { } }
 }
 var _mrShowLogin = showLogin;
 showLogin = function (n) { document.body.classList.remove('mr-on'); MR.on = false; return _mrShowLogin(n); };
