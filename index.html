@@ -2191,8 +2191,7 @@ nav button#tmr{margin-top:auto}
   #mrout .k-kit table th,#mrout .k-kit table td,#mrkit table th,#mrkit table td{white-space:nowrap!important;padding:7px 9px!important;font-size:12.5px!important;min-width:44px}
   #mrkit .wrap,#mrkit .tbl11d,#mrkit{overflow-x:auto}
   #tt#tt [data-ws]{font-size:0!important}
-  #tt#tt [data-ws]::after{content:attr(data-ws);font-size:12px;font-weight:800;line-height:1.2;letter-spacing:0}
-  #tt#tt th[data-ws]::after{font-size:10px}
+  #tt#tt [data-ws]::after{content:attr(data-ws);font-size:var(--wf,12px);font-weight:inherit;line-height:inherit;letter-spacing:inherit}
   #mrout .capt tr:nth-child(2) th,#mrout .capt th:not(.g1):not(.g2):not(.l){min-width:38px!important;font-size:10px!important;padding:7px 4px!important}
   #mrout .capt td{padding:7px 5px!important;min-width:38px}
 }
@@ -5376,8 +5375,12 @@ function wsTagAll() {
   var S = {}; WSL.forEach(function (w) { var a = wsAbbr(w); if (a && a !== w) S[w] = a; });
   [].forEach.call(document.querySelectorAll('td,th'), function (c) {
     if (c.children.length) return;
-    var t = c.textContent.replace(/\s+/g, ' ').trim(), s = t && S[t];
-    if (s) { if (c.getAttribute('data-ws') !== s) c.setAttribute('data-ws', s); } else if (c.hasAttribute('data-ws') && c.getAttribute('data-ws') !== 'TOT') c.removeAttribute('data-ws');
+    var t = c.textContent.replace(/\s+/g, ' ').trim(), s = t && S[t], cur = c.getAttribute('data-ws');
+    if (!s && cur === 'TOT') s = 'TOT';
+    if (!s) { if (cur) { c.removeAttribute('data-ws'); c.style.removeProperty('--wf'); } return; }
+    if (cur) c.removeAttribute('data-ws');                        // read the size the cell really has (the same as a name that is already short, e.g. MAU)
+    c.style.setProperty('--wf', getComputedStyle(c).fontSize);
+    c.setAttribute('data-ws', s);
   });
 }
 function wsTagLater() { clearTimeout(_wsT); _wsT = setTimeout(wsTagAll, 150); }
