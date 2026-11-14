@@ -3799,3 +3799,84 @@ begin
   end if;
 end $reg$;
 notify pgrst, 'reload schema';
+
+
+-- ================================================================================================================
+-- STEP 104 : Reports > Same Plinth Damage - places where a transformer was damaged 3 (or more) times.
+-- A "plinth" = same workshop + same place of damage (the number written in the place is part of the name) + same capacity.
+-- The JE / workshop user writes the Unique No, the Reason of damage and the Action taken in the report; they are kept here.
+-- Safe to run again.
+-- ================================================================================================================
+create table if not exists public.plinth_info (
+  workshop text not null, pkey text not null, cap int not null,
+  unique_no text, reason text, action_taken text,
+  by_login text, at timestamptz not null default now(),
+  primary key (workshop, pkey, cap)
+);
+alter table public.plinth_info enable row level security;
+revoke all on public.plinth_info from public, anon, authenticated;
+
+-- the place of damage in one spelling: capital letters, every other sign = one space, digits kept (RAIPUR 2 and RAIPUR 3 are two plinths)
+create or replace function public.plinth_key(p text) returns text language sql immutable set search_path = public as $$
+  select btrim(regexp_replace(upper(coalesce(p, '')), '[^[:alnum:]]+', ' ', 'g')) $$;
+
+-- may the caller write the Unique No / reason / action of this workshop?  (an Admin of the division, or a user who may edit)
+create or replace function public.plinth_edit_ok(p_ws text) returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select p.active and p_ws = any (public.my_workshops()) and (p.role = 'admin' or (p.role = 'je' and coalesce(p.can_edit, false)))
+                     from public.profiles p where p.user_id = auth.uid()), false)
+$$;
+
+-- rows: every plinth with p_min or more damages (different PR dates) between p_from and p_to
+create or replace function public.plinth_json(p_from date, p_to date, p_min int default 3, p_ws text default null) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); ws text[]; r jsonb; m int := greatest(2, least(coalesce(p_min, 3), 20));
+begin
+  if c.user_id is null or not c.active or c.role not in ('admin', 'je', 'discom', 'creator') then raise exception 'Not allowed.'; end if;
+  if p_from is null or p_to is null or p_from > p_to then raise exception 'Choose the From and To dates.'; end if;
+  if p_to - p_from > 800 then raise exception 'Choose a period of up to 2 years.'; end if;
+  ws := coalesce(public.my_workshops(), '{}');
+  with b as (
+    select d.workshop, d.division, d.substation, d.place_of_damage, d.je_name, d.capacity, d.pr_no, d.pr_date, public.plinth_key(d.place_of_damage) as k
+      from public.data d
+     where not d.dup and d.workshop = any (ws) and (p_ws is null or d.workshop = p_ws)
+       and d.pr_date between p_from and p_to and d.capacity is not null and public.plinth_key(d.place_of_damage) <> ''),
+  e as (select distinct on (workshop, k, capacity, pr_date) * from b order by workshop, k, capacity, pr_date, pr_no collate "C"),
+  g as (select workshop, k, capacity, count(*) as n,
+               jsonb_agg(jsonb_build_array(pr_date, pr_no) order by pr_date) as t,
+               (array_agg(division order by pr_date desc))[1] as dv,
+               (array_agg(nullif(btrim(substation), '') order by pr_date desc) filter (where nullif(btrim(substation), '') is not null))[1] as ss,
+               (array_agg(btrim(place_of_damage) order by pr_date desc))[1] as pl,
+               (array_agg(nullif(btrim(je_name), '') order by pr_date desc) filter (where nullif(btrim(je_name), '') is not null))[1] as je
+          from e group by workshop, k, capacity having count(*) >= m)
+  select jsonb_build_object('min', m, 'from', p_from, 'to', p_to,
+    'rows', coalesce(jsonb_agg(jsonb_build_object('ws', g.workshop, 'dv', g.dv, 'ss', g.ss, 'pl', g.pl, 'je', g.je, 'cap', g.capacity, 'n', g.n, 't', g.t,
+        'k', g.k, 'u', coalesce(i.unique_no, ''), 'r', coalesce(i.reason, ''), 'a', coalesce(i.action_taken, ''), 'ed', public.plinth_edit_ok(g.workshop))
+        order by g.workshop, g.dv, g.pl, g.capacity), '[]'::jsonb)) into r
+    from g left join public.plinth_info i on i.workshop = g.workshop and i.pkey = g.k and i.cap = g.capacity;
+  return r;
+end $$;
+
+-- save the three texts of one plinth (all empty = the note is removed)
+create or replace function public.plinth_save(p_ws text, p_key text, p_cap int, p_uno text, p_reason text, p_action text) returns text
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); u text := btrim(coalesce(p_uno, '')); rs text := btrim(coalesce(p_reason, '')); ac text := btrim(coalesce(p_action, ''));
+begin
+  if not public.plinth_edit_ok(p_ws) then raise exception 'You cannot change the notes of this workshop.'; end if;
+  if p_key is null or btrim(p_key) = '' or p_cap is null then raise exception 'Plinth not found.'; end if;
+  if length(u) > 40 then raise exception 'Unique No: at most 40 characters.'; end if;
+  if length(rs) > 400 or length(ac) > 400 then raise exception 'Reason / Action: at most 400 characters.'; end if;
+  if u <> '' and exists (select 1 from public.plinth_info x where x.workshop = p_ws and upper(btrim(x.unique_no)) = upper(u) and not (x.pkey = p_key and x.cap = p_cap)) then
+    raise exception 'The Unique No % is already used for another plinth of this workshop.', u;
+  end if;
+  if u = '' and rs = '' and ac = '' then
+    delete from public.plinth_info where workshop = p_ws and pkey = p_key and cap = p_cap; return 'removed';
+  end if;
+  insert into public.plinth_info(workshop, pkey, cap, unique_no, reason, action_taken, by_login, at)
+    values (p_ws, p_key, p_cap, nullif(u, ''), nullif(rs, ''), nullif(ac, ''), c.login_id, now())
+    on conflict (workshop, pkey, cap) do update set unique_no = excluded.unique_no, reason = excluded.reason, action_taken = excluded.action_taken, by_login = excluded.by_login, at = now();
+  return 'saved';
+end $$;
+
+revoke all on function public.plinth_key(text), public.plinth_edit_ok(text), public.plinth_json(date, date, int, text), public.plinth_save(text, text, int, text, text, text) from public, anon;
+grant execute on function public.plinth_key(text), public.plinth_edit_ok(text), public.plinth_json(date, date, int, text), public.plinth_save(text, text, int, text, text, text) to authenticated;
+notify pgrst, 'reload schema';

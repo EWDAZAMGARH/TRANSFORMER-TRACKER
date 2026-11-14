@@ -2178,6 +2178,20 @@ nav button#tmr{margin-top:auto}
 #mkout details.lkd>summary{font:700 13px Inter,system-ui,sans-serif}
 .gc.sirD input{color:#0f7a4e!important;font-weight:700}.gc.sirP input{color:#b45309!important;font-weight:700}
 
+/* Reports (the old Comparison tab) */
+.rph{display:flex;align-items:baseline;gap:10px;margin:2px 2px 10px}.rph h2{margin:0;font-size:20px}
+.rpbk{align-items:center}.rpbk>b{font-size:15px;margin-right:6px}
+#rpcmpw[data-m="dw"] #cbtn,#rpcmpw[data-m="dw"] #cxl,#rpcmpw[data-m="dw"] #cpr,#rpcmpw[data-m="dw"] #cwsw,#rpcmpw[data-m="dw"] #cmpout{display:none!important}
+#rpcmpw[data-m="cmp"] #cdw{display:none!important}
+.plt{border-collapse:collapse;width:100%;font-size:12.5px}
+.plt th{background:#fff200;color:#1f1b16;border:1px solid #444;padding:6px 6px;text-align:center;font-size:11.5px;line-height:1.25}
+.plt td{border:1px solid #b9ad9c;padding:5px 6px;vertical-align:middle;background:#fff}
+.plt td.c{text-align:center}.plt td small{display:block;color:#7a6a58;font-size:10.5px}
+.plt textarea,.plt input{width:100%;min-width:150px;font:inherit;font-size:12.5px;border:1px solid #d9cdbb;border-radius:6px;padding:4px 6px;background:#fffdf8;box-sizing:border-box}
+.plt textarea{min-height:44px;resize:vertical}.plt td.u input{min-width:110px}
+.plt tr.pl-ok td{background:#effbea}.plt tr.pl-er td{background:#fdecec}
+.plt input:disabled,.plt textarea:disabled{background:#f4efe6;color:#5c5044}
+@media(max-width:700px){.plt{font-size:11.5px}.plt textarea,.plt input{min-width:120px}.rph h2{font-size:18px}}
 /* short workshop names on a phone (display only) */
 @media screen and (max-width:700px){
   #tt#tt [data-ws]{font-size:0!important}
@@ -2230,7 +2244,7 @@ nav button#tmr{margin-top:auto}
     <button data-t="sum" id="tsum" class="on">Summary</button>
     <button data-t="data" id="tdata">Data Sheet</button>
     <button data-t="drv" id="tdrv">Drivers</button>
-    <button data-t="cmp" id="tcmp">Comparison</button>
+    <button data-t="cmp" id="tcmp">Reports</button>
     <button data-t="emg" id="temg">Emergency<b class="ebadge hide"></b></button>
     <button data-t="adm" id="tadm">Admin</button>
     <button data-t="mr" id="tmr" class="hide" type="button">M&amp;R</button>
@@ -2311,16 +2325,43 @@ nav button#tmr{margin-top:auto}
 
     <!-- COMPARISON (Admin only) -->
     <section id="t-cmp" class="hide">
+      <div id="rpmenu"><div class="rph"><h2>Reports</h2><span class="muted">Tap a report</span></div><div id="rpchips" class="achips"></div></div>
+      <div id="rpcmpw" class="hide" data-m="cmp">
+        <div class="bar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b id="rpcmpt"></b></div>
       <div class="card">
         <div class="bar sbar">
           <div><label>From</label><div class="dt"><input type="text" class="dtx" id="cf" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="cf"></span></div></div>
           <div><label>To</label><div class="dt"><input type="text" class="dtx" id="cto" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="cto"></span></div></div>
-          <div><label>Workshop</label><select id="cws"><option value="">All workshops</option></select></div>
+          <div id="cwsw"><label>Workshop</label><select id="cws"><option value="">All workshops</option></select></div>
           <button class="btn" id="cbtn">Show Comparison</button><button class="btn sec" id="cxl">&#11015; Excel</button><button class="btn sec" id="cpr">Print</button><button class="btn sec" id="cdw" type="button" title="Day-wise PR &amp; Repair comparison"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4M8 14h2M12 14h2M16 14h.01M8 18h2M12 18h2"/></svg>Day-wise PR &amp; Repair</button>
         </div>
       </div>
       <div id="cmsg"></div>
       <div id="cmpout"></div>
+    
+      </div>
+      <div id="rpkitw" class="hide">
+        <div class="card"><div class="bar sbar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b>Kitty</b>
+          <div><label>Date</label><div class="dt"><input type="text" class="dtx" id="rkd" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="rkd"></span></div></div>
+          <button class="btn" id="rkgo" type="button">Show Kitty</button></div></div>
+        <div id="rkmsg"></div><div class="card k-kit" id="rkout" style="display:none"></div>
+      </div>
+      <div id="rpchmw" class="hide">
+        <div class="card"><div class="bar sbar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b>Chamber Assembly Report</b>
+          <div><label>Date</label><div class="dt"><input type="text" class="dtx" id="rhd" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="rhd"></span></div></div>
+          <button class="btn" id="rhgo" type="button">Open report</button></div></div>
+        <div id="rhmsg"></div><div class="muted" style="font-size:12.5px;padding:2px 4px">The same report is also in the Repair tab (M&amp;R).</div>
+      </div>
+      <div id="rppw" class="hide">
+        <div class="card"><div class="bar sbar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b>Same Plinth Damage</b>
+          <div><label>From</label><div class="dt"><input type="text" class="dtx" id="rpf" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="rpf"></span></div></div>
+          <div><label>To</label><div class="dt"><input type="text" class="dtx" id="rpt" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="rpt"></span></div></div>
+          <div><label>Workshop</label><select id="rpw"><option value="">All workshops</option></select></div>
+          <div><label>Damaged</label><select id="rpn"><option value="2">2 or more times</option><option value="3" selected>3 or more times</option><option value="4">4 or more times</option><option value="5">5 or more times</option></select></div>
+          <button class="btn" id="rpgo" type="button">Show</button><button class="btn sec" id="rpxl" type="button">&#11015; Excel</button><button class="btn sec" id="rppr" type="button">Print</button></div></div>
+        <div id="rpmsg"></div>
+        <div id="rpout"></div>
+      </div>
     </section>
 
     <!-- ADMIN -->
@@ -2616,7 +2657,7 @@ function xlsxDownload(name, sheets) {
   var styles = X + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="4"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFC00000"/><name val="Calibri"/></font><font><b/><sz val="13"/><name val="Calibri"/></font></fonts>' +
     '<fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE3E9FB"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFCFE89A"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFF200"/><bgColor indexed="64"/></patternFill></fill></fills>' +
     '<borders count="3"><border><left/><right/><top/><bottom/><diagonal/></border>' + bd + bk + '</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-    '<cellXfs count="12"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+    '<cellXfs count="15"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
     '<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
     '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf>' +
     '<xf numFmtId="0" fontId="1" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf>' +
@@ -2627,7 +2668,10 @@ function xlsxDownload(name, sheets) {
     '<xf numFmtId="0" fontId="3" fillId="4" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
     '<xf numFmtId="0" fontId="2" fillId="0" borderId="2" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' +
     '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="right"/></xf>' +
-    '<xf numFmtId="0" fontId="0" fillId="0" borderId="2" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="2" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="1" fillId="4" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="2" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="2" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
   files.unshift({ n: '[Content_Types].xml', d: ct + '</Types>' }, { n: '_rels/.rels', d: X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
     { n: 'xl/workbook.xml', d: wb + '</sheets></workbook>' }, { n: 'xl/_rels/workbook.xml.rels', d: rl }, { n: 'xl/styles.xml', d: styles });
   saveBlob(zipBlob(files), name);
@@ -2845,7 +2889,7 @@ function showTab(t) {
   ['sum', 'data', 'drv', 'cmp', 'emg', 'adm'].forEach(function (k) { $('t-' + k).classList.toggle('hide', k !== t); });
 }
 document.querySelectorAll('nav button').forEach(function (b) {
-  b.onclick = function () { var t = b.dataset.t; showTab(t); if (t === 'sum') loadSummary(); else if (t === 'adm') admLoad(); else if (t === 'drv') drvLoad(); else if (t === 'cmp') cmpLoad(); else if (t === 'emg') emgLoad(); else if (!dirtyN()) loadData(); };
+  b.onclick = function () { var t = b.dataset.t; showTab(t); if (t === 'sum') loadSummary(); else if (t === 'adm') admLoad(); else if (t === 'drv') drvLoad(); else if (t === 'cmp') rpHome(); else if (t === 'emg') emgLoad(); else if (!dirtyN()) loadData(); };
 });
 
 /* =====================  SUMMARY  ===================== */
@@ -5336,7 +5380,7 @@ function mrLeave() {
   MR.on = false; document.body.classList.remove('mr-on');
   Object.keys(MR_SECT).forEach(function (k) { $(MR_SECT[k]).classList.add('hide'); });
   var ok = allowedTabs(), t = ok.indexOf('sum') >= 0 ? 'sum' : ok[0];
-  showTab(t); if (t === 'sum') loadSummary(); else if (t === 'adm') admLoad(); else if (t === 'drv') drvLoad(); else if (t === 'cmp') cmpLoad(); else if (t === 'emg') emgLoad(); else loadData();
+  showTab(t); if (t === 'sum') loadSummary(); else if (t === 'adm') admLoad(); else if (t === 'drv') drvLoad(); else if (t === 'cmp') rpHome(); else if (t === 'emg') emgLoad(); else loadData();
 }
 function mrShow(t) {
   MR.tab = t;
@@ -5780,26 +5824,152 @@ function mrSumKit() {
   rpc('kitty_cmp_json', { p_day: mrIso(S.d) }).then(function (r) { if (seq !== MR.kseq2 || !$('mrkit')) return; MR.sk = { r: r, d: S.d }; mrSumKitDraw(); })
     .catch(function (er) { if ($('mrkit')) $('mrkit').innerHTML = '<h3>Kitty</h3><div class="msg err">' + esc(er.message) + '</div>'; });
 }
-function mrSumKitDraw() {
-  var K = MR.sk, r = K.r, ord = mrWs().filter(function (w) { return r.ws.indexOf(w) >= 0; }), V = {}, tot = KCAPS.map(function () { return 0; }), gt = 0;
+function mrSumKitDraw(K0, el0, p0) {
+  var P = p0 || 'mrk', EL = el0 || $('mrkit'), K = K0 || MR.sk, r = K.r, ord = mrWs().filter(function (w) { return r.ws.indexOf(w) >= 0; }), V = {}, tot = KCAPS.map(function () { return 0; }), gt = 0;
   (r.rows || []).forEach(function (x) { V[x[0]] = x; });
-  var h = '<div class="bar" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Kitty <span class="muted" style="text-transform:none;font-weight:600">- net kitty on ' + esc(K.d) + '</span></h3><span><button class="btn sec sm" id="mrkpr" type="button">&#128424; Print</button> <button class="btn sec sm" id="mrkxl" type="button">&#11015; Excel</button></span></div>' +
-    '<div class="wrap"><table class="mkt" id="mrkitt"><thead><tr><th class="l">KITTY</th>' + KCAPS.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '<th>TOTAL</th></tr></thead><tbody>';
+  var h = '<div class="bar" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Kitty <span class="muted" style="text-transform:none;font-weight:600">- net kitty on ' + esc(K.d) + '</span></h3><span><button class="btn sec sm" id="' + P + 'pr" type="button">&#128424; Print</button> <button class="btn sec sm" id="' + P + 'xl" type="button">&#11015; Excel</button></span></div>' +
+    '<div class="wrap"><table class="mkt" id="' + P + 'itt"><thead><tr><th class="l">KITTY</th>' + KCAPS.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '<th>TOTAL</th></tr></thead><tbody>';
   ord.forEach(function (w) {
     var j = r.ws.indexOf(w) + 1, s2 = 0;
     h += '<tr><td class="l"' + wsAttr(w) + '>' + esc(w) + '</td>' + KCAPS.map(function (c, i) { var v = V[c] ? V[c][j] : null; if (v == null) return '<td class="muted">-</td>'; s2 += v; tot[i] += v; return '<td class="' + (v < 0 ? 'neg' : '') + '">' + v + '</td>'; }).join('') + '<td class="' + (s2 < 0 ? 'neg' : '') + '"><b>' + s2 + '</b></td></tr>'; gt += s2;
   });
   h += '<tr class="t"><td class="l">TOTAL</td>' + tot.map(function (v) { return '<td class="' + (v < 0 ? 'neg' : '') + '"><b>' + v + '</b></td>'; }).join('') + '<td class="' + (gt < 0 ? 'neg' : '') + '"><b>' + gt + '</b></td></tr></tbody></table></div>';
   if ((r.nobase || []).length) h += '<div class="muted" style="font-size:12px;margin-top:6px">Kitty not started on this date for: ' + esc(r.nobase.join(', ')) + '.</div>';
-  $('mrkit').innerHTML = h; setTimeout(sumFit, 30);
+  EL.innerHTML = h; if (P === 'mrk') setTimeout(sumFit, 30);
 }
 document.addEventListener('click', function (e) {
   var t = e.target; if (!t.closest) return;
-  if (t.closest('#mrkpr') && MR.sk) kitPrint($('mrkitt'), 'KITTY - NET KITTY', MR.sk.d);
-  else if (t.closest('#mrkxl') && MR.sk) { var rows = kitXlRows($('mrkitt'), 1), cw = [14]; for (var q = 1; q < rows[0].length; q++) cw.push(9); cw[cw.length - 1] = 11; xlsxDownload('Kitty_' + mrFile(MR.sk.d) + '.xlsx', [{ name: 'Kitty', rows: rows, cw: cw }]); }
+  var kb = t.closest('#mrkpr,#mrkxl,#rpkpr,#rpkxl'); if (!kb) return;
+  var KK = /^rpk/.test(kb.id) ? RPK : MR.sk, tb = $(/^rpk/.test(kb.id) ? 'rpkitt' : 'mrkitt'); if (!KK || !tb) return;
+  if (/pr$/.test(kb.id)) kitPrint(tb, 'KITTY - NET KITTY', KK.d);
+  else { var rows = kitXlRows(tb, 1), cw = [14]; for (var q = 1; q < rows[0].length; q++) cw.push(9); cw[cw.length - 1] = 11; xlsxDownload('Kitty_' + mrFile(KK.d) + '.xlsx', [{ name: 'Kitty', rows: rows, cw: cw }]); }
 });
 
 
+/* ======================= REPORTS (the old Comparison tab): one icon for every report ======================= */
+var RP_DEFS = [
+  { k: 'cmp', t: 'PR Comparative', s: 'Dates against last year', i: '\u{1F4CA}', c: '#e6f0ff' },
+  { k: 'dw', t: 'Daywise PR & Repair', s: 'Day by day against last year', i: '\u{1F4C5}', c: '#e4f6e8' },
+  { k: 'kit', t: 'Kitty', s: 'Net kitty, capacity wise', i: '\u{1F4E6}', c: '#fdebd8', mr: 1 },
+  { k: 'chm', t: 'Chamber Assembly', s: 'Report of a date', i: '\u{1F527}', c: '#efe6ff', mr: 1 },
+  { k: 'pl', t: 'Same Plinth Damage', s: 'Damaged again and again at one place', i: '⚠️', c: '#ffe8e8' }
+];
+var RP_PANEL = { cmp: 'rpcmpw', dw: 'rpcmpw', kit: 'rpkitw', chm: 'rpchmw', pl: 'rppw' }, RPK = null, RPKS = 0, PLM = null, PLS = 0;
+function rpShow(k) {
+  ['rpcmpw', 'rpkitw', 'rpchmw', 'rppw'].forEach(function (id) { $(id).classList.add('hide'); });
+  $('rpmenu').classList.toggle('hide', !!k);
+  if (k) $(RP_PANEL[k]).classList.remove('hide');
+}
+function rpHome() {
+  if (!ME || ['admin', 'je', 'discom'].indexOf(ME.role) < 0) return;
+  var mr = typeof mrAccess === 'function' && mrAccess(), h = '';
+  RP_DEFS.forEach(function (d) { if (d.mr && !mr) return; h += '<button type="button" class="achip" data-rp="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + esc(d.t) + '</b><small>' + esc(d.s) + '</small></span></button>'; });
+  $('rpchips').innerHTML = h; rpShow('');
+}
+function rpOpen(k) {
+  rpShow(k);
+  if (k === 'cmp' || k === 'dw') { $('rpcmpw').dataset.m = k; $('rpcmpt').textContent = k === 'cmp' ? 'PR Comparative' : 'Daywise PR & Repair'; if (k === 'cmp') cmpLoad(); else dwOpen(); }
+  else if (k === 'kit') { if (!validD($('rkd').value.trim())) $('rkd').value = fmt(new Date()); rpKitLoad(); }
+  else if (k === 'chm') { if (!validD($('rhd').value.trim())) $('rhd').value = fmt(new Date()); msg('rhmsg', ''); }
+  else if (k === 'pl') plInit();
+}
+document.addEventListener('click', function (e) {
+  var t = e.target; if (!t.closest) return;
+  var b = t.closest('[data-rp]'); if (b && $('rpchips').contains(b)) return rpOpen(b.dataset.rp);
+  if (t.closest('[data-rpback]')) rpHome();
+});
+/* Kitty (the same card as in the M&R Summary) */
+function rpKitLoad() {
+  var d = $('rkd').value.trim(); if (!validD(d)) return msg('rkmsg', 'Enter the date in DD.MM.YYYY format.', 'err');
+  var seq = ++RPKS; msg('rkmsg', '<span class="sp" style="border-color:#3b5bdb55;border-top-color:#3b5bdb"></span>Loading...', 'info');
+  rpc('kitty_cmp_json', { p_day: mrIso(d) }).then(function (r) { if (seq !== RPKS) return; msg('rkmsg', ''); RPK = { r: r, d: d }; $('rkout').style.display = ''; mrSumKitDraw(RPK, $('rkout'), 'rpk'); })
+    .catch(function (er) { if (seq === RPKS) { $('rkout').style.display = 'none'; msg('rkmsg', esc(er.message), 'err'); } });
+}
+$('rkgo').onclick = rpKitLoad;
+/* Chamber Assembly Report (also in the Repair tab): the same pop-up, for the date written here */
+$('rhgo').onclick = function () {
+  var d = $('rhd').value.trim(); if (!validD(d)) return msg('rhmsg', 'Enter the date in DD.MM.YYYY format.', 'err');
+  msg('rhmsg', ''); $('mpd').value = d; mrRepChm();
+};
+document.addEventListener('change', function (e) { var t = e.target; if (t && t.matches && t.matches('.calw input[data-c="rkd"]')) setTimeout(rpKitLoad, 50); });
+/* Same Plinth Damage: a place where a transformer of one capacity was damaged again and again (see plinth_json in setup.sql) */
+function plInit() {
+  if (!$('rpf').value.trim()) { var t = new Date(), y = t.getMonth() >= 3 ? t.getFullYear() : t.getFullYear() - 1; $('rpf').value = '01.04.' + y; $('rpt').value = '31.03.' + (y + 1); }
+  var sel = $('rpw'), cur = sel.value; sel.innerHTML = '<option value="">All workshops</option>' + mrWs().map(function (w) { return '<option>' + esc(w) + '</option>'; }).join(''); sel.value = cur;
+  plLoad();
+}
+function plLoad() {
+  var f = $('rpf').value.trim(), t = $('rpt').value.trim();
+  if (!validD(f) || !validD(t)) return msg('rpmsg', 'Enter both dates in DD.MM.YYYY format.', 'err');
+  if (parseD(f) > parseD(t)) return msg('rpmsg', 'The "From" date cannot be later than the "To" date.', 'err');
+  var seq = ++PLS, n = +$('rpn').value; msg('rpmsg', '<span class="sp" style="border-color:#3b5bdb55;border-top-color:#3b5bdb"></span>Loading...', 'info'); $('rpout').innerHTML = '';
+  rpc('plinth_json', { p_from: d2i(f), p_to: d2i(t), p_min: n, p_ws: $('rpw').value || null }).then(function (r) {
+    if (seq !== PLS) return; msg('rpmsg', ''); PLM = { f: f, t: t, n: n, rows: (r && r.rows) || [] }; plDraw();
+  }).catch(function (e) { if (seq === PLS) { PLM = null; msg('rpmsg', /plinth_json|function/i.test(e.message || '') ? 'Run the new setup.sql in Supabase once (the Same Plinth report is not switched on in your database yet).' : esc(e.message), 'err'); } });
+}
+var PL_ORD = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth', 'Ninth', 'Tenth'];
+function plTimeHead(i) { return i === 3 ? 'FOURTH TIME' : (PL_ORD[i] || (i + 1) + 'th') + ' time'; }
+function plDraw() {
+  var R = PLM.rows, mx = 4, h = '';
+  R.forEach(function (r) { if (r.n > mx) mx = r.n; }); PLM.mx = mx;
+  if (!R.length) { $('rpout').innerHTML = '<div class="card"><div class="msg info">No place was damaged ' + PLM.n + ' or more times between <b>' + esc(PLM.f) + '</b> and <b>' + esc(PLM.t) + '</b>.</div></div>'; return; }
+  h = '<div class="card"><div class="muted" style="font-size:12.5px;margin-bottom:8px"><b>' + R.length + '</b> plinth(s): same place (the number in the place is part of the name) and same capacity, ' + PLM.n + ' or more PR dates. Write the Unique No, the reason and the action in the boxes: they are saved by themselves.</div><div class="wrap"><table class="plt"><thead><tr>' +
+    ['SL NO', 'NAME OF WORKSHOP', 'NAME OF DISTRIBUTION DIVISION', 'NAME OF SUBSTAION', 'NAME OF VILLEGE', 'NAME OF J.E.', 'UNIQUE NO', 'capacit in KVA'].map(function (x) { return '<th rowspan="2">' + x + '</th>'; }).join('') +
+    '<th colspan="' + mx + '">Description of Repeatedly Failed/Damaged Transformers at the Same Plinth<br>From ' + esc(PLM.f) + ' to ' + esc(PLM.t) + '</th><th rowspan="2">REASON OF DAMAGE</th><th rowspan="2">ACTION TAKEN</th></tr><tr>';
+  for (var i = 0; i < mx; i++) h += '<th>' + plTimeHead(i) + '</th>';
+  h += '</tr></thead><tbody>';
+  R.forEach(function (r, ri) {
+    var dis = r.ed ? '' : ' disabled';
+    h += '<tr data-i="' + ri + '"><td class="c">' + (ri + 1) + '</td><td class="c"' + wsAttr(r.ws) + '>' + esc(r.ws) + '</td><td>' + esc(r.dv || '') + '</td><td>' + esc(r.ss || '') + '</td><td><b>' + esc(r.pl || '') + '</b></td><td>' + esc(r.je || '') + '</td>' +
+      '<td class="u"><input type="text" class="pli" data-f="u" maxlength="40" value="' + esc(r.u) + '"' + dis + '></td><td class="c"><b>' + r.cap + '</b></td>';
+    for (var j = 0; j < mx; j++) { var x = r.t[j]; h += '<td class="c">' + (x ? esc(mrDmy(x[0])) + '<small>PR ' + esc(x[1]) + '</small>' : '') + '</td>'; }
+    h += '<td><textarea class="pli" data-f="r" rows="2" maxlength="400"' + dis + '>' + esc(r.r) + '</textarea></td><td><textarea class="pli" data-f="a" rows="2" maxlength="400"' + dis + '>' + esc(r.a) + '</textarea></td></tr>';
+  });
+  $('rpout').innerHTML = h + '</tbody></table></div></div>';
+}
+document.addEventListener('change', function (e) {
+  var t = e.target; if (!t.classList || !t.classList.contains('pli') || !PLM) return;
+  var tr = t.closest('tr'), r = PLM.rows[+tr.dataset.i]; if (!r) return;
+  var g = function (f) { return tr.querySelector('[data-f="' + f + '"]').value.trim(); };
+  tr.classList.remove('pl-ok', 'pl-er');
+  rpc('plinth_save', { p_ws: r.ws, p_key: r.k, p_cap: r.cap, p_uno: g('u'), p_reason: g('r'), p_action: g('a') }).then(function () {
+    r.u = g('u'); r.r = g('r'); r.a = g('a'); tr.classList.add('pl-ok'); msg('rpmsg', ''); setTimeout(function () { tr.classList.remove('pl-ok'); }, 1500);
+  }).catch(function (er) {
+    tr.classList.add('pl-er'); t.value = r[t.dataset.f]; msg('rpmsg', esc(er.message), 'err'); setTimeout(function () { tr.classList.remove('pl-er'); }, 2500);
+  });
+});
+$('rpgo').onclick = plLoad;
+$('rpxl').onclick = function () {
+  if (!PLM || !PLM.rows.length) return msg('rpmsg', 'Show the report first (nothing to download).', 'err');
+  var mx = PLM.mx, W = 8, T = W + mx + 2, rows = [], mg = [], r0 = [], r1 = [], i, j;
+  ['SL NO', 'NAME OF WORKSHOP', 'NAME OF DISTRIBUTION DIVISION', 'NAME OF SUBSTAION', 'NAME OF VILLEGE', 'NAME OF J.E.', 'UNIQUE NO', 'capacit in KVA'].forEach(function (x) { r0.push({ v: x, s: 12 }); r1.push({ v: '', s: 12 }); });
+  r0.push({ v: 'Description of Repeatedly Failed/Damaged Transformers at the Same Plinth\nFrom ' + PLM.f + ' to ' + PLM.t, s: 12 }); r1.push({ v: plTimeHead(0), s: 12 });
+  for (i = 1; i < mx; i++) { r0.push({ v: '', s: 12 }); r1.push({ v: plTimeHead(i), s: 12 }); }
+  r0.push({ v: 'REASON OF DAMAGE', s: 12 }); r1.push({ v: '', s: 12 }); r0.push({ v: 'ACTION TAKEN', s: 12 }); r1.push({ v: '', s: 12 });
+  rows.push(r0, r1); for (i = 0; i < W; i++) mg.push([0, i, 1, i]); mg.push([0, W, 0, W + mx - 1]); mg.push([0, W + mx, 1, W + mx]); mg.push([0, W + mx + 1, 1, W + mx + 1]);
+  PLM.rows.forEach(function (r, k) {
+    var line = [{ v: k + 1, s: 4 }, { v: r.ws, s: 14 }, { v: r.dv || '', s: 14 }, { v: r.ss || '', s: 14 }, { v: r.pl || '', s: 14 }, { v: r.je || '', s: 14 }, { v: r.u || '', s: 13 }, { v: r.cap, s: 4 }];
+    for (j = 0; j < mx; j++) { var x = r.t[j]; line.push({ v: x ? mrDmy(x[0]) + '\nPR ' + x[1] : '', s: 13 }); }
+    line.push({ v: r.r || '', s: 14 }, { v: r.a || '', s: 14 }); rows.push(line);
+  });
+  var cw = [8, 16, 26, 18, 26, 26, 20, 12]; for (j = 0; j < mx; j++) cw.push(18); cw.push(30, 30);
+  xlsxDownload('Same_Plinth_Damage_' + fileSafe(PLM.f) + '_to_' + fileSafe(PLM.t) + '.xlsx', [{ name: 'Same Plinth Damage', rows: rows, merges: mg, cw: cw }]);
+};
+$('rppr').onclick = function () {
+  if (!PLM || !PLM.rows.length) return msg('rpmsg', 'Show the report first (nothing to print).', 'err');
+  var mx = PLM.mx, h = '<table class="plp"><thead><tr>' + ['SL NO', 'NAME OF WORKSHOP', 'NAME OF DISTRIBUTION DIVISION', 'NAME OF SUBSTAION', 'NAME OF VILLEGE', 'NAME OF J.E.', 'UNIQUE NO', 'capacit in KVA'].map(function (x) { return '<th rowspan="2">' + x + '</th>'; }).join('') +
+    '<th colspan="' + mx + '">Description of Repeatedly Failed/Damaged Transformers at the Same Plinth<br>From ' + esc(PLM.f) + ' to ' + esc(PLM.t) + '</th><th rowspan="2">REASON OF DAMAGE</th><th rowspan="2">ACTION TAKEN</th></tr><tr>';
+  for (var i = 0; i < mx; i++) h += '<th>' + plTimeHead(i) + '</th>';
+  h += '</tr></thead><tbody>';
+  PLM.rows.forEach(function (r, k) {
+    h += '<tr><td>' + (k + 1) + '</td><td>' + esc(r.ws) + '</td><td>' + esc(r.dv || '') + '</td><td>' + esc(r.ss || '') + '</td><td>' + esc(r.pl || '') + '</td><td>' + esc(r.je || '') + '</td><td>' + esc(r.u || '') + '</td><td>' + r.cap + '</td>';
+    for (var j = 0; j < mx; j++) { var x = r.t[j]; h += '<td>' + (x ? esc(mrDmy(x[0])) + '<br>PR ' + esc(x[1]) : '') + '</td>'; }
+    h += '<td>' + esc(r.r || '') + '</td><td>' + esc(r.a || '') + '</td></tr>';
+  });
+  var st = document.getElementById('chmpgs'); if (st) st.remove(); st = document.createElement('style'); st.id = 'chmpgs';
+  st.textContent = '@media print{@page{size:A4 landscape;margin:8mm}#pz table.plp{border-collapse:collapse;width:100%;font-size:9px}#pz table.plp th{background:#fff200!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#pz table.plp th,#pz table.plp td{border:1px solid #222;padding:2px 3px;vertical-align:top;text-align:center}}';
+  document.head.appendChild(st); printHtml('Same Plinth Damage - ' + PLM.f + ' to ' + PLM.t, h + '</tbody></table>');
+};
 /* ---- Repair tab: shrink the rows so that all firms of the three blocks are seen on one screen (desktop) ---- */
 function repFit() {
   var o = $('mpout'); if (!o) return; o.classList.add('cmp');
