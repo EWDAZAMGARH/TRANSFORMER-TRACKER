@@ -3985,3 +3985,38 @@ end $$;
 revoke all on function public.daywise_json(date, date) from public, anon;
 grant execute on function public.daywise_json(date, date) to authenticated;
 notify pgrst, 'reload schema';
+
+-- ================================================================================================================
+-- STEP 106 : KITTY SUMMARY from date to date (Reports tab)
+-- rows per workshop and capacity: [cap, opening kitty on the From date, issue, repair, issue to other w/s, receive from other w/s, net kitty on the To date]
+-- issue / repair / to other / from other are the totals of the days From..To.  p_ws = one workshop (or null = all of yours).
+-- A workshop whose kitty is not started on the From date is listed in "nobase".  Safe to run again.
+-- ================================================================================================================
+create or replace function public.kitty_range_json(p_from date, p_to date, p_ws text default null) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare w text; a jsonb; b jsonb; rws jsonb; outj jsonb := '[]'::jsonb; nob jsonb := '[]'::jsonb; caps int[] := array[10, 16, 25, 63, 100, 160, 250, 400, 630, 1000]; lst text[];
+begin
+  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if p_from is null or p_to is null or p_from > p_to then raise exception 'Choose the From and To dates (From must not be after To).'; end if;
+  if p_to - p_from > 400 then raise exception 'Choose a period of up to 13 months.'; end if;
+  if coalesce(p_ws, '') <> '' and not (p_ws = any (public.my_workshops())) then raise exception 'This workshop is not yours.'; end if;
+  lst := case when coalesce(p_ws, '') = '' then public.my_workshops() else array[p_ws] end;
+  foreach w in array coalesce(lst, '{}') loop
+    a := public.kitty_json(w, p_from);
+    if (a->>'base') is null then nob := nob || to_jsonb(w); continue; end if;
+    b := public.kitty_json(w, p_to);
+    select jsonb_agg(jsonb_build_array(c,
+             coalesce((select (x->>1)::int from jsonb_array_elements(a->'rows') x where (x->>0)::int = c), 0),
+             (select count(*)::int from public.data d where not d.dup and d.workshop = w and d.capacity = c and d.issue_date between p_from and p_to),
+             coalesce((select sum(k.repair)::int from public.kitty_day k where k.workshop = w and k.cap = c and k.day between p_from and p_to), 0),
+             coalesce((select sum(k.to_other)::int from public.kitty_day k where k.workshop = w and k.cap = c and k.day between p_from and p_to), 0),
+             coalesce((select sum(k.from_other)::int from public.kitty_day k where k.workshop = w and k.cap = c and k.day between p_from and p_to), 0),
+             coalesce((select (x->>7)::int from jsonb_array_elements(b->'rows') x where (x->>0)::int = c), 0)) order by c)
+      into rws from unnest(caps) c;
+    outj := outj || jsonb_build_array(jsonb_build_object('ws', w, 'rows', rws));
+  end loop;
+  return jsonb_build_object('ws', outj, 'nobase', nob);
+end $$;
+revoke all on function public.kitty_range_json(date, date, text) from public, anon;
+grant execute on function public.kitty_range_json(date, date, text) to authenticated;
+notify pgrst, 'reload schema';
