@@ -2374,13 +2374,6 @@ nav button#tmr{margin-top:auto}
           <button class="btn" id="rhgo" type="button">Open report</button></div></div>
         <div id="rhmsg"></div><div class="muted" style="font-size:12.5px;padding:2px 4px">The same report is also in the Repair tab (M&amp;R).</div>
       </div>
-      <div id="rplyrw" class="hide">
-        <div class="card"><div class="bar sbar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b>LY Repair (day by day)</b>
-          <div><label>Workshop</label><select id="rlw"></select></div>
-          <div><label>Month (last year)</label><input type="month" id="rlm"></div></div></div>
-        <div id="rlmsg"></div>
-        <div class="card"><div class="muted ins" style="font-size:12.5px;margin-bottom:8px">How many transformers were repaired on each day of last year, capacity wise. Type or paste from Excel (saved by itself). Used by "Next month need" and by the Daywise PR &amp; Repair report, until the Repair tab has its own figures for those days.</div><div id="rlt"></div></div>
-      </div>
       <div id="rpksw" class="hide">
         <div class="card"><div class="bar sbar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b>Kitty Summary</b>
           <div><label>From</label><div class="dt"><input type="text" class="dtx" id="ksf" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="ksf"></span></div></div>
@@ -2534,10 +2527,18 @@ nav button#tmr{margin-top:auto}
       <div class="card">
         <div class="bar sbar">
           <div class="ptitle"><b>Repair</b><span>repair, assembly and oven - firm-wise</span></div>
-          <div class="mpchm"><button class="btn sec" id="mpchmb" type="button" title="Open the Chamber Assembly Report">&#128295; Chamber Assembly Report</button> <button class="btn sec" id="mprs" type="button" title="Repair summary from date to date">&#128202; Repair summary</button></div>
+          <div class="mpchm"><button class="btn sec" id="mpchmb" type="button" title="Open the Chamber Assembly Report">&#128295; Chamber Assembly Report</button> <button class="btn sec" id="mprs" type="button" title="Repair summary from date to date">&#128202; Repair summary</button> <button class="btn sec" id="mply" type="button" title="Last year's repair, day by day">&#128736;&#65039; LY Repair</button></div>
           <div><label>Workshop</label><select id="mpw"></select></div>
           <div><label>Date</label><div class="tg"><button class="ib" id="mpprev" title="Previous day">&#9664;</button><div class="dt"><input type="text" class="dtx" id="mpd" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="mpd"></span></div><button class="ib" id="mpnext" title="Next day">&#9654;</button><button class="btn sec sm" id="mptoday" type="button">Today</button></div></div>
         </div>
+      </div>
+      <div class="card hide" id="mplyc">
+        <div class="bar sbar"><b>LY Repair (day by day)</b>
+          <div><label>Workshop</label><select id="rlw"></select></div>
+          <div><label>Month (last year)</label><input type="month" id="rlm"></div>
+          <button class="btn sec sm" type="button" id="mplyx">Close</button></div>
+        <div id="rlmsg"></div>
+        <div class="muted ins" style="font-size:12.5px;margin:6px 0 8px">How many transformers were repaired on each day of last year, capacity wise. Type or paste from Excel (saved by itself). Used by "Next month need" and by the Daywise PR &amp; Repair report, until the Repair tab has its own figures for those days.</div><div id="rlt"></div>
       </div>
       <div id="mpmsg"></div>
       <div id="mpout"></div>
@@ -5989,11 +5990,13 @@ document.addEventListener('input', function (e) {
   g.dirty[t.closest('tr').dataset.d + '|' + t.dataset.c] = parseInt(v, 10) || 0; lyTot(host); asRun('lyd_' + host, function () { lySave(host); }, 900);
 });
 function rlyInit() {
-  var s = $('rlw'), cur = s.value; s.innerHTML = mrWs().map(function (w) { return '<option' + wsAttr(w) + '>' + esc(w) + '</option>'; }).join(''); if (cur) s.value = cur;
+  var s = $('rlw'), cur = s.value || $('mpw').value; s.innerHTML = mrWs().map(function (w) { return '<option' + wsAttr(w) + '>' + esc(w) + '</option>'; }).join(''); if (cur) s.value = cur;
   if (!$('rlm').value) { var t = new Date(); $('rlm').value = (t.getFullYear() - 1) + '-' + p2(t.getMonth() + 1); }
   rlyLoad();
 }
 function rlyLoad() { var m = $('rlm').value; if (!$('rlw').value || !/^\d{4}-\d{2}$/.test(m)) return; asFlushAll(); lyGrid('rlt', 'rlmsg', $('rlw').value, m); }
+$('mply').onclick = function () { var c = $('mplyc'); c.classList.toggle('hide'); if (!c.classList.contains('hide')) { rlyInit(); c.scrollIntoView({ block: 'nearest' }); } };
+$('mplyx').onclick = function () { asFlushAll(); $('mplyc').classList.add('hide'); };
 $('rlw').onchange = rlyLoad; $('rlm').addEventListener('change', rlyLoad);
 
 /* ---- LY KITTY (Reports): last year's kitty of the same date, typed or pasted, next to this year's kitty ---- */
@@ -6076,13 +6079,12 @@ var RP_DEFS = [
   { k: 'kit', t: 'Kitty', s: 'Net kitty, capacity wise', i: '\u{1F4E6}', c: '#fdebd8', mr: 1 },
   { k: 'ks', t: 'Kitty Summary', s: 'From date to date, workshop wise', i: '\u{1F9FE}', c: '#e8eaff', mr: 1 },
   { k: 'lyk', t: 'Kitty Comparison', s: 'This year against last year', i: '\u{1F5C2}\uFE0F', c: '#fff4cc', mr: 1 },
-  { k: 'lyr', t: 'LY Repair', s: 'Last year repair, day by day', i: '\u{1F6E0}\uFE0F', c: '#e0f7f4', mr: 1 },
   { k: 'chm', t: 'Chamber Assembly', s: 'Report of a date', i: '\u{1F527}', c: '#efe6ff', mr: 1 },
   { k: 'pl', t: 'Same Plinth Damage', s: 'Damaged again and again at one place', i: '⚠️', c: '#ffe8e8' }
 ];
-var RP_PANEL = { cmp: 'rpcmpw', dw: 'rpcmpw', kit: 'rpkitw', ks: 'rpksw', lyk: 'rplykw', lyr: 'rplyrw', chm: 'rpchmw', pl: 'rppw' }, RPK = null, RPKS = 0, PLM = null, PLS = 0;
+var RP_PANEL = { cmp: 'rpcmpw', dw: 'rpcmpw', kit: 'rpkitw', ks: 'rpksw', lyk: 'rplykw', chm: 'rpchmw', pl: 'rppw' }, RPK = null, RPKS = 0, PLM = null, PLS = 0;
 function rpShow(k) {
-  ['rpcmpw', 'rpkitw', 'rpksw', 'rplykw', 'rplyrw', 'rpchmw', 'rppw'].forEach(function (id) { $(id).classList.add('hide'); });
+  ['rpcmpw', 'rpkitw', 'rpksw', 'rplykw', 'rpchmw', 'rppw'].forEach(function (id) { $(id).classList.add('hide'); });
   $('rpmenu').classList.toggle('hide', !!k);
   if (k) $(RP_PANEL[k]).classList.remove('hide');
 }
@@ -6098,7 +6100,6 @@ function rpOpen(k) {
   else if (k === 'kit') { if (!validD($('rkd').value.trim())) $('rkd').value = fmt(new Date()); rpKitLoad(); }
   else if (k === 'ks') ksInit();
   else if (k === 'lyk') { if (!validD($('rld').value.trim())) $('rld').value = fmt(new Date()); rlkLoad(); }
-  else if (k === 'lyr') rlyInit();
   else if (k === 'chm') { if (!validD($('rhd').value.trim())) $('rhd').value = fmt(new Date()); msg('rhmsg', ''); }
   else if (k === 'pl') plInit();
 }
