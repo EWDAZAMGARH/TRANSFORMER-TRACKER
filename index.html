@@ -2100,6 +2100,28 @@ table.tst td.rx button:hover{background:#fee2e2}
 #mkout table.mkt tbody td.ed{background:#fffaf4!important}
 #mkout table.mkt tr.t td{background:linear-gradient(180deg,#d6edaa,#c2de8a)!important;font-weight:800!important;color:#1a3d0a!important}
 #mkout table.mkt tbody tr:hover td{filter:brightness(.97)}
+#rlkout .card>.wrap>table.mkt{border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;width:100%}
+#rlkout table.mkt thead th{background:linear-gradient(180deg,#eef2ff,#dfe7ff)!important;color:#1e3a8a!important;border:1px solid #c7d2fe!important;font-weight:800!important;padding:9px 8px!important}
+#rlkout table.mkt thead th.ed{background:linear-gradient(180deg,#fff4e6,#ffe4c7)!important;color:#c2410c!important;border-color:#f6cfa8!important}
+#rlkout table.mkt tbody td{border:1px solid #e3e8f5!important;padding:7px 8px!important;background:#fff!important;color:#1f2937!important;font-size:14px!important}
+#rlkout table.mkt tbody tr:nth-child(even) td{background:#f7f9ff!important}
+#rlkout table.mkt tbody td.l{font-weight:800!important;color:#1e3a8a!important;background:#eef2ff!important}
+#rlkout table.mkt td.repair{color:#15803d!important}
+#rlkout table.mkt td.n{font-weight:800!important;background:#f0fdf4!important;color:#166534!important}#rlkout table.mkt td.n.neg{background:#fef2f2!important;color:#b91c1c!important}
+#rlkout table.mkt tbody td.ed{background:#fffaf4!important}
+#rlkout table.mkt tr.t td{background:linear-gradient(180deg,#d6edaa,#c2de8a)!important;font-weight:800!important;color:#1a3d0a!important}
+#rlkout table.mkt tbody tr:hover td{filter:brightness(.97)}
+#ksout .card>.wrap>table.mkt{border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;width:100%}
+#ksout table.mkt thead th{background:linear-gradient(180deg,#eef2ff,#dfe7ff)!important;color:#1e3a8a!important;border:1px solid #c7d2fe!important;font-weight:800!important;padding:9px 8px!important}
+#ksout table.mkt thead th.ed{background:linear-gradient(180deg,#fff4e6,#ffe4c7)!important;color:#c2410c!important;border-color:#f6cfa8!important}
+#ksout table.mkt tbody td{border:1px solid #e3e8f5!important;padding:7px 8px!important;background:#fff!important;color:#1f2937!important;font-size:14px!important}
+#ksout table.mkt tbody tr:nth-child(even) td{background:#f7f9ff!important}
+#ksout table.mkt tbody td.l{font-weight:800!important;color:#1e3a8a!important;background:#eef2ff!important}
+#ksout table.mkt td.repair{color:#15803d!important}
+#ksout table.mkt td.n{font-weight:800!important;background:#f0fdf4!important;color:#166534!important}#ksout table.mkt td.n.neg{background:#fef2f2!important;color:#b91c1c!important}
+#ksout table.mkt tbody td.ed{background:#fffaf4!important}
+#ksout table.mkt tr.t td{background:linear-gradient(180deg,#d6edaa,#c2de8a)!important;font-weight:800!important;color:#1a3d0a!important}
+#ksout table.mkt tbody tr:hover td{filter:brightness(.97)}
 /* M&R Summary on one page */
 @media screen{body:not(.printing) #t-mrsum{zoom:var(--mz,1)}}
 nav button#tmr{margin-top:auto}
@@ -2368,7 +2390,7 @@ nav button#tmr{margin-top:auto}
         <div id="ksmsg"></div><div id="ksout"></div>
       </div>
       <div id="rplykw" class="hide">
-        <div class="card"><div class="bar sbar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b>LY Kitty</b>
+        <div class="card"><div class="bar sbar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b>Kitty Comparison</b>
           <div><label>Date (this year)</label><div class="dt"><input type="text" class="dtx" id="rld" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="rld"></span></div></div>
           <button class="btn" id="rlgo" type="button">Show</button><button class="btn sec hide" id="rlpr" type="button">Print</button><button class="btn sec hide" id="rlxl" type="button">&#11015; Excel</button></div></div>
         <div id="rlkmsg"></div><div id="rlkout"></div>
@@ -5890,7 +5912,7 @@ function ksBlocks() {
 }
 function ksTable(b) {
   var tot = [0, 0, 0, 0, 0, 0], h = '<div class="card"><h3 style="margin:0 0 8px"' + (b.ws === 'ALL WORKSHOPS' ? '' : wsAttr(b.ws)) + '>' + esc(b.ws) + '</h3><div class="wrap"><table class="mkt ksx"><thead><tr><th class="l">CAPACITY IN KVA</th><th>OPENING KITTY<br><small>' + esc(KSM.f) + '</small></th><th>ISSUE</th><th>REPAIR</th><th class="ed">ISSUE TO OTHER WORKSHOP</th><th class="ed">RECEIVE FROM OTHER W/S</th><th>NET KITTY<br><small>' + esc(KSM.t) + '</small></th></tr></thead><tbody>';
-  b.rows.forEach(function (x) { for (var k = 0; k < 6; k++) tot[k] += x[k + 1]; h += '<tr><td class="l">' + x[0] + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td><td>' + x[3] + '</td><td class="ed">' + x[4] + '</td><td class="ed">' + x[5] + '</td><td class="' + (x[6] < 0 ? 'neg' : '') + '"><b>' + x[6] + '</b></td></tr>'; });
+  b.rows.forEach(function (x) { for (var k = 0; k < 6; k++) tot[k] += x[k + 1]; h += '<tr><td class="l">' + x[0] + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td><td>' + x[3] + '</td><td class="ed">' + x[4] + '</td><td class="ed">' + x[5] + '</td><td class="n' + (x[6] < 0 ? ' neg' : '') + '"><b>' + x[6] + '</b></td></tr>'; });
   return h + '<tr class="t"><td class="l">TOTAL</td>' + tot.map(function (q) { return '<td><b>' + q + '</b></td>'; }).join('') + '</tr></tbody></table></div></div>';
 }
 function ksDraw() {
@@ -5988,21 +6010,21 @@ function rlkDraw() {
   if (!n) { $('rlkout').innerHTML = '<div class="card"><div class="msg info">No workshop has a started kitty on this date.</div></div>'; return; }
   L.ly = W.map(function (w) { var m = {}; w.rows.forEach(function (x) { m[x[0]] = x[2]; }); return m; });
   L.cy = W.map(function (w) { var m = {}; w.rows.forEach(function (x) { m[x[0]] = x[1]; }); return m; });
-  var h = '<div class="card"><div class="muted ins" style="font-size:12.5px;margin-bottom:8px">Last year kitty of <b>' + esc(mrDmy(L.r.ly)) + '</b> (type or paste from Excel into the "' + ly + '" boxes: saved by itself) against the kitty of <b>' + esc(L.d) + '</b>. Workshops whose kitty this app already counted last year use it automatically.</div>' +
-    '<div class="wrap"><table class="mkt xg" id="rlkt" data-rlk="1"><thead><tr><th class="l" rowspan="2">CAPACITY IN KVA</th>' + W.map(function (w) { return '<th colspan="2">' + esc(dwNm(w.ws)) + '</th>'; }).join('') + (n > 1 ? '<th rowspan="2">' + ly + ' TOTAL</th><th rowspan="2">' + ty + ' TOTAL</th>' : '') + '<th rowspan="2">DIFF</th></tr><tr>' + W.map(function () { return '<th>' + ly + '</th><th>' + ty + '</th>'; }).join('') + '</tr></thead><tbody>';
+  var h = '<div class="card"><div class="muted ins" style="font-size:12.5px;margin-bottom:8px">Kitty of <b>' + esc(L.d) + '</b> against the kitty of <b>' + esc(mrDmy(L.r.ly)) + '</b> (last year). Last year figures are taken from the Kitty tab (&quot;Kitty compared with last year&quot;): fill them there.</div>' +
+    '<div class="wrap"><table class="mkt" id="rlkt"><thead><tr><th class="l" rowspan="2">CAPACITY IN KVA</th>' + W.map(function (w) { return '<th colspan="2"' + wsAttr(w.ws) + '>' + esc(w.ws) + '</th>'; }).join('') + (n > 1 ? '<th rowspan="2">' + ly + ' TOTAL</th><th class="ed" rowspan="2">' + ty + ' TOTAL</th>' : '') + '<th rowspan="2">DIFF</th></tr><tr>' + W.map(function () { return '<th>' + ly + '</th><th class="ed">' + ty + '</th>'; }).join('') + '</tr></thead><tbody>';
   KCAPS.forEach(function (c) {
-    h += '<tr data-c="' + c + '"><td class="l x">' + c + '</td>';
-    W.forEach(function (w, i) { h += '<td class="ed">' + (w.edit && !w.auto ? '<input type="text" inputmode="numeric" autocomplete="off" class="rlk" data-i="' + i + '" value="' + (L.ly[i][c] || 0) + '">' : '<span>' + (L.ly[i][c] || 0) + '</span>') + '</td><td class="x">' + (L.cy[i][c] || 0) + '</td>'; });
-    h += (n > 1 ? '<td class="x lt"></td><td class="x tt"></td>' : '') + '<td class="x df"></td></tr>';
+    h += '<tr data-c="' + c + '"><td class="l">' + c + '</td>';
+    W.forEach(function (w, i) { h += '<td>' + (L.ly[i][c] || 0) + '</td><td class="ed">' + (L.cy[i][c] || 0) + '</td>'; });
+    h += (n > 1 ? '<td class="lt"></td><td class="ed tt"></td>' : '') + '<td class="df n"></td></tr>';
   });
-  h += '<tr class="t"><td class="l x">TOTAL</td>' + W.map(function () { return '<td class="x a"></td><td class="x b"></td>'; }).join('') + (n > 1 ? '<td class="x lt"></td><td class="x tt"></td>' : '') + '<td class="x df"></td></tr></tbody></table></div></div>';
+  h += '<tr class="t"><td class="l">TOTAL</td>' + W.map(function () { return '<td class="a"></td><td class="b"></td>'; }).join('') + (n > 1 ? '<td class="lt"></td><td class="tt"></td>' : '') + '<td class="df"></td></tr></tbody></table></div></div>';
   $('rlkout').innerHTML = h; rlkPaint();
 }
 function rlkPaint() {
   var L = RLK, t = $('rlkt'); if (!t) return; var n = L.r.ws.length, cl = [], cy = [], gl = 0, gt = 0, i; for (i = 0; i < n; i++) { cl.push(0); cy.push(0); }
   [].forEach.call(t.querySelectorAll('tbody tr[data-c]'), function (tr) {
     var c = +tr.dataset.c, a = 0, b = 0; for (i = 0; i < n; i++) { var x = L.ly[i][c] || 0, y = L.cy[i][c] || 0; a += x; b += y; cl[i] += x; cy[i] += y; }
-    if (n > 1) { tr.querySelector('.lt').innerHTML = '<b>' + a + '</b>'; tr.querySelector('.tt').innerHTML = '<b>' + b + '</b>'; } tr.querySelector('.df').innerHTML = '<b>' + (b - a) + '</b>'; gl += a; gt += b;
+    if (n > 1) { tr.querySelector('.lt').innerHTML = '<b>' + a + '</b>'; tr.querySelector('.tt').innerHTML = '<b>' + b + '</b>'; } tr.querySelector('.df').innerHTML = '<b>' + (b - a) + '</b>'; tr.querySelector('.df').classList.toggle('neg', b - a < 0); gl += a; gt += b;
   });
   var T = t.querySelector('tr.t'), A = T.querySelectorAll('.a'), B = T.querySelectorAll('.b'); for (i = 0; i < n; i++) { A[i].innerHTML = '<b>' + cl[i] + '</b>'; B[i].innerHTML = '<b>' + cy[i] + '</b>'; }
   if (n > 1) { T.querySelector('.lt').innerHTML = '<b>' + gl + '</b>'; T.querySelector('.tt').innerHTML = '<b>' + gt + '</b>'; } T.querySelector('.df').innerHTML = '<b>' + (gt - gl) + '</b>';
@@ -6044,16 +6066,16 @@ $('rlxl').onclick = function () {
   });
   var last = [{ v: 'TOTAL', s: 5 }]; W.forEach(function (w, k) { last.push({ v: cl[k], s: 5 }, { v: cy[k], s: 5 }); }); last.push({ v: tl, s: 5 }, { v: tt, s: 5 }, { v: tt - tl, s: 5 }); rows.push(last);
   var cw = [16]; for (i = 0; i < n; i++) cw.push(9, 9); cw.push(11, 11, 9);
-  xlsxDownload('LY_Kitty_' + mrFile(L.d) + '.xlsx', [{ name: 'LY Kitty', rows: rows, merges: mg, cw: cw }]);
+  xlsxDownload('Kitty_Comparison_' + mrFile(L.d) + '.xlsx', [{ name: 'Kitty Comparison', rows: rows, merges: mg, cw: cw }]);
 };
-$('rlpr').onclick = function () { if (RLK && $('rlkt')) kitPrint($('rlkt'), 'KITTY - LAST YEAR AND THIS YEAR', RLK.d); };
+$('rlpr').onclick = function () { if (RLK && $('rlkt')) kitPrint($('rlkt'), 'KITTY COMPARISON', RLK.d); };
 /* ======================= REPORTS (the old Comparison tab): one icon for every report ======================= */
 var RP_DEFS = [
   { k: 'cmp', t: 'PR Comparative', s: 'Dates against last year', i: '\u{1F4CA}', c: '#e6f0ff' },
   { k: 'dw', t: 'Daywise PR & Repair', s: 'Day by day against last year', i: '\u{1F4C5}', c: '#e4f6e8' },
   { k: 'kit', t: 'Kitty', s: 'Net kitty, capacity wise', i: '\u{1F4E6}', c: '#fdebd8', mr: 1 },
   { k: 'ks', t: 'Kitty Summary', s: 'From date to date, workshop wise', i: '\u{1F9FE}', c: '#e8eaff', mr: 1 },
-  { k: 'lyk', t: 'LY Kitty', s: 'Last year kitty of the same date', i: '\u{1F5C2}\uFE0F', c: '#fff4cc', mr: 1 },
+  { k: 'lyk', t: 'Kitty Comparison', s: 'This year against last year', i: '\u{1F5C2}\uFE0F', c: '#fff4cc', mr: 1 },
   { k: 'lyr', t: 'LY Repair', s: 'Last year repair, day by day', i: '\u{1F6E0}\uFE0F', c: '#e0f7f4', mr: 1 },
   { k: 'chm', t: 'Chamber Assembly', s: 'Report of a date', i: '\u{1F527}', c: '#efe6ff', mr: 1 },
   { k: 'pl', t: 'Same Plinth Damage', s: 'Damaged again and again at one place', i: '⚠️', c: '#ffe8e8' }
@@ -6429,7 +6451,7 @@ function mrKitPerHtml(per) {
     var tot = [0, 0, 0, 0, 0, 0], h = '<div class="card"><h3 style="margin:0 0 8px"' + wsAttr(pw.ws) + '>' + esc(pw.ws) + '</h3><div class="wrap"><table class="mkt"><thead><tr><th class="l">CAPACITY IN KVA</th><th>OPENING KITTY</th><th>ISSUE</th><th>REPAIR</th><th class="ed">ISSUE TO OTHER WORKSHOP</th><th class="ed">RECEIVE FROM OTHER W/S</th><th>NET KITTY</th></tr></thead><tbody>';
     pw.rows.forEach(function (x) {
       var v = [x[1], x[3], x[4], x[5], x[6], x[7]]; v.forEach(function (q, i) { tot[i] += q; });
-      h += '<tr><td class="l">' + x[0] + '</td><td>' + v[0] + '</td><td>' + v[1] + '</td><td>' + v[2] + '</td><td class="ed">' + v[3] + '</td><td class="ed">' + v[4] + '</td><td class="' + (v[5] < 0 ? 'neg' : '') + '"><b>' + v[5] + '</b></td></tr>';
+      h += '<tr><td class="l">' + x[0] + '</td><td>' + v[0] + '</td><td>' + v[1] + '</td><td>' + v[2] + '</td><td class="ed">' + v[3] + '</td><td class="ed">' + v[4] + '</td><td class="n' + (v[5] < 0 ? ' neg' : '') + '"><b>' + v[5] + '</b></td></tr>';
     });
     return h + '<tr class="t"><td class="l">TOTAL</td>' + tot.map(function (q) { return '<td><b>' + q + '</b></td>'; }).join('') + '</tr></tbody></table></div></div>';
   }).join('');
