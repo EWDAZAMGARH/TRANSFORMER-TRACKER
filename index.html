@@ -920,11 +920,11 @@ table.cmpt input.ci{width:70px;text-align:center;font:inherit;font-weight:800;bo
 #pz .cmpp table.cmpt tr.w.wt td,#pz .cmpp table.cmpt tr.t.z td{font-size:8.5px}
 #pz .cmpp table.cmpt td.nm,#pz .cmpp table.cmpt th.nm{white-space:normal;min-width:26mm}
 #pz .cmpp .cmph{display:none!important}
-#pz .cmpp{width:277mm!important;max-width:none!important;margin:0 auto!important;overflow:visible!important}
-#pz .cmpp table.cmpt{width:277mm!important;min-width:0!important;max-width:none!important;table-layout:fixed!important;font-size:7pt!important}
+#pz .cmpp{width:100%!important;max-width:none!important;margin:0 auto!important;overflow:visible!important}
+#pz .cmpp table.cmpt{width:100%!important;min-width:0!important;max-width:none!important;table-layout:fixed!important;font-size:7pt!important}
 #pz .cmpp table.cmpt tr.ca{display:table-row!important}
 #pz .cmpp table.cmpt th,#pz .cmpp table.cmpt td{font-size:7pt!important;padding:0 .4mm!important;position:static!important;max-width:none!important;min-width:0!important;overflow:hidden}
-#pz .cmpp table.cmpt thead th{font-size:5.6pt!important;line-height:1.1!important;padding:.4mm .3mm!important}
+#pz .cmpp table.cmpt thead th{font-size:5.2pt!important;line-height:1.1!important;padding:.4mm .3mm!important}
 #pz .cmpp table.cmpt thead tr.ca th{font-size:8pt!important}
 #pz .cmpp table.cmpt thead tr.ca th:not(.ct){font-size:6pt!important}
 #pz .cmpp table.cmpt td{font-size:6.8pt!important}
@@ -933,6 +933,16 @@ table.cmpt input.ci{width:70px;text-align:center;font:inherit;font-weight:800;bo
 #pz .cmpp table.cmpt tr.w.wt td,#pz .cmpp table.cmpt tr.t.z td{font-size:7.4pt!important}
 #pz .cmpp table.cmpt tr.w.s td.nm,#pz .cmpp table.cmpt tr.t.z td.nm{background:inherit!important}
 .cmph{display:none}
+/* final layout (screen + PDF): fixed columns in %, like the Excel sheet; header never overlaps */
+table.cmpt{table-layout:fixed!important;border-collapse:collapse!important}
+table.cmpt thead th{position:static!important;overflow:hidden}
+table.cmpt th.cp,table.cmpt th.nm,table.cmpt td.nm{min-width:0!important;max-width:none!important}
+table.cmpt td{overflow:hidden;text-overflow:clip}
+table.cmpt input.ci{width:92%!important;min-width:0}
+@media(min-width:701px){table.cmpt{width:100%!important;min-width:1250px!important;font-size:11px!important}
+ table.cmpt th,table.cmpt td{padding:7px 1px!important}table.cmpt thead th{padding:4px 1px!important}
+ table.cmpt th.cp{font-size:9.5px!important}table.cmpt td.nm{text-align:left;padding-left:4px!important}}
+@media print{#pz .cmpp table.cmpt thead{display:table-header-group}#pz .cmpp table.cmpt tr{break-inside:avoid;page-break-inside:avoid}}
 /* desktop: the table fills the width and the height of the screen, bigger letters */
 @media(min-width:901px){
  .cmpw{max-height:calc(100vh - 190px)!important}
@@ -1802,6 +1812,9 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
  html.hs-t #emt td.lk{background:rgba(128,128,128,.12);color:inherit}html.hs-t #emt td.ein{background:rgba(250,204,21,.25)}html.hs-t #emt td.ein input{color:inherit}
  @media (max-width:760px){#siren{flex-wrap:wrap}#siren .sgo{width:100%;text-align:center}#siren .sl{display:none}}
  #emt td.est{min-width:170px;white-space:normal}
+#emt td.ein textarea.emta{display:block;width:100%;min-width:260px;max-width:380px;margin:0;border:0;outline:0;background:transparent;color:inherit;font:inherit;line-height:1.3;resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word;padding:3px 4px;box-sizing:border-box;text-align:left}
+#emt td.ein textarea.emta:focus{background:#fff;outline:2px solid #3b5bdb;outline-offset:-2px}
+#emt td.lk textarea.emta{cursor:default}
  @media (max-width:760px){#emt td.gc:empty{display:none!important}#emt.mt tr.er{border-left:5px solid #dc2626!important}#emt.mt tr.eg{border-left:5px solid #16a34a!important}#emt.mt tr.eo{border-left:5px solid #9ca3af!important}}
 @media screen and (min-width:761px){
  #emt{border-collapse:separate;border-spacing:0}
@@ -1907,6 +1920,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}input[type=num
 .xg th.x,.xg td.x{border:0!important;background:transparent!important;width:26px;padding:0!important}.xg td.x button{border:0;background:none;color:#b91c1c;font-size:17px;cursor:pointer}
 .xg td.muted{color:#666!important}.xg input.rf{text-align:left;min-width:130px}
 .rrt.xg th,.rrt.xg td{background:#c8c8c8!important}.rrt.xg td.xs{background:#a9cfb3!important}.rrt.xg th.x,.rrt.xg td.x{background:transparent!important}.rrt.xg td.bl{font-weight:400!important;width:90px}.rrt td.tt{font-weight:400!important}
+nav button#mmat::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M21%2016V8l-9-5-9%205v8l9%205z%22/%3E%3Cpath%20d=%22M3.3%207.5L12%2012l8.7-4.5M12%2022V12%22/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M21%2016V8l-9-5-9%205v8l9%205z%22/%3E%3Cpath%20d=%22M3.3%207.5L12%2012l8.7-4.5M12%2022V12%22/%3E%3C/svg%3E")}
 nav button#mrr::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M9%2014L4%209l5-5%22/%3E%3Cpath%20d=%22M4%209h10a6%206%200%200%201%200%2012h-3%22/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M9%2014L4%209l5-5%22/%3E%3Cpath%20d=%22M4%209h10a6%206%200%200%201%200%2012h-3%22/%3E%3C/svg%3E")}
 
 /* ---- M&R: animation + friendlier Repair tab (Step 78) ---- */
@@ -2002,6 +2016,27 @@ table.dwt tr.dwT td{background:#ffff00;font-weight:800;font-size:14px}
  .rrk{margin-bottom:8px}.rrkc{flex-direction:row;align-items:baseline;gap:10px;padding:6px 14px}.rrkc small{display:none}.rrkc b{font-size:22px}
  .rrc{margin-bottom:8px}.rrh{padding:5px 14px 0}.rrc .wrap{padding:2px 10px 8px}
  #mpout.cmp .rrt.xg th{padding:2px 4px!important;font-size:11.5px!important}#mpout.cmp .rrt.xg td{font-size:12.5px}
+.rrt2.xg th,.rrt2.xg td{background:#c8c8c8!important}.rrt2.xg td.xs{background:#a9cfb3!important}.rrt2.xg th.x,.rrt2.xg td.x{background:transparent!important}.rrt2.xg td.bl{font-weight:400!important;width:90px}.rrt td.tt{font-weight:400!important}
+.rrt2.xg{border-collapse:separate;border-spacing:0;border-radius:10px;overflow:hidden}
+.rrt2.xg th{background:var(--bg)!important;color:var(--ac)!important;font-weight:700!important;font-size:12.5px!important;border:1px solid var(--bd)!important;padding:7px 6px!important}
+.rrt2.xg td{background:#fff!important;border:1px solid #e3e8f3!important;height:33px}
+.rrt2.xg tbody tr:nth-child(even) td{background:#f7f9ff!important}
+.rrt2.xg td>input{transition:background .15s,box-shadow .15s}.rrt2.xg td>input:hover{background:#eef3ff!important}
+.rrt2.xg td>input:focus{background:#fffbe6!important;box-shadow:inset 0 0 0 2px var(--ac)}
+.rrt2.xg tbody tr td.bl{background:var(--bg)!important;color:var(--ac);font-weight:800!important;letter-spacing:.5px}
+.rrt2.xg tbody tr td.tt{background:var(--bg)!important;color:var(--ac);font-weight:700!important}
+.rrt2.xg tbody tr.tr td{background:var(--bg)!important;color:var(--ac);font-weight:800!important}
+.rrt2.xg tbody tr.sp td{background:#fff!important;height:14px;border-left:0!important;border-right:0!important}
+.rrt2.xg tbody tr td.xs{background:#cfe3ff!important}
+.rrt2.xg th.x,.rrt2.xg tbody tr td.x{background:transparent!important;border:0!important}
+.rrt2.xg td.x button{width:26px;height:26px;border-radius:50%;line-height:1;transition:background .15s,transform .15s}.rrt2.xg td.x button:hover{background:#fee2e2;transform:rotate(90deg)}
+.rrt2.xg tr.empty td{color:#94a3b8!important}
+.rrt2.xg td>input{height:calc(var(--rh,33px) - 2px)!important;padding-top:0!important;padding-bottom:0!important;line-height:1}
+.rrt2.xg td{height:var(--rh,33px)!important;padding-top:0!important;padding-bottom:0!important}.rrt2.xg td>input{box-sizing:border-box;font-size:12.5px}
+.rrt2.xg td.bl,.rrt2.xg td.tt{line-height:1.1}
+.rrt2.xg td.x button{width:min(26px,calc(var(--rh,33px) - 2px))!important;height:min(26px,calc(var(--rh,33px) - 2px))!important;padding:0!important;font-size:12px;line-height:1}
+ #mpout.cmp .rrt2.xg th{padding:2px 4px!important;font-size:11.5px!important}#mpout.cmp .rrt2.xg td{font-size:12.5px}
+.rrh2{padding-top:12px;border-top:1px dashed var(--bd,#ddd);margin-top:6px}.rrv{gap:8px;align-items:center;margin:0 0 10px}.rrt2.xg td.l{text-align:left;padding-left:8px}
 }
 #rsov{position:fixed;inset:0;z-index:300;background:rgba(20,16,10,.55);display:flex;align-items:flex-start;justify-content:center;padding:3vh 10px;overflow:auto;animation:mrFade .25s both}
 #rsov.hide{display:none}
@@ -2090,6 +2125,48 @@ table.tst td.rx button:hover{background:#fee2e2}
 /* Kitty: nicer look */
 .rrk-PURPLE{--ac:#6d28d9;--bg:#ede9fe;--bd:#d6ccf8}.kk4{grid-template-columns:repeat(4,minmax(0,1fr))!important}
 #mkout .card>.wrap>table.mkt{border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;width:100%}
+#mmout,#mmstdo{font-family:Calibri,"Segoe UI",Arial,sans-serif}
+#mmout table.mkt,#mmstdo table.mkt{border-collapse:collapse;background:#fff;font-size:13.5px}
+#mmout table.mkt th,#mmout table.mkt td,#mmstdo table.mkt th,#mmstdo table.mkt td{border:1px solid #d0d0d0!important;padding:3px 6px!important;color:#000!important;background:#fff!important;text-align:center;vertical-align:middle;height:25px;border-radius:0!important}
+#mmout table.mkt thead th,#mmstdo table.mkt thead th{background:#e7e6e6!important;font-weight:700!important;font-size:13px!important;text-transform:none!important}
+#mmout table.mkt thead th.ttl{background:#c6e0b4!important;font-size:15px!important;font-weight:800!important}
+#mmout table.mkt thead tr.nm th{background:#f2f2f2!important;font-weight:400!important;font-size:12px!important;height:20px}
+#mmout table.mkt tr.grp td,#mmstdo table.mkt tr.grp td{background:#ffe699!important;font-weight:700!important;text-align:left!important}
+#mmout table.mkt td.l,#mmout table.mkt td.nm{text-align:left!important;font-weight:600!important;background:#f2f2f2!important}
+#mmout table.mkt td.nm{font-weight:400!important;background:#fff!important}
+#mmout table.mkt td.c{text-align:right!important}
+#mmout table.mkt td.au{background:#e2efda!important}
+#mmout table.mkt td.in,#mmstdo table.mkt td.in{background:#fffde7!important;padding:0!important}
+#mmout table.mkt td.in.chg{background:#fce4d6!important}
+#mmout table.mkt tr.t td,#mmout table.mkt tfoot td{background:#d9d9d9!important;font-weight:700!important;text-align:right!important}
+#mmout table.mkt tr.t td.l{text-align:left!important}
+#mmout td.neg,#mmout td.neg *{color:#c00000!important;font-weight:700!important}
+#mmout table.mkt tbody tr:hover td{filter:none!important}
+#mmout .wrap{overflow:auto;max-width:100%}
+#mmout input.mmn,#mmout input.mmr,#mmout select.mmr,#mmstdo input.mmn{display:block;width:100%;min-width:70px;height:100%;min-height:24px;margin:0;border:0!important;border-radius:0!important;background:transparent!important;text-align:right;padding:2px 6px!important;font:inherit;box-sizing:border-box;box-shadow:none!important;outline:none}
+#mmout input.mmr[data-rf=src],#mmout input.mmr[data-rf=note]{text-align:left;min-width:150px}
+#mmout input.mmr[type=date],#mmout select.mmr{text-align:left;min-width:120px}
+#mmout td.in{position:relative;padding:0!important;min-width:70px;height:26px}
+#mmout td.in>input.mmn{position:absolute;left:0;top:0;right:0;bottom:0;width:100%!important;max-width:none!important;height:100%;min-width:0}
+#mmout input.mmn,#mmout input.mmr,#mmout select.mmr{max-width:none!important}
+#mmout input.mmn:focus,#mmout input.mmr:focus,#mmout select.mmr:focus,#mmstdo input.mmn:focus{outline:2px solid #217346!important;outline-offset:-2px;background:#fff!important}
+#mmout table.mkt td.std{font-weight:700!important;background:#fff2cc!important;vertical-align:middle}
+#mmout td.wide{min-width:240px;max-width:380px}
+#mmout td.nm{white-space:nowrap!important}
+#mmout td.nm.wide{white-space:normal!important;word-break:break-word}
+#mmout textarea.mmr{display:block;width:100%;min-width:240px;margin:0;border:0!important;border-radius:0!important;background:transparent!important;font:inherit;padding:4px 6px!important;line-height:1.3;resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word;box-sizing:border-box;box-shadow:none!important;outline:none;text-align:left}
+#mmout textarea.mmr:focus{outline:2px solid #217346!important;outline-offset:-2px;background:#fff!important}
+#mmout input.mmr[data-rf=src]{min-width:190px}
+#mmout input.mmr[data-rf=pr]{min-width:150px}
+#mmout td.nm.au{white-space:nowrap!important}
+#mmout .mmdel{border:0;background:transparent;color:#c00000;cursor:pointer;font-size:15px;padding:0 6px}
+.mmrng{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}.mmrng label{display:flex;flex-direction:column;font-size:12px}
+#mmpanel .btn.on{background:#217346;color:#fff}
+.mmov{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:90;display:flex;align-items:center;justify-content:center;padding:10px}
+.mmbox{background:#fff;border-radius:10px;padding:12px;max-width:96vw;max-height:92vh;overflow:auto}
+.mmstdw{overflow:auto;max-height:68vh}
+#mmstdo td.nm,#mmstdo td.l{text-align:left!important;white-space:nowrap}
+#mmstdo table.mkt thead th{position:sticky;top:0}
 #mkout table.mkt thead th{background:linear-gradient(180deg,#eef2ff,#dfe7ff)!important;color:#1e3a8a!important;border:1px solid #c7d2fe!important;font-weight:800!important;padding:9px 8px!important}
 #mkout table.mkt thead th.ed{background:linear-gradient(180deg,#fff4e6,#ffe4c7)!important;color:#c2410c!important;border-color:#f6cfa8!important}
 #mkout table.mkt tbody td{border:1px solid #e3e8f5!important;padding:7px 8px!important;background:#fff!important;color:#1f2937!important;font-size:14px!important}
@@ -2277,6 +2354,7 @@ nav button#tmr{margin-top:auto}
     <button data-t="mrep" id="mrep" type="button">Repair</button>
     <button data-t="msc" id="msc" type="button">Scrap</button>
     <button data-t="mtst" id="mtst" type="button">Testing Register</button>
+    <button data-t="mmat" id="mmat" type="button">Material Management</button>
     <button data-t="mrr" id="mrr" type="button">R&amp;R</button>
   </nav></div>
   <main>
@@ -2313,7 +2391,7 @@ nav button#tmr{margin-top:auto}
             <input type="text" class="q" id="dq" placeholder="Search PR no, place, firm...">
           </div>
           <div class="tg r">
-            <button class="btn sec sm" id="dclean" type="button">Switch to clean look</button><button class="btn sec sm" id="dxl">&#11015; Excel</button><button class="btn sec sm" id="dpr">Print</button>
+            <button class="btn sec sm hide" id="ddrv" type="button" title="Driver Master">&#128666; Drivers</button><button class="btn sec sm" id="dclean" type="button">Switch to clean look</button><button class="btn sec sm" id="dxl">&#11015; Excel</button><button class="btn sec sm" id="dpr">Print</button>
             <button class="btn sec sm hide" id="ddel">Delete selected</button><button class="btn sec sm" id="dpaste">Paste from Excel</button>
             <button class="btn" id="dsave">Save</button>
           </div>
@@ -2334,6 +2412,7 @@ nav button#tmr{margin-top:auto}
 
     <!-- DRIVER MASTER -->
     <section id="t-drv" class="hide">
+      <div class="bar rpbk hide" id="drvbk"><button class="btn sec sm" type="button" id="drvback">&#8249; Data Sheet</button><b>Drivers</b></div>
       <div class="card">
         <div class="tools">
           <div class="tg"><select id="vws"><option value="">All workshops</option></select><input type="text" class="q" id="vq" placeholder="Search firm, driver, mobile, vehicle..."></div>
@@ -2348,6 +2427,12 @@ nav button#tmr{margin-top:auto}
     <!-- COMPARISON (Admin only) -->
     <section id="t-cmp" class="hide">
       <div id="rpmenu"><div class="rph"><h2>Reports</h2><span class="muted">Tap a report</span></div><div id="rpchips" class="achips"></div></div>
+      <div id="rpwebw" class="hide">
+        <div class="bar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b id="rpwebt"></b><span style="flex:1"></span><a class="btn sec sm" id="rpwebx" target="_blank" rel="noopener noreferrer">Open in new tab &#8599;</a><button class="btn sec sm hide" type="button" id="rpwebdel">Remove</button></div>
+        <div class="muted" style="font-size:12px;margin:4px 2px">If this page stays blank, that web app does not allow itself to open inside another page - use <b>Open in new tab</b>.</div>
+        <iframe id="rpwebf" title="Report" referrerpolicy="no-referrer" allow="clipboard-write; fullscreen" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals" style="display:block;width:100%;height:calc(100vh - 150px);min-height:440px;border:1px solid #d9dfee;border-radius:12px;background:#fff"></iframe>
+      </div>
+      <div id="rpaddo" class="hide mmov"></div>
       <div id="rpcmpw" class="hide" data-m="cmp">
         <div class="bar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b id="rpcmpt"></b></div>
       <div class="card">
@@ -2427,6 +2512,8 @@ nav button#tmr{margin-top:auto}
         <div class="bar"><input type="text" id="wcn" placeholder="Short name, e.g. azamgarh" autocapitalize="off" spellcheck="false" style="max-width:240px"><button class="btn" id="wcr" type="button">Get workshop code</button></div>
         <div id="wcshow"></div>
       </div>
+      <div class="card acard hide" id="secard"><h3>Share with SE Workshop <span class="muted" style="font-weight:400">(read only)</span></h3><div id="sebox"></div><div id="semsg"></div></div>
+      <div class="card acard hide" id="sdcard"><h3>Divisions <span class="muted" style="font-weight:400">(SE Workshop)</span></h3><div id="sdbox"></div><div id="sdmsg"></div></div>
       <div class="card acard hide" id="ulcard"><h3>Login without code <span class="muted" style="font-weight:400">(ID and password only)</span></h3><div id="ulbox"></div><div id="ulmsg"></div></div>
       <div class="card acard hide" id="udcard"><h3>Admin directory <span class="muted" style="font-weight:400">(App Creator)</span></h3><div id="udbox"></div><div id="udmsg"></div></div>
       <div class="card acard hide" id="archard"><h3>Google Drive archive <span class="muted" style="font-weight:400">(M&amp;R Repair + Testing Register)</span></h3><div id="arbox"></div><div id="armsg"></div></div>
@@ -2487,9 +2574,26 @@ nav button#tmr{margin-top:auto}
     <div id="pdov" class="hide"><div class="box"><div class="hd"><b>Pending for DTC</b><span class="muted" id="pdsub" style="flex:1"></span><button class="btn sm" id="pdsave" type="button" disabled>Save DTC</button><button class="btn sec sm" id="pdx" type="button">Close &#10005;</button></div><div id="pdmsg"></div><div class="wrap mrtb"><table id="pdt"></table></div></div></div>
     <div id="gov" class="hide"><div class="box"><div class="hd"><b id="govt"></b><span id="govbtn" style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap"></span><button class="btn sec sm" id="govx" type="button">Close &#10005;</button></div><div id="govmsg"></div><div id="govb"></div></div></div>
     <div id="otpbell" class="hide"></div>
-    <div id="rsov" class="hide"><div class="box"><div class="hd"><b>Repair summary</b><span class="muted" style="flex:1">transformers from date to date - firm &amp; capacity wise</span><button class="btn sec sm" id="rsxl" type="button">&#11015; Excel</button><button class="btn sec sm" id="rsx" type="button">Close &#10005;</button></div><div id="rsbar"></div><div id="rsmsg"></div><div id="rsout"></div></div></div>
+    <div id="rsov" class="hide"><div class="box"><div class="hd"><b>Repair summary</b><span class="muted" style="flex:1">transformers from date to date - firm &amp; capacity wise</span><button class="btn sec sm" id="rsxl" type="button">&#11015; Excel</button><button class="btn sec sm" id="rspdf" type="button">&#128196; PDF</button><button class="btn sec sm" id="rsx" type="button">Close &#10005;</button></div><div id="rsbar"></div><div id="rsmsg"></div><div id="rsout"></div></div></div>
     <div id="chmov" class="hide"><div class="box"><div class="hd"><b id="chmt">Chamber Assembly Report</b><button class="btn sec sm" id="chmpr" type="button">&#128424; Print</button><button class="btn sec sm" id="chmxl" type="button">&#11015; Excel</button><button class="btn sec sm hide" id="chmbase" type="button">Start figures (Admin)</button><button class="btn sec sm" id="chmx" type="button">Close &#10005;</button></div><div class="muted" style="font-size:12px;margin:-2px 0 6px">Select cells like in Excel (drag with the mouse, Shift+click, or Ctrl+A), press Ctrl+C and paste in Excel.</div><div id="chmmsg"></div><div id="chmbw" class="hide"></div><div id="chmb"></div></div></div>
     <!-- SCRAP -->
+    <section id="t-mrmat" class="hide">
+      <div class="card">
+        <div class="bar sbar"><div class="ptitle"><b>Material Management</b><span>wire, strip, oil and insulating material - month wise (repairs come from the Repair tab)</span></div></div>
+        <div id="mmmenu"><div class="achips" id="mmchips"></div></div>
+        <div id="mmpanel" class="hide">
+          <div class="bar" style="gap:8px;flex-wrap:wrap;align-items:flex-end;margin:6px 0">
+            <button class="btn sec sm" type="button" data-mmback="1">&#9664; Back</button><b id="mmtt" style="font-size:15px"></b>
+            <div><label>Workshop</label><select id="mmw"></select></div>
+            <div class="tg"><button class="btn sm on" type="button" data-mmmode="entry">Monthly entry</button><button class="btn sm" type="button" data-mmmode="sum">Summary (From - To)</button></div>
+            <div id="mmper"></div>
+            <button class="btn sec sm" type="button" id="mmstd">STD</button><button class="btn sec sm" type="button" id="mmxl">Excel</button>
+          </div>
+          <div id="mmmsg"></div><div id="mmout"></div>
+        </div>
+        <div id="mmstdo" class="hide mmov"></div>
+      </div>
+    </section>
     <section id="t-mrsc" class="hide">
       <div class="card">
         <div class="bar sbar">
@@ -2551,14 +2655,14 @@ nav button#tmr{margin-top:auto}
           <div class="ptitle"><b>Kitty</b><span>daily stock of repaired transformers</span></div>
           <div><label>Workshop</label><select id="mkw"></select></div>
           <div><label>Date</label><div class="tg"><button class="ib" id="mkprev" title="Previous day">&#9664;</button><div class="dt"><input type="text" class="dtx" id="mkd" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="mkd"></span></div><button class="ib" id="mknext" title="Next day">&#9654;</button><button class="btn sec sm" id="mktoday" type="button">Today</button></div></div>
-          <div class="tg" style="align-self:flex-end"><button class="btn sec sm hide" id="mklyb" type="button" title="Fill last year's repair">LY repair</button></div>
+          <div class="tg" style="align-self:flex-end"><button class="btn sec sm hide" id="mklyb" type="button" title="Admin: fill last year's kitty day by day">LY Kitty</button></div>
         </div>
       </div>
       <div id="mkmsg"></div>
       <div id="mkout"></div>
       <div id="mklyo" class="ov hide" style="z-index:80"><div class="md" style="max-width:460px">
-        <div class="bar" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Last year repair</h2><button class="btn sec" id="mklyx" type="button">Close &#10005;</button></div>
-        <div class="muted ins" style="font-size:12.5px;margin:6px 0">How many transformers were repaired on each day of last year, capacity wise (saved by itself). Used for "Next month need". This button goes away by itself once the kitty has its own repair figures for that time.</div>
+        <div class="bar" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Last year kitty</h2><button class="btn sec" id="mklyx" type="button">Close &#10005;</button></div>
+        <div class="muted ins" style="font-size:12.5px;margin:6px 0">Only the Admin fills this. The kitty (stock of repaired transformers) of each day of last year, capacity wise. Type or paste from Excel (saved by itself). Used in <b>Kitty compared with last year</b>. Users do not see this.</div>
         <div class="bar"><div><label>Month</label><input type="month" id="mklym"></div></div>
         <div id="mklyt"></div>
         <button id="mklys" type="button" class="hide"></button>
@@ -2805,7 +2909,7 @@ function showLogin(note) {
   $('lp').value = ''; msg('lmsg', note || '', note ? 'info' : '');
 }
 function showApp() { document.body.classList.remove('on-home'); $('login').classList.add('hide'); $('app').classList.remove('hide'); }
-var ROLE = { creator: 'App Creator', discom: 'DISCOM head', admin: 'Admin', je: 'User' };
+var ROLE = { creator: 'App Creator', discom: 'DISCOM head', admin: 'Admin', je: 'User', se: 'SE Workshop' };
 function enter(user) {
   return SB.from('profiles').select('login_id,display,role,org_division,scope,can_edit,active,must_change,tabs').eq('user_id', user.id).maybeSingle().then(function (r) {
     var p = r.data;
@@ -2822,6 +2926,7 @@ function enter(user) {
       $('who').textContent = ME.name + ' · ' + (ROLE[ME.role] || ME.role) + (ME.div ? ' · ' + ME.div : '');
       showApp(); initDates(); DROWS = []; $('dt').innerHTML = ''; fillWs(); DRV = []; drvLoad(true);
       var ok = allowedTabs(); document.querySelectorAll('nav:not(#mrnav) button').forEach(function (b) { b.classList.toggle('hide', ok.indexOf(b.dataset.t) < 0); });
+      var dv = ok.indexOf('drv') >= 0, dd = ok.indexOf('data') >= 0; $('tdrv').classList.toggle('hide', !dv || dd); $('ddrv').classList.toggle('hide', !(dv && dd)); $('drvbk').classList.toggle('hide', !(dv && dd));   // Drivers live in the Data Sheet (an icon on top); its own tab only for a user who has no Data Sheet
       var first = ok[0] || 'sum'; showTab(first);
       if (ME.must) openPw(true);
       if (typeof mrAfterLogin === 'function') mrAfterLogin();
@@ -2921,7 +3026,7 @@ function initDates() {
 var CURTAB = 'sum', SSEQ = 0;
 var WSDIV = {}, DRV = [];
 function allowedTabs() {
-  var base = { creator: ['sum', 'emg', 'adm'], discom: ['sum', 'cmp', 'emg'], admin: ['sum', 'data', 'drv', 'cmp', 'emg', 'adm'], je: ['sum', 'data', 'drv', 'cmp', 'emg'] }[ME.role] || ['sum'];
+  var base = { se: ['sum', 'cmp', 'adm'], creator: ['sum', 'emg', 'adm'], discom: ['sum', 'cmp', 'emg'], admin: ['sum', 'data', 'drv', 'cmp', 'emg', 'adm'], je: ['sum', 'data', 'drv', 'cmp', 'emg'] }[ME.role] || ['sum'];
   if (ME.tabs && ME.role === 'je') base = base.filter(function (t) { return t === 'cmp' || ME.tabs.indexOf(t) >= 0; });
   else if (ME.tabs && ME.role !== 'je') base = base.filter(function (t) { return t === 'adm' || t === 'cmp' || ME.tabs.indexOf(t) >= 0; });
   if (typeof mrAccess === 'function' && mrAccess()) base = (mrOnly() ? ['sum'] : base).concat('mr');
@@ -2929,12 +3034,15 @@ function allowedTabs() {
 }
 function showTab(t) {
   CURTAB = t;
-  document.querySelectorAll('nav button').forEach(function (x) { x.classList.toggle('on', x.dataset.t === t); });
+  document.querySelectorAll('nav button').forEach(function (x) { x.classList.toggle('on', x.dataset.t === t || (t === 'drv' && x.dataset.t === 'data' && $('tdrv').classList.contains('hide'))); });
   ['sum', 'data', 'drv', 'cmp', 'emg', 'adm'].forEach(function (k) { $('t-' + k).classList.toggle('hide', k !== t); });
 }
 document.querySelectorAll('nav button').forEach(function (b) {
   b.onclick = function () { var t = b.dataset.t; showTab(t); if (t === 'sum') loadSummary(); else if (t === 'adm') admLoad(); else if (t === 'drv') drvLoad(); else if (t === 'cmp') rpHome(); else if (t === 'emg') emgLoad(); else if (!dirtyN()) loadData(); };
 });
+
+$('ddrv').onclick = function () { showTab('drv'); drvLoad(); };
+$('drvback').onclick = function () { showTab('data'); if (!dirtyN()) loadData(); };
 
 /* =====================  SUMMARY  ===================== */
 function dayCount(f, t) { return Math.round((parseD(t) - parseD(f)) / 86400000) + 1; }
@@ -3379,6 +3487,7 @@ function flushData(force) {
   var vers = map.map(function (ri) { return DROWS[ri].ver; });
   DWAIT = rpc('save_rows', { p_items: items }).then(function (res) {
     DSAVING = false;
+    if (res && (res.added || res.updated)) { cclear(); SKEY = ''; SUM = null; CMP = null; }     // saved figures changed: the Summary / Comparison must not reuse the 5-minute old copy
     map.forEach(function (ri, j) {
       var r = DROWS[ri]; if (!r) return; var k21 = r.c[21], k22 = r.c[22];
       if (res.bad.indexOf(j) >= 0) { r.bad = true; return; }
@@ -4223,12 +4332,14 @@ function cmpHtml(edit) {
   var sub = same ? 'COMPARISON OF DIVISION WISE PR FOR THE M/O-' + p2(f.getMonth() + 1) + '/' + f.getFullYear() + ' WITH LAST YEAR SAME MONTH' : 'COMPARISON OF DIVISION WISE PR FOR ' + C.from + ' TO ' + C.to + ' WITH THE SAME DATES OF LAST YEAR';
   var capH = CCAPS.slice(0, 4).map(String).concat(['BELOW<br>100 KVA'], CCAPS.slice(4).map(String), ['100 AND<br>ABOVE', 'TOTAL PR']);
   if (!edit || edit) h = '<div class="cmph"><b>' + esc(cmpTitle()) + '</b><span>' + esc(sub) + '</span><span>' + esc(C.from + ' TO ' + C.to) + '</span></div>' + h;
-  h += '<table class="cmpt"><thead>';
+  var U = [3, 8], sd = []; for (var q = 0; q < 10; q++) sd.push(2.2); sd.splice(4, 0, 2.6); sd.splice(11, 0, 2.6, 2.6, 4.4, 4);
+  var all = U.concat(sd, sd, [4.2, 4.2, 4.2]), sum = all.reduce(function (a, b) { return a + b; }, 0);
+  h += '<table class="cmpt"><colgroup>' + all.map(function (u) { return '<col style="width:' + (u / sum * 100).toFixed(3) + '%">'; }).join('') + '</colgroup><thead>';
   h += '<tr class="ca"><th colspan="' + (NC - 4) + '" class="ct">' + esc(cmpTitle()) + '</th><th>MONTH</th><th colspan="3">' + esc(C.from + ' TO ' + C.to) + '</th></tr>';
   h += '<tr class="ca"><th colspan="' + (NC - 4) + '" class="ct">' + esc(sub) + '</th><th colspan="4"></th></tr>';
   h += '<tr><th rowspan="2">Sl.No.</th><th rowspan="2" class="nm">Name of<br>Division Circle<br>/Zone</th>' +
-    '<th colspan="13">Damaged Transformers PR of ' + esc(lp) + '</th><th rowspan="2" class="ins">Install on<br>01.04.' + C.yp + '</th><th rowspan="2">Damage %</th>' +
-    '<th colspan="13">Damaged Transformers PR of ' + esc(lc) + '</th><th rowspan="2" class="ins">Install on<br>01.04.' + C.yc + '</th><th rowspan="2">DAMAGE %</th>' +
+    '<th colspan="13">Damaged Transformers PR of ' + esc(lp) + '</th><th rowspan="2">Install on<br>01.04.' + C.yp + '</th><th rowspan="2">Damage %</th>' +
+    '<th colspan="13">Damaged Transformers PR of ' + esc(lc) + '</th><th rowspan="2">Install on<br>01.04.' + C.yc + '</th><th rowspan="2">DAMAGE %</th>' +
     '<th rowspan="2">LESS THAN<br>100KVA<br>INC/DEC<br>DAMAGE %</th><th rowspan="2">100 KVA<br>AND ABOVE<br>INC/DEC<br>DAMAGE %</th><th rowspan="2">TOTAL INC/DEC<br>DAMAGE %</th></tr>';
   h += '<tr>' + capH.concat(capH).map(function (x) { return '<th class="cp">' + x + '</th>'; }).join('') + '</tr></thead><tbody>';
   function side(v, inst, edit, key, yr, vi) {
@@ -4386,11 +4497,6 @@ $('cxl').onclick = function () {
 $('cpr').onclick = function () {
   if (!CMP) return msg('cmsg', 'Show the comparison first.', 'info');
   printHtml('Comparison ' + CMP.from + ' to ' + CMP.to, '<div class="ps cmpp noanim">' + cmpHtml(false) + '</div>');
-  // the table is laid out in millimetres (not screen pixels), so it fills one landscape A4 page on any device
-  var tb = $('pz').querySelector('.cmpp table'), cg = '<colgroup><col style="width:7mm"><col style="width:30mm">', side = '';
-  for (var q = 0; q < 13; q++) side += '<col style="width:6.2mm">'; side += '<col style="width:9mm"><col style="width:8.5mm">';
-  cg += side + side + '<col style="width:12mm"><col style="width:12mm"><col style="width:12mm"></colgroup>';
-  tb.insertAdjacentHTML('afterbegin', cg);
 };
 
 /* =====================  GRAPH DASHBOARD (opened from the Summary)  =====================
@@ -4718,8 +4824,12 @@ function emgStatus(r) {
 }
 function emgCell(r, f, val, lab) {
   var ed = r.can_edit;
+  if (f === 'remark') return '<td class="gc' + (ed ? ' ein' : ' lk') + '" data-l="' + lab + '"><textarea rows="1" class="emta" data-f="remark" data-id="' + r.id + '" placeholder="remark"' + (ed ? '' : ' readonly tabindex="-1"') + '>' + esc(val || '') + '</textarea></td>';
   return '<td class="gc' + (ed ? ' ein' : ' lk') + '" data-l="' + lab + '"><input type="text" data-f="' + f + '" data-id="' + r.id + '" value="' + esc(val || '') + '"' + (ed ? '' : ' readonly tabindex="-1"') + (f === 'pr' ? ' autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="type PR no."' : f === 'remark' ? ' placeholder="remark"' : '') + '></td>';
 }
+function emgAutoH(e) { e.style.height = 'auto'; e.style.height = Math.max(e.scrollHeight, 24) + 'px'; }
+function emgAutoAll() { document.querySelectorAll('#emt textarea.emta').forEach(emgAutoH); }
+document.addEventListener('input', function (e) { var t = e.target; if (t && t.classList && t.classList.contains('emta')) emgAutoH(t); });
 function emgRender() {
   var o = $('emgout'); if (!o) return;
   var frm = '';
@@ -4748,7 +4858,8 @@ function emgRender() {
   }
   var keep = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.id ? [document.activeElement.dataset.f, document.activeElement.dataset.id] : null;
   o.innerHTML = h;
-  if (keep) { var k = o.querySelector('input[data-f="' + keep[0] + '"][data-id="' + keep[1] + '"]'); if (k) { k.focus(); } }
+  emgAutoAll();
+  if (keep) { var k = o.querySelector('[data-f="' + keep[0] + '"][data-id="' + keep[1] + '"]'); if (k) { k.focus(); try { var ln = (k.value || '').length; k.setSelectionRange(ln, ln); } catch (x) { } } }
   emgBadge();
 }
 function emgLoad(quiet) {
@@ -4773,7 +4884,7 @@ document.addEventListener('input', function (e) {
   var i = e.target; if (!i.dataset || !i.dataset.id || !i.dataset.f || !i.closest('#emt')) return;
   var id = i.dataset.id; if (i.dataset.f === 'pr') { var sp = i.selectionStart; i.value = i.value.toUpperCase(); try { i.setSelectionRange(sp, sp); } catch (x) { } } clearTimeout(EMGSAVE[id]); emgMsg('Typing...');
   EMGSAVE[id] = setTimeout(function () {
-    var tr = i.closest('tr'), pr = tr.querySelector('input[data-f="pr"]').value, rm = tr.querySelector('input[data-f="remark"]').value;
+    var tr = i.closest('tr'), pr = tr.querySelector('input[data-f="pr"]').value, rm = tr.querySelector('[data-f="remark"]').value;
     emgMsg('Saving...');
     rpc('emg_set', { p_id: +id, p_remark: rm, p_pr: pr }).then(function () { return emgFetch(); }).then(function () { emgRender(); emgMsg('Saved.'); }).catch(function (x) { emgMsg(x.message, 1); });
   }, 900);
@@ -5069,7 +5180,7 @@ function arLoad() {
 }
 function arDraw() {
   var s = AR.st, c = AR.cfg, ok = c.url && c.token, h = '', i;
-  h += '<div class="muted" style="font-size:12.5px;line-height:1.55;margin-bottom:8px">R&amp;R PRs are deleted by themselves (oldest 12 months at a time, only when the storage is 90% full) and the <b>last 3 years always stay</b>. Repair and Testing Register are never deleted by themselves. When R&amp;R is down to 3 years and the storage is still full, save the <b>oldest month</b> to <b>your own Google Drive</b> (steps below). It is deleted from Supabase only after Drive has confirmed every row. A month is never saved twice.</div>';
+  h += '<div class="muted" style="font-size:12.5px;line-height:1.55;margin-bottom:8px"><b>Keeping time (automatic, every Sunday night):</b> R&amp;R PRs: the <b>last 3 years stay</b>; when the 4th year begins, the oldest 12 months are deleted (their daily counts stay in the Comparison for <b>10 years</b>). Repair and Testing Register: the <b>last 5 years stay</b>; when the 6th year begins, the oldest 12 months are deleted. If the storage is still full, save the <b>oldest month</b> to <b>your own Google Drive</b> (steps below). It is deleted from Supabase only after Drive has confirmed every row. A month is never saved twice.</div>';
   h += '<details' + (ok ? '' : ' open') + ' class="drg" style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:700">First time? How to set up your Google Drive (one time, about 5 minutes)</summary>' +
     '<div class="muted" style="font-size:12.5px;margin:6px 0">You need your <b>own Google (Gmail) account</b>. Your data goes only to <b>your</b> Drive. Nobody else can see it.</div>' +
     '<div class="bar" style="margin:6px 0"><button class="btn sm" type="button" data-sgc="drive-archive.gs">&#128203; Copy script (.gs)</button><button class="btn sm sec" type="button" data-sgd="drive-archive.gs">&#11015; Download file (drive-archive.gs)</button></div>' +
@@ -5404,9 +5515,9 @@ printHtml = function (title, inner) {
    A second dashboard inside the same app: M&R Summary, DTC Sheet and Kitty. The R&R button (last in the menu) goes back to the main dashboard.
    Who: an Admin, and an M&R user = a user whose tabs list holds 'mr'. All figures come from the Data Sheet; only DTC no / DTC date and the kitty figures are typed here. */
 var MR = { on: false, tab: 'msum', month: '', ws: '', st: 'all', q: '', rows: [], total: 0, cnt: {}, dirty: {}, kws: '', kday: '', kd: null, sum: null, qt: null };
-var MR_SECT = { msum: 't-mrsum', mdtc: 't-mrdtc', mkit: 't-mrkit', mrep: 't-mrrep', msc: 't-mrsc', mtst: 't-mrtst' };
+var MR_SECT = { msum: 't-mrsum', mdtc: 't-mrdtc', mkit: 't-mrkit', mrep: 't-mrrep', msc: 't-mrsc', mtst: 't-mrtst', mmat: 't-mrmat' };
 var MR_WORD = ['AZAMGARH', 'MAU', 'BALLIA'];
-function mrAccess() { return !!ME && (ME.role === 'admin' || (ME.tabs && ME.tabs.indexOf('mr') >= 0)); }
+function mrAccess() { return !!ME && (ME.role === 'admin' || ME.role === 'se' || (ME.tabs && ME.tabs.indexOf('mr') >= 0)); }
 function mrOnly() { return !!ME && ME.role !== 'admin' && !!ME.tabs && ME.tabs.indexOf('mr') >= 0 && ME.tabs.indexOf('sum') < 0; }
 function mrIso(s) { var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(s || ''); return m ? m[3] + '-' + m[2] + '-' + m[1] : null; }
 function mrDmy(s) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || ''); return m ? m[3] + '.' + m[2] + '.' + m[1] : ''; }
@@ -5430,8 +5541,829 @@ function mrShow(t) {
   MR.tab = t;
   Object.keys(MR_SECT).forEach(function (k) { $(MR_SECT[k]).classList.toggle('hide', k !== t); });
   document.querySelectorAll('#mrnav button').forEach(function (b) { b.classList.toggle('on', b.dataset.t === t); });
-  if (t === 'msum') mrSumLoad(); else if (t === 'mdtc') mrDtcLoad(); else if (t === 'mkit') mrKitLoad(true); else if (t === 'mrep') mrRepLoad(true); else if (t === 'msc') mrScLoad(true); else if (t === 'mtst') tsLoad();
+  if (t === 'msum') mrSumLoad(); else if (t === 'mdtc') mrDtcLoad(); else if (t === 'mkit') mrKitLoad(true); else if (t === 'mrep') mrRepLoad(true); else if (t === 'msc') mrScLoad(true); else if (t === 'mtst') tsLoad(); else if (t === 'mmat') mmHome();
 }
+/* =====================  MATERIAL MANAGEMENT (M&R): Wire & Strip Consumption + Oil Recovery Sheet, month wise  =====================
+   Per workshop and month.  The repaired transformers come from the Repair tab (mat_rep); the opening of a month is the closing of the month before.
+   STD (material std per capacity, oil std per capacity) is kept per workshop (mat_cfg).  See STEP 108 in setup.sql. */
+var MM_S = [['10 KVA', '7.1x4.1 MM Al. Strip'], ['', '6.6x4.8 MM Al. Strip'], ['25 KVA', '7x3 MM Al. Strip'], ['', '8x2.75 MM Al. Strip'], ['63 KVA', '7x4 MM Al. Strip'], ['', '8x3.5 MM Al. Strip'], ['100 KVA', '10x4 MM Al. Strip'], ['', '10x4.4 MM Al. Strip'], ['160 KVA', '7.5x5.1 MM Al. Strip'], ['250 KVA', '10.5x5.5 MM Al. Strip'], ['', '11x5 MM Al. Strip']];
+var MM_W = [['10 KVA', '10 KVA(19/20SWG SE)'], ['25 KVA', '21 SWG SE'], ['', '21 SWG DPC'], ['63 KVA', '17 SWG SE'], ['', '17.5 SWG SE'], ['', '17 SWG DPC'], ['', '17.5 SWG DPC'], ['100 KVA', '16 SWG SE'], ['', '16.5 SWG SE'], ['', '16 SWG DPC'], ['', '16.5 SWG DPC'], ['160 KVA', '14 SWG DPC Al.'], ['250 KVA', '12.5 SWG DPC Al.'], ['', '13 SWG DPC Al.']];
+var MM_IT = MM_S.map(function (x) { return { cat: 'Strip', sl: x[0], name: x[1], unit: 'Kg' }; }).concat(MM_W.map(function (x) { return { cat: 'Wire', sl: x[0], name: x[1], unit: 'Kg' }; }));
+var MM_INS_G = [["Material", [["Press Board Sheet 1 mm Type-D", "Kg"], ["Press Board Sheet 1.5 mm Type-D", "Kg"], ["Press Board Sheet 3 mm Type-D", "Kg"], ["Press Board Block 25x30x3 mm", "Kg"], ["Press Board Block 40x45x3 mm", "Kg"], ["Craft Paper of size 4 Mile X (40”/36”)", "Kg"], ["Craft Paper of size 10 Mile X (40”/36”)", "Kg"], ["HT Porcelain Bushing", "No"], ["LT Porcelain Bushing (25 to 100 KVA)", "No"], ["LT Procelain Bushing (250 KVA to 400 KVA)", "No"], ["LT Porcelain Bushing (630 KVA)", "No"], ["Fresh transformer Oil", "KL"], ["HT Bushing rod (25 to 100 KVA)", "No"], ["HT Bushing rod (250 to 400 KVA)", "No"], ["LT Bushing rod (25 to 100 KVA)", "No"], ["LT Bushing rod (250 to 400 KVA)", "No"], ["LT Bushing rod (630 KVA)", "No"], ["Breather 250gm", "No"], ["Breather 500gm", "No"], ["Arcing horn", "No"], ["Al. Clamping ring", "No"]]], ["Backlite Tube", [["Backlite Tube 4 mm", "No"], ["Backlite Tube 6 mm", "No"], ["Backlite Tube 8 mm", "No"], ["Backlite Tube 10 mm", "No"], ["Backlite Tube 12 mm", "No"]]], ["Fiber Glass Sleeves", [["Fiber Glass Sleeves 1MMX 1 MTR", "No"], ["Fiber Glass Sleeves 2MMX 1 MTR", "No"], ["Fiber Glass Sleeves 3MMX 1 MTR", "No"], ["Fiber Glass Sleeves 4 MMX 1 MTR", "No"], ["Fiber Glass Sleeves 6MMX 1 MTR", "No"], ["Fiber Glass Sleeves 10MMX 1 MTR", "No"], ["Fiber Glass Sleeves 12 MMX 1 MTR", "No"], ["Gasket of Set (10 KVA to 100 KVA)", "No"], ["Gasket of Set (160 KVA to400 KVA)", "No"]]], ["Oil Seal", [["Oil seal LT 12mm", "No"], ["Oil seal LT 20mm", "No"], ["Oil seal HT12mm", "No"]]], ["Other", [["Weaving Tape 25mmx50 mtr.", "No"], ["Clamping Member (Al. casting with MS Hexagonal nut).", "No"], ["Cotton Tape 1” x 50 Mtr.", "Mtr."]]]];
+var MM_INS = [], MM_INS_O = [["Material", ["Press Board Sheet 1 mm Type-D", "Press Board Sheet 1.5 mm Type-D", "Press Board Sheet 3 mm Type-D", "Press Board Block 25x30x3 mm", "Press Board Block 40x45x3 mm", "Gasket of Set (10 KVA to 100 KVA)", "Gasket of Set (160 KVA to400 KVA)", "Craft Paper of size 4 Mile X (40”/36”)", "Craft Paper of size 10 Mile X (40”/36”)", "HT Porcelain Bushing", "LT Porcelain Bushing (25 to 100 KVA)", "LT Procelain Bushing (250 KVA to 400 KVA)", "LT Porcelain Bushing (630 KVA)", "Breather 250gm", "Breather 500gm", "Arcing horn", "Al. Clamping ring"]], ["ROD", ["HT Bushing rod (25 to 100 KVA)", "HT Bushing rod (250 to 400 KVA)", "LT Bushing rod (25 to 100 KVA)", "LT Bushing rod (250 to 400 KVA)", "LT Bushing rod (630 KVA)"]], ["Backlite Tube", ["Backlite Tube 4 mm", "Backlite Tube 6 mm", "Backlite Tube 8 mm", "Backlite Tube 10 mm", "Backlite Tube 12 mm"]], ["Fiber Glass Sleeves", ["Fiber Glass Sleeves 1MMX 1 MTR", "Fiber Glass Sleeves 2MMX 1 MTR", "Fiber Glass Sleeves 3MMX 1 MTR", "Fiber Glass Sleeves 4 MMX 1 MTR", "Fiber Glass Sleeves 6MMX 1 MTR", "Fiber Glass Sleeves 10MMX 1 MTR", "Fiber Glass Sleeves 12 MMX 1 MTR"]], ["Oil Seal", ["Oil seal LT 12mm", "Oil seal LT 20mm", "Oil seal HT12mm"]], ["Other", ["Weaving Tape 25mmx50 mtr.", "Clamping Member (Al. casting with MS Hexagonal nut).", "Cotton Tape 1” x 50 Mtr."]]];   // the order of the Excel sheet (Daily Stock)
+(function () { var i = 25, ix = {}; MM_INS_G.forEach(function (g) { g[1].forEach(function (x) { ix[x[0].replace(/\s+/g, ' ').trim()] = { i: i, unit: x[1] }; i++; }); });
+  MM_INS_O.forEach(function (g) { var n = 0; g[1].forEach(function (nm) { var q = ix[nm.replace(/\s+/g, ' ').trim()]; if (q) MM_INS.push({ i: q.i, cat: g[0], sl: ++n, name: nm, unit: q.unit }); }); }); })();   // the Fresh oil of the sheet is handled by the Oil Recovery Sheet
+var MM_RK = { fresh: 'Fresh Oil', reclaim: 'Reclaim Oil', ou: 'O&U Oil', reclaim_ou: 'Reclaimed (O&U) Oil' };
+var MM_K = ['10', '16', '25', '63', '100', '160', '250(al)', '250(cu)', '400', '630'];
+var MMK_STD = ['10', '16', '25', '63', '100', '160', '250(al)', '400', '630'];   // the Cu 250 KVA is not counted in the wire / strip consumption
+var MM_OC = ['10', '16', '25', '63', '100', '160', '250', '400', '630', '1000'];
+var MM_DEF_STD = {"0":{"10":1},"1":{"10":3},"2":{"25":6},"3":{"25":3},"4":{"63":4},"5":{"63":14},"6":{"16":9,"100":12.5},"7":{"100":12.5},"8":{"160":30},"9":{"250(al)":21.5},"10":{"250(al)":21.5},"11":{"10":7},"12":{"25":13},"13":{"25":3},"14":{"16":11,"63":12.5},"15":{"63":12.5},"16":{"63":3.5},"17":{"63":3.5},"18":{"100":17.5},"19":{"100":17.5},"20":{"100":4.5},"21":{"100":4.5},"22":{"160":60},"23":{"250(al)":40},"24":{"250(al)":32},"25":{"10":2,"16":2,"25":3.5,"63":3.5,"100":3.5,"160":6,"250(al)":6,"250(cu)":6,"400":6,"630":6},"26":{"10":1,"16":1,"25":1,"63":1,"100":1,"160":4},"27":{"10":1,"16":1,"25":1,"63":2,"100":2,"160":5,"250(al)":8,"250(cu)":8,"400":8,"630":8},"28":{"10":1,"16":1,"25":2},"29":{"63":2.5,"100":2.5,"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"30":{"10":0.02,"16":0.03,"25":0.05,"63":0.05,"100":0.05,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"31":{"10":3,"16":3,"25":3,"63":3,"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"32":{"10":2,"16":2,"25":3,"63":3,"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"33":{"10":2,"16":2,"25":4,"63":4,"100":4},"34":{"160":4,"250(al)":4,"250(cu)":4,"400":4},"35":{"630":4},"37":{"10":2,"16":2,"25":4,"63":4,"100":4},"38":{"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"39":{"10":2,"16":2,"25":4,"63":4,"100":4},"40":{"160":4,"250(al)":4,"250(cu)":4,"400":4},"41":{"630":4},"42":{"10":1,"16":1,"25":1,"63":1,"100":1},"43":{"160":1,"250(al)":1,"250(cu)":1,"400":1,"630":1},"44":{"10":2,"16":2,"25":4,"63":4,"100":4,"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"45":{"10":2,"16":2,"25":4,"63":4,"100":4,"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"46":{"10":1,"16":1,"25":3,"63":3,"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"47":{"10":1,"16":1,"25":3,"63":3,"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"48":{"10":1,"16":1,"25":3,"63":3,"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"49":{"25":4,"63":4,"100":4,"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"50":{"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"51":{"10":3,"16":3,"25":3,"63":3,"100":3},"52":{"10":3,"16":3,"25":3,"63":3,"100":3},"53":{"10":3,"16":3,"25":3,"63":3,"100":3},"54":{"10":3,"16":3,"25":3,"63":3,"100":3},"55":{"10":3,"16":3,"25":3,"63":3,"100":3},"56":{"160":4,"250(al)":4,"250(cu)":4,"400":4},"57":{"160":4,"250(al)":4,"250(cu)":4,"400":4},"58":{"10":0.5,"16":0.5,"25":0.5,"63":0.5},"59":{"100":1,"160":1,"250(al)":1,"250(cu)":1,"400":1,"630":1},"60":{"10":2,"16":2,"25":4,"63":4,"100":4},"61":{"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"62":{"10":2,"16":2,"25":4,"63":4,"100":4,"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"63":{"160":5,"250(al)":5,"250(cu)":5,"400":5,"630":5},"64":{"10":8,"16":8,"25":12,"63":12,"100":12,"160":12,"250(al)":12,"250(cu)":12,"400":12,"630":12},"65":{"10":4,"16":4,"25":4,"63":4,"100":5,"160":5,"250(al)":5,"250(cu)":5,"400":5,"630":5}};
+var MM_OIL_STD = { '10': 40, '16': 50, '25': 90, '63': 150, '100': 190, '160': 220, '250': 380, '400': 480, '630': 650, '1000': 0 };
+var MM_OIL_FAC = { '10': 0.6, '16': 0.6, '25': 0.6, '63': 0.6, '100': 0.6, '160': 0.7, '250': 0.7, '400': 0.7, '630': 0.7, '1000': 0 };
+var MM_OT = [['fresh', 'Fresh Oil'], ['bc', 'B&C Oil'], ['rc', 'Reclaim Oil'], ['ou', 'O&U']];
+var MM_OR = [['open', 'Opening Balance'], ['recv', 'Received During Month'], ['trf', 'Issued for TF Repairing'], ['dist', 'Issued to Dist division'], ['other', 'Issue for reclaim'], ['close', 'Closing Balance']];
+var MM_WF = ['open', 'recv', 'tr', 'cons', 'old'];
+var MM_HEAD = ['Sl No', 'Name of Material', 'Unit', 'Opening Balance', 'Material Received (Store/Ws)', 'Material Transfer to other w/s', 'Consumed', 'IF OLD MATERIAL USED THEN QTY', 'Balance', 'As per STD (qty repaired x material std, all materials of the capacity added)'];
+var MM_FLD = [null, null, null, 'open', 'recv', 'tr', 'cons', 'old', 'bal', 'std'];
+var MM_MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+var MM = { kind: '', mode: 'entry', ws: '', month: '', from: '', to: '', per: null, names: [], seq: 0, cur: null };
+function mmR3(x) { return Math.round(x * 1000) / 1000; }
+function mmF(n) { return n ? Number(n).toLocaleString('en-IN', { maximumFractionDigits: 3 }) : '-'; }
+function mmF0(n) { return Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 3 }); }
+function mmNum(v) { var n = parseFloat(v); return isNaN(n) ? 0 : mmR3(n); }
+function mmMonthName(m) { return MM_MON[+m.slice(5, 7) - 1] + ' ' + m.slice(0, 4); }
+function mmShift(m, n) { var y = +m.slice(0, 4), mo = +m.slice(5, 7) - 1 + n; y += Math.floor(mo / 12); mo = ((mo % 12) + 12) % 12; return y + '-' + p2(mo + 1); }
+function mmNow() { var t = new Date(); return t.getFullYear() + '-' + p2(t.getMonth() + 1); }
+function mmCapLab(k) { return k === '250' ? '250 (Al + Cu)' : k; }
+function mmEsc(x) { return esc(String(x)); }
+function mmInp(attr, k, v, dis, extra) { return '<input class="mmn" type="text" inputmode="decimal" autocomplete="off" ' + attr + '="' + mmEsc(k) + '" value="' + (v || '') + '"' + (dis ? ' disabled' : '') + (extra || '') + '>'; }
+function mmStdOf(i, rep, mstd) { var t = 0, m = (mstd || {})[i] || {}; for (var k in m) { if (k === '250(cu)') continue; t += (parseFloat(rep[k]) || 0) * m[k]; } return mmR3(t); }   // 250 KVA: only the Al transformers are counted
+function mmKLab(k) { return k === '250(cu)' ? '250(cu) - not counted' : k; }
+
+/* ---- repaired transformers of a month (Repair tab) ---- */
+function mmAutoW(rows, month) { var o = {}; MM_K.forEach(function (k) { o[k] = 0; }); (rows || []).forEach(function (x) { if (x[0] !== month) return; var k = x[1] === '250AL' ? '250(al)' : x[1] === '250CU' ? '250(cu)' : x[1]; if (k in o) o[k] += +x[2]; }); return o; }
+function mmAutoO(rows, month) { var o = {}; MM_OC.forEach(function (k) { o[k] = 0; }); (rows || []).forEach(function (x) { if (x[0] !== month) return; var k = (x[1] === '250AL' || x[1] === '250CU') ? '250' : x[1]; if (k in o) o[k] += +x[2]; }); return o; }
+function mmRepW(P, month) { var au = mmAutoW(P.rep, month), ov = ((P.g.ws || {})[month] || {}).rep || {}, r = {}; MM_K.forEach(function (k) { r[k] = ov[k] !== undefined ? mmNum(ov[k]) : au[k]; }); return { auto: au, rep: r }; }
+function mmRepO(P, month) { var au = mmAutoO(P.rep, month), ov = ((P.g.oil || {})[month] || {}).rep || {}, r = {}; MM_OC.forEach(function (k) { r[k] = ov[k] !== undefined ? mmNum(ov[k]) : au[k]; }); return { auto: au, rep: r }; }
+function mmMstd(P) {
+  var sv = P.g.mstd; if (!sv) return MM_DEF_STD; if (P._ms && P._ms0 === sv) return P._ms;
+  var o = {}, k; for (k in sv) o[k] = sv[k]; MM_INS.forEach(function (x) { if (o[x.i] === undefined && MM_DEF_STD[x.i]) o[x.i] = MM_DEF_STD[x.i]; });   // insulating std not saved yet = the default std
+  P._ms0 = sv; P._ms = o; return o;
+}
+function mmStdI(i, rep, mstd) { var t = 0, m = (mstd || {})[i] || {}; for (var k in m) t += (parseFloat(rep[k]) || 0) * m[k]; return mmR3(t); }   // insulating material: Cu 250 KVA is counted too
+
+/* ---- Wire & Strip: month chain ---- */
+function mmStart(map) { var k = Object.keys(map || {}).sort(); return k.length ? k[0] : null; }
+function mmWsOne(sv, prev) {
+  var rows = {};
+  MM_IT.forEach(function (x, i) {
+    var s = (sv.rows && sv.rows[i]) || {}, r = {};
+    MM_WF.forEach(function (f) { r[f] = s[f] !== undefined ? mmNum(s[f]) : 0; });
+    if (prev) { var p = prev[i]; r.open = mmR3(p.open + p.recv - p.tr - p.cons); }
+    rows[i] = r;
+  });
+  return rows;
+}
+function mmWsChain(ws, upto) {
+  var out = {}, st = mmStart(ws), prev = null, n = 0;
+  if (!st || upto < st) return out;
+  for (var m = st; m <= upto && n < 600; m = mmShift(m, 1), n++) { out[m] = mmWsOne(ws[m] || {}, prev); prev = out[m]; }
+  return out;
+}
+/* ---- Oil: month chain ---- */
+
+/* ---- menu / page ---- */
+var MM_DEFS = [
+  { k: 'wsc', t: 'Wire & Strip Consumption', s: 'Monthly stock, consumed and as per STD', i: '\u{1F9F5}', c: '#e4f6e8' },
+  { k: 'oil', t: 'Oil Recovery Sheet', s: 'Oil account and recovery from DTC', i: '\u{1F6E2}️', c: '#fff4cc' },
+  { k: 'rcv', t: 'Oil Receive', s: 'Fresh / Reclaim oil received: date, from where', i: '\u26FD', c: '#e0f2fe' },
+  { k: 'ins', t: 'Insulating Material', s: 'Press board, bushing, rod, tube, sleeve, seal...: stock, consumed, as per STD', i: '\u{1F9F1}', c: '#efe6ff' },
+  { k: 'req', t: 'Material Requirement', s: 'Wire, strip and insulating: need for N days from last year PRs minus stock', i: '\u{1F4CB}', c: '#ffe8d6' },
+  { k: 'low', t: 'Oil Found Below STD', s: 'PR wise: oil found, reason of low oil', i: '\u{1F4C9}', c: '#fde8e8' }
+];
+function mmHome() {
+  var h = ''; MM_DEFS.forEach(function (d) { h += '<button type="button" class="achip" data-mmk="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + esc(d.t) + '</b><small>' + esc(d.s) + '</small></span></button>'; });
+  $('mmchips').innerHTML = h; $('mmmenu').classList.remove('hide'); $('mmpanel').classList.add('hide'); MM.kind = '';
+}
+function mmOpen(k) {
+  MM.kind = k; if (!MM.month) MM.month = mmNow(); if (!MM.to) MM.to = mmNow(); if (!MM.from) MM.from = MM.to.slice(0, 4) + '-01';
+  $('mmmenu').classList.add('hide'); $('mmpanel').classList.remove('hide');
+  $('mmtt').textContent = MM_DEFS.filter(function (d) { return d.k === k; })[0].t;
+  $('mmstd').classList.toggle('hide', k === 'rcv' || k === 'low' || k === 'req'); var mt = document.querySelector('[data-mmmode]'); if (mt) mt.parentNode.classList.toggle('hide', k === 'req'); if (k === 'req') MM.mode = 'entry'; $('mmreset') && 0;
+  var ws = mrWs(), o = ws.map(function (w) { return '<option' + wsAttr(w) + '>' + esc(w) + '</option>'; }).join('');
+  MM.all = !!(ME && ME.role === 'admin' && ws.length > 1);
+  $('mmw').dataset.o = o; mmSetMode(MM.mode || 'entry', true);
+}
+function mmSetMode(m, noLoad) {
+  asFlushAll(); MM.mode = m;
+  var o = $('mmw').dataset.o || '', cur = $('mmw').value;
+  $('mmw').innerHTML = (MM.all ? '<option value="__ALL__">All workshops</option>' : '') + o;
+  if (cur && [].some.call($('mmw').options, function (x) { return x.value === cur; })) $('mmw').value = cur; else { var f1 = [].filter.call($('mmw').options, function (x) { return x.value !== '__ALL__'; })[0]; if (f1) $('mmw').value = f1.value; } MM.ws = $('mmw').value;
+  document.querySelectorAll('[data-mmmode]').forEach(function (b) { b.classList.toggle('on', b.dataset.mmmode === m); });
+  var cm = mmNow();
+  $('mmper').innerHTML = MM.kind === 'req' ? mmReqCtl() : m === 'entry'
+    ? '<div class="tg"><button class="ib" type="button" id="mmprev" title="Previous month">&#9664;</button><input type="month" id="mmm" value="' + MM.month + '" max="' + cm + '"><button class="ib" type="button" id="mmnext" title="Next month">&#9654;</button><button class="btn sec sm" type="button" id="mmnow">This month</button></div>'
+    : '<div class="mmrng"><label>From <input type="month" id="mmf" value="' + MM.from + '" max="' + cm + '"></label><label>To <input type="month" id="mmt" value="' + MM.to + '" max="' + cm + '"></label><button class="btn sm" type="button" id="mmgo">Show</button></div>';
+  if (!noLoad || true) mmLoad();
+}
+document.addEventListener('click', function (e) {
+  var t = e.target; if (!t.closest) return;
+  var b = t.closest('[data-mmk]'); if (b && $('mmchips').contains(b)) return mmOpen(b.dataset.mmk);
+  if (t.closest('[data-mmback]')) { asFlushAll(); return mmHome(); }
+  b = t.closest('[data-mmmode]'); if (b) return mmSetMode(b.dataset.mmmode);
+  if (t.closest('#mmprev')) return mmGo(mmShift(MM.month, -1)); if (t.closest('#mmnext')) return mmGo(mmShift(MM.month, 1)); if (t.closest('#mmnow')) return mmGo(mmNow());
+  if (t.closest('#mmqgo')) return mmReqGo();
+  if (t.closest('#mmgo')) { MM.from = $('mmf').value; MM.to = $('mmt').value; return mmLoad(); }
+  if (t.closest('#mmstd')) return mmStdOpen();
+  if (t.closest('#mmxl')) return mmExcel();
+  if (t.closest('#mmreset')) return mmReset();
+});
+document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target && /^mmq[dnp]$/.test(e.target.id || '')) mmReqGo(); });
+document.addEventListener('change', function (e) {
+  var t0 = e.target; if (t0 && t0.dataset && t0.dataset.ins && MM.kind === 'ins') { mmInsRecalc(); }
+  var t = e.target; if (!t || !t.id) return;
+  if (t.id === 'mmw') { asFlushAll(); MM.ws = t.value; mmLoad(); } else if (t.id === 'mmm') mmGo(t.value);
+  else if (t.id === 'mmf' || t.id === 'mmt') { MM.from = $('mmf').value; MM.to = $('mmt').value; mmLoad(); }
+});
+function mmGo(m) { if (!/^\d{4}-\d{2}$/.test(m || '') || m > mmNow()) return; asFlushAll(); MM.month = m; $('mmm').value = m; mmLoad(); }
+
+/* ---- table builders ---- */
+function mmGrid(id, rows, std, ed, openEd, label, heads) {
+  var nums = ['1', '2', '3', '4', '5', '6', '7', '8', '9 = 4+5-6-7', '10'], n = 10, h = '', span = {}, skip = {};
+  [['Strip', 0, 10], ['Wire', 11, 24]].forEach(function (g) { for (var i = g[1]; i <= g[2]; i++) { if (MM_IT[i].sl === '') continue; var c = 1; while (i + c <= g[2] && MM_IT[i + c].sl === '') { skip[i + c] = 1; c++; } span[i] = c; } });
+  h += '<div class="wrap"><table class="mkt mmt" id="' + id + '"' + (ed ? ' data-edit="1"' : '') + '><thead><tr><th colspan="' + n + '" class="ttl">Details of Material availability &amp; Balance position</th></tr><tr><th rowspan="2">' + esc(heads[0]) + '</th><th rowspan="2">' + esc(heads[1]) + '</th><th rowspan="2">' + esc(heads[2]) + '</th><th colspan="' + (n - 3) + '" class="ed">' + esc(label) + '</th></tr><tr>';
+  for (var c0 = 3; c0 < n; c0++) h += '<th>' + esc(heads[c0]) + '</th>';
+  h += '</tr><tr class="nm">' + nums.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>';
+  function item(i) {
+    var x = MM_IT[i], r = rows[i] || { open: 0, recv: 0, tr: 0, cons: 0, old: 0 }, bal = mmR3(r.open + r.recv - r.tr - r.cons);
+    var v = { open: r.open, recv: r.recv, tr: r.tr, cons: r.cons, old: r.old, bal: bal };
+    var s = '<tr class="it" data-i="' + i + '">' + (skip[i] ? '' : '<td class="l"' + (span[i] > 1 ? ' rowspan="' + span[i] + '"' : '') + '>' + esc(x.sl) + '</td>') + '<td class="nm">' + esc(x.name) + '</td><td>' + esc(x.unit) + '</td>';
+    for (var c = 3; c < 9; c++) {
+      var f = MM_FLD[c];
+      if (ed && (f === 'recv' || f === 'tr' || f === 'cons' || f === 'old' || (f === 'open' && openEd))) s += '<td class="in" data-c="' + c + '">' + mmInp('data-f', f, v[f], false, ' data-i="' + i + '"') + '</td>';
+      else s += '<td class="c' + (v[f] < 0 ? ' neg' : '') + '" data-c="' + c + '" data-v="' + v[f] + '">' + mmF(v[f]) + '</td>';
+    }
+    if (!skip[i]) { var sg = 0; for (var j = i; j < i + span[i]; j++) sg += std[j] || 0; sg = mmR3(sg); s += '<td class="c std"' + (span[i] > 1 ? ' rowspan="' + span[i] + '"' : '') + ' data-c="9" data-v="' + sg + '">' + mmF(sg) + '</td>'; }
+    return s + '</tr>';
+  }
+  function band(t) { return '<tr class="grp"><td colspan="' + n + '">' + esc(t) + '</td></tr>'; }
+  function totRow(t, k) { var s = '<tr class="t" data-k="' + k + '"><td colspan="3" class="l">' + esc(t) + '</td>'; for (var c = 3; c < n; c++) s += '<td data-c="' + c + '"></td>'; return s + '</tr>'; }
+  h += band('Strip'); for (var i = 0; i <= 10; i++) h += item(i); h += totRow('Sub Total strip', 'strip');
+  h += band('Wire'); for (i = 11; i <= 24; i++) h += item(i); h += totRow('WIRE TOTAL', 'wire') + totRow('WIRE & STRIP TOTAL', 'all');
+  return h + '</tbody></table></div>';
+}
+function mmTotals(id) {
+  var t = $(id); if (!t) return;
+  [['strip', 0, 10], ['wire', 11, 24], ['all', 0, 24]].forEach(function (g) {
+    var tr = t.querySelector('tr[data-k="' + g[0] + '"]'); if (!tr) return;
+    for (var c = 3; c < 10; c++) {
+      var s = 0; t.querySelectorAll('tr.it').forEach(function (r) { var i = +r.dataset.i; if (i < g[1] || i > g[2]) return; var td = r.querySelector('td[data-c="' + c + '"]'); if (!td) return; var e = td.querySelector('input'); s += e ? (parseFloat(e.value) || 0) : (parseFloat(td.dataset.v) || 0); });
+      s = mmR3(s); var td2 = tr.querySelector('td[data-c="' + c + '"]'); td2.textContent = mmF(s); td2.dataset.v = s; td2.className = s < 0 ? 'neg' : '';
+    }
+  });
+}
+function mmKva(id, title, keys, labf, heads, totalCols, cell) {
+  var h = '<div class="wrap"><table class="mkt mmt" id="' + id + '" style="width:auto;min-width:340px"><thead><tr><th colspan="' + heads.length + '" class="ttl">' + esc(title) + '</th></tr><tr>' + heads.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>';
+  keys.forEach(function (k) { h += '<tr data-k="' + mmEsc(k) + '"><td class="l">' + esc(labf(k)) + '</td>'; for (var c = 1; c < heads.length; c++) h += cell(k, c); h += '</tr>'; });
+  if (totalCols.length) { h += '<tr class="t" data-total="1"><td class="l">Total</td>'; for (var c2 = 1; c2 < heads.length; c2++) h += '<td data-c="' + c2 + '"></td>'; h += '</tr>'; }
+  return h + '</tbody></table></div>';
+}
+function mmCalcTd(c, v, cls) { return '<td class="c' + (cls || '') + (v < 0 ? ' neg' : '') + '" data-c="' + c + '" data-v="' + v + '">' + mmF(v) + '</td>'; }
+function mmKvaTot(id, cols) {
+  var t = $(id); if (!t) return;
+  cols.forEach(function (c) { var s = 0; t.querySelectorAll('tbody tr[data-k]').forEach(function (r) { var td = r.querySelector('td[data-c="' + c + '"]'), e = td.querySelector('input'); s += e ? (parseFloat(e.value) || 0) : (parseFloat(td.dataset.v) || 0); }); s = mmR3(s); var td2 = t.querySelector('tr[data-total] td[data-c="' + c + '"]'); td2.textContent = mmF(s); td2.dataset.v = s; });
+}
+function mmSetTd(tr, c, v) { var td = tr.querySelector('td[data-c="' + c + '"]'); if (!td) return; td.textContent = mmF(v); td.dataset.v = v; td.className = 'c' + (v < 0 ? ' neg' : ''); }
+function mmNote(h, ok) { return '<div class="msg ' + (ok ? 'ok' : 'info') + '" style="margin:0 0 8px;font-size:13px">' + h + '</div>'; }
+
+/* ---- Wire & Strip: monthly entry ---- */
+function mmReset() {
+  var C = MM.cur; if (!C) return;
+  document.querySelectorAll('#mmr input[data-q]').forEach(function (e) { e.value = C.auto[e.dataset.q] || ''; });
+  document.querySelectorAll('#mmr input[data-oq]').forEach(function (e) { e.value = (C.auto[e.dataset.oq] || ''); });
+  if (MM.kind === 'ins') { mmInsRecalc(); asRun('mm', mmInsSave, 600); } else if (MM.kind === 'wsc') { mmWscRecalc(); asRun('mm', mmWscSave, 600); } else { mmOilRecalc(); asRun('mm', mmOilSave, 600); }
+}
+document.addEventListener('input', function (e) {
+  var t = e.target; if (!t.classList || !t.classList.contains('mmn') || !MM.cur || !MM.cur.ed) return;
+  var v = t.value.replace(/[^0-9.]/g, ''); if (v !== t.value) t.value = v;
+  if (t.dataset.ins) t.dataset.auto = t.value === '' ? '1' : '0';
+  if (MM.kind === 'ins') { mmInsRecalc(); asRun('mm', mmInsSave, 900); } else if (MM.kind === 'wsc') { mmWscRecalc(); asRun('mm', mmWscSave, 900); } else { mmOilRecalc(); asRun('mm', mmOilSave, 900); }
+});
+
+/* ---- Wire & Strip: summary From - To ---- */
+
+/* ---- Oil: monthly entry ---- */
+
+/* ---- Oil: summary From - To ---- */
+
+/* ---- STD (material std per capacity for the Wire / Strip rows; oil std per capacity) ---- */
+
+/* ---- Excel: the tables of the page as they are ---- */
+function mmSheet(tbl, name) {
+  var rows = [], mg = [], occ = [], r = 0, mx = 0, cw = [];
+  [].forEach.call(tbl.querySelectorAll('tr'), function (tr) {
+    if (tr.classList.contains('blank')) return;
+    var c = 0, row = (rows[r] = rows[r] || []); occ[r] = occ[r] || [];
+    [].forEach.call(tr.children, function (td) {
+      while (occ[r][c]) c++;
+      var rs = +td.getAttribute('rowspan') || 1, cs = +td.getAttribute('colspan') || 1, e = td.querySelector('input,select,textarea'), v = e ? (e.tagName === 'SELECT' ? e.options[e.selectedIndex].text : (e.type === 'date' ? mrDmy(e.value) : e.value)) : td.classList.contains('x') ? '' : (td.dataset.v !== undefined && td.dataset.v !== '' && !td.classList.contains('nm') ? td.dataset.v : td.textContent.replace(/\s+/g, ' ').trim());
+      if (v === '-' ) v = 0; if (typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v)) v = parseFloat(v);
+      var th = td.tagName === 'TH' || tr.classList.contains('t') || tr.classList.contains('grp'), left = td.classList.contains('nm') || td.classList.contains('l');
+      var s = th ? 5 : (left ? 14 : 4);
+      for (var i = 0; i < rs; i++) for (var j = 0; j < cs; j++) { occ[r + i] = occ[r + i] || []; occ[r + i][c + j] = 1; rows[r + i] = rows[r + i] || []; rows[r + i][c + j] = { v: (i || j) ? '' : v, s: s }; }
+      if (rs > 1 || cs > 1) mg.push([r, c, r + rs - 1, c + cs - 1]);
+      if (cs === 1) cw[c] = Math.max(cw[c] || 8, Math.min(40, String(v).length + 2));
+      c += cs; if (c > mx) mx = c;
+    });
+    r++;
+  });
+  rows.forEach(function (row) { for (var i = 0; i < mx; i++) if (!row[i]) row[i] = { v: '', s: 4 }; });
+  for (var i = 0; i < mx; i++) cw[i] = cw[i] || 10;
+  return { name: name, rows: rows, merges: mg, cw: cw };
+}
+
+/* ---- Oil (v2): 3 std (Fresh / Reclaim / Dirty), DTC from the PRs, receipts from Oil Receive ---- */
+var MM_OSK = [['f', 'Fresh Oil'], ['r', 'Reclaim Oil'], ['d', 'Dirty Oil']];
+function mmOstd(P) {
+  var s = P.g.oilstd || {}, legacy = s.f === undefined && s.r === undefined && s.d === undefined, o = { f: {}, r: {}, d: {} };
+  MM_OC.forEach(function (k) {
+    o.f[k] = legacy ? (s[k] !== undefined ? mmNum(s[k]) : MM_OIL_STD[k]) : (s.f && s.f[k] !== undefined ? mmNum(s.f[k]) : MM_OIL_STD[k]);
+    o.r[k] = (!legacy && s.r && s.r[k] !== undefined) ? mmNum(s.r[k]) : 0;
+    o.d[k] = (!legacy && s.d && s.d[k] !== undefined) ? mmNum(s.d[k]) : mmR3(MM_OIL_STD[k] * MM_OIL_FAC[k]);
+  });
+  return o;
+}
+function mmOilStartM(P) { var a = Object.keys(P.g.oil || {}).concat(Object.keys(P.g.recv || {})).sort(); return a.length ? a[0] : null; }
+function mmRecOf(P, m, k, dtc) { var d = mmOstd(P).d[k], n = 0, f = 0; (P.adj || []).forEach(function (x) { if (x[0] === m && String(x[1]) === k) { n += +x[2]; f += +x[3]; } }); return mmR3(Math.max(0, dtc - n) * d + f); }   // PRs of "Oil found below STD": the oil found is taken in place of the Dirty std
+function mmDtcOf(P, m) { var o = {}; MM_OC.forEach(function (k) { o[k] = 0; }); (P.dtc || []).forEach(function (x) { if (x[0] === m && (String(x[1]) in o)) o[String(x[1])] += +x[2]; }); return o; }
+function mmOilMonth(P, m, prev) {
+  var rec = (P.g.recv || {})[m] || {}, sv = ((P.g.oil || {})[m] || {}).o || {}, dtc = mmDtcOf(P, m), ds = mmOstd(P).d, rows = {}, dirty = 0, fr = mmNum(rec.fresh), rc0 = mmNum(rec.reclaim), rc = mmR3(rc0 + mmNum(rec.reclaim_ou)), ouR = mmNum(rec.ou), ouI = mmOu(mmNum(rec.reclaim_ou));
+  MM_OC.forEach(function (k) { dirty += mmRecOf(P, m, k, dtc[k]); }); dirty = mmR3(dirty);
+  MM_OT.forEach(function (t) {
+    var x = sv[t[0]] || {}, open = prev ? prev[t[0]] : mmNum(x.open), id = t[0];
+    var recv = id === 'fresh' ? fr : id === 'rc' ? rc : id === 'bc' ? dirty : ouR, trf = mmNum(x.trf), dist = mmNum(x.dist), other = id === 'bc' ? mmDirty(rc0) : id === 'ou' ? ouI : mmNum(x.other);
+    rows[id] = { open: open, recv: recv, trf: trf, dist: dist, other: other, close: mmR3(open + recv - trf - dist - other) };
+  });
+  return { rows: rows, dtc: dtc, fr: fr, rc: rc, rc0: rc0, ouR: ouR, ouI: ouI, dirty: dirty };
+}
+function mmOilChain(P, upto) {
+  var st = mmOilStartM(P), out = {}, prev = null, n = 0; if (!st || upto < st) return out;
+  for (var m = st; m <= upto && n < 600; m = mmShift(m, 1), n++) { var r = mmOilMonth(P, m, prev); out[m] = r; prev = {}; MM_OT.forEach(function (t) { prev[t[0]] = r.rows[t[0]].close; }); }
+  return out;
+}
+function mmOilFull(P, month) {
+  var ch = mmOilChain(P, month), r = ch[month], rp = mmRepO(P, month), std = mmOstd(P), cf = {}, cr = {}, rec = {};
+  if (!r) { r = mmOilMonth(P, month, null); var bx = r.rows.bc; bx.recv = 0; bx.close = mmR3(bx.open - bx.trf - bx.dist - bx.other); }   // before the first oil month: nothing is received / recovered yet
+  MM_OC.forEach(function (k) { cf[k] = mmR3(rp.rep[k] * std.f[k]); cr[k] = mmR3(rp.rep[k] * std.r[k]); rec[k] = mmRecOf(P, month, k, r.dtc[k]); });
+  return { rows: r.rows, rep: rp.rep, auto: rp.auto, dtc: r.dtc, cf: cf, cr: cr, rec: rec, std: std, fr: r.fr, rc: r.rc, rc0: r.rc0, ouR: r.ouR, ouI: r.ouI, start: mmOilStartM(P) };
+}
+function mmOilCalcHtml(cf, cr, tf, tr_) {
+  function row(a, x, y, cls) { var d = x + y; return '<tr><td class="l">' + a + '</td><td class="c" data-v="' + x + '">' + mmF0(x) + '</td><td class="c" data-v="' + y + '">' + mmF0(y) + '</td><td class="c' + (cls && d > 0 ? ' neg' : '') + '" data-v="' + d + '">' + mmF0(d) + '</td></tr>'; }
+  return '<div class="wrap"><table class="mkt mmt" id="mmoc" style="width:auto"><thead><tr><th>Calculated oil recovery</th><th>FRESH</th><th>RECLAIM</th><th>TOTAL</th></tr></thead><tbody>' +
+    row('Oil to be consumed for repair as per std', cf, cr) + row('Oil actually issued for TF repairing', tf, tr_) + row('Difference (issued - std)', mmR3(tf - cf), mmR3(tr_ - cr), true) + '</tbody></table></div>';
+}
+var MM_OTH = ['Capacity (KVA)', 'Repaired in Repair tab (auto - you can change)', 'Consume as per std (L) FRESH', 'Consume as per std (L) RECLAIM', 'TOTAL Consume as per std (L)', 'Total transformer DTC (NOS)', 'Oil recovered as per std (L)'];
+function mmOilAccHtml(f, ed, openEd, lab) {
+  return mmKva('mmoo', 'Oil account - ' + lab, MM_OR.map(function (r) { return r[0]; }), function (k) { return MM_OR.filter(function (r) { return r[0] === k; })[0][1]; }, ['Oil movement'].concat(MM_OT.map(function (t) { return t[1]; })).concat(['Total (without B&C)']), [], function (k, c) {
+    if (c === 5) return mmCalcTd(5, 0);
+    var t = MM_OT[c - 1][0], x = f.rows[t], auto = k === 'recv' || (k === 'other' && (t === 'bc' || t === 'ou'));
+    if (k === 'close' || auto || (k === 'open' && !openEd) || !ed) return mmCalcTd(c, x[k], auto ? ' au' : '');
+    return '<td class="in" data-c="' + c + '">' + mmInp('data-of', k, x[k], false, ' data-ot="' + t + '"') + '</td>';
+  });
+}
+function mmOilEntry() {
+  var P = MM.per[MM.ws], g = P.g, month = MM.month, f = mmOilFull(P, month), st = f.start, ed = !!g.edit, openEd = ed && (!st || month <= st), before = !!(st && month < st);
+  MM.cur = { P: P, month: month, start: st, openEd: openEd, before: before, ed: ed, auto: f.auto, std: f.std, fr: f.fr, rc: f.rc, rc0: f.rc0, ouR: f.ouR, ouI: f.ouI, recK: f.rec };
+  var note = '';
+  if (ed) {
+    if (!st) note = mmNote('No oil entries yet. This is the first month: enter the <b>Opening Balance</b> of each oil (only once). After that the closing of a month becomes the opening of the next month by itself.');
+    else if (before) note = mmNote('This month is before the first oil month (<b>' + mmMonthName(st) + '</b>). The Opening you enter here makes it the new first month.');
+    else if (openEd) note = mmNote('This is the first oil month: you can change the Opening Balance here. Later months get it by themselves.', true);
+  } else note = mmNote('View only: only the Admin (or a user with edit right) can fill this page.');
+  var t1 = mmKva('mmot', 'Transformer repaired / DTC and oil std - ' + mmMonthName(month), MM_OC, mmCapLab, MM_OTH, [1], function (k, c) {
+    if (c === 1) return ed ? '<td class="in' + (Math.abs(f.rep[k] - f.auto[k]) > 0.0005 ? ' chg' : '') + '" data-c="1">' + mmInp('data-oq', k, f.rep[k]) + '</td>' : mmCalcTd(1, f.rep[k]);
+    if (c === 2) return mmCalcTd(2, f.cf[k]); if (c === 3) return mmCalcTd(3, f.cr[k]); if (c === 4) return mmCalcTd(4, mmR3(f.cf[k] + f.cr[k]));
+    if (c === 5) return mmCalcTd(5, f.dtc[k], ' au'); return mmCalcTd(6, f.rec[k]);
+  });
+  $('mmout').innerHTML = note + mmNote('<b>Repaired</b> = from the Repair tab (250 KVA Al + Cu together), you can change it (orange). <b>Total transformer DTC</b> = PRs received in this month (PR date, same as <b>Total PR</b> of the M&amp;R Summary). <b>Fresh / Reclaim Received</b> come from <b>Oil Receive</b>; a Reclaim receipt issues B&amp;C (dirty) oil for reclaim = reclaim qty \u00F7 0.95 (reclaim oil is 5% less than the dirty oil); a Reclaimed (O&amp;U) receipt adds to Reclaim oil and issues O&amp;U oil for reclaim = qty \u00F7 0.97 (3% less); O&amp;U Oil received goes to the O&amp;U column; the <b>oil recovered as per std</b> is Received in B&amp;C (dirty) oil. Green cells are automatic.') +
+    '<div class="bar" style="margin:0 0 8px">' + (ed ? '<button class="btn sec sm" type="button" id="mmreset">Reset repaired qty to Repair tab</button>' : '') + '<span id="mmsst" class="muted" style="font-size:12.5px"></span></div>' +
+    t1 + '<div style="height:12px"></div>' + mmOilAccHtml(f, ed, openEd, mmMonthName(month)) + '<div style="height:12px"></div><div id="mmocalc"></div>';
+  mmOilRecalc();
+}
+function mmOilTot(vals, key) { var s = 0; MM_OT.forEach(function (x) { if (x[0] !== 'bc') s += vals[x[0]][key]; }); return mmR3(s); }
+function mmOilRecalc() {
+  var C = MM.cur, tb = $('mmot'), ob = $('mmoo'); if (!C || !tb || !ob) return; var rep = {}, tot = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }, sf = 0, sr = 0;
+  tb.querySelectorAll('tbody tr[data-k]').forEach(function (tr) {
+    var k = tr.dataset.k, e1 = tr.querySelector('input[data-oq]'), dt = parseFloat(tr.querySelector('td[data-c="5"]').dataset.v) || 0;
+    var rp = e1 ? (parseFloat(e1.value) || 0) : (parseFloat(tr.querySelector('td[data-c="1"]').dataset.v) || 0);
+    var cf = mmR3(rp * C.std.f[k]), cr = mmR3(rp * C.std.r[k]), rec = C.recK[k];
+    mmSetTd(tr, 2, cf); mmSetTd(tr, 3, cr); mmSetTd(tr, 4, mmR3(cf + cr)); mmSetTd(tr, 6, rec);
+    if (e1) e1.parentNode.classList.toggle('chg', Math.abs(rp - C.auto[k]) > 0.0005);
+    rep[k] = rp; tot[1] += rp; tot[2] += cf; tot[3] += cr; tot[4] += cf + cr; tot[5] += dt; tot[6] += rec; sf += cf; sr += cr;
+  });
+  [1, 2, 3, 4, 5, 6].forEach(function (c) { var td = tb.querySelector('tr[data-total] td[data-c="' + c + '"]'), v = mmR3(tot[c]); td.textContent = mmF(v); td.dataset.v = v; });
+  var vals = {};
+  MM_OT.forEach(function (t, i) {
+    var o = {}, id = t[0];
+    ['open', 'recv', 'trf', 'dist', 'other'].forEach(function (f) {
+      var e = ob.querySelector('input[data-ot="' + id + '"][data-of="' + f + '"]');
+      if (e) o[f] = parseFloat(e.value) || 0;
+      else if (f === 'recv' && id === 'fresh') o[f] = C.fr; else if (f === 'recv' && id === 'rc') o[f] = C.rc; else if (f === 'recv' && id === 'bc') o[f] = mmR3(tot[6]); else if (f === 'recv' && id === 'ou') o[f] = C.ouR; else if (f === 'other' && id === 'bc') o[f] = mmDirty(C.rc0); else if (f === 'other' && id === 'ou') o[f] = C.ouI;
+      else { var td = ob.querySelector('tr[data-k="' + f + '"] td[data-c="' + (i + 1) + '"]'); o[f] = td ? (parseFloat(td.dataset.v) || 0) : 0; }
+    });
+    o.close = mmR3(o.open + o.recv - o.trf - o.dist - o.other); vals[id] = o;
+  });
+  MM_OR.forEach(function (r) { var tr = ob.querySelector('tr[data-k="' + r[0] + '"]'); MM_OT.forEach(function (t, i) { if (!tr.querySelector('input[data-ot="' + t[0] + '"]')) { mmSetTd(tr, i + 1, vals[t[0]][r[0]]); var td = tr.querySelector('td[data-c="' + (i + 1) + '"]'); if (r[0] === 'recv' || (r[0] === 'other' && (t[0] === 'bc' || t[0] === 'ou'))) td.classList.add('au'); } }); mmSetTd(tr, 5, mmOilTot(vals, r[0])); });
+  C.vals = vals; C.rep = rep;
+  $('mmocalc').innerHTML = mmOilCalcHtml(mmR3(sf), mmR3(sr), vals.fresh.trf, vals.rc.trf);
+}
+function mmOilSave() {
+  var C = MM.cur; if (!C || !C.ed || !$('mmot')) return; mmOilRecalc();
+  var isStart = !C.start || C.month <= C.start, o = {}, any = false, hasOpen = false, ov = {};
+  MM_OT.forEach(function (t) { var x = {}, r = C.vals[t[0]]; ['open', 'recv', 'trf', 'dist', 'other'].forEach(function (f) {
+    if (f === 'open' && !isStart) return; if (f === 'recv') return; if (f === 'other' && (t[0] === 'bc' || t[0] === 'ou')) return;
+    if (r[f]) { x[f] = r[f]; any = true; if (f === 'open') hasOpen = true; } }); o[t[0]] = x; });
+  MM_OC.forEach(function (k) { if (Math.abs(C.rep[k] - C.auto[k]) > 0.0005) { ov[k] = C.rep[k]; any = true; } });
+  var rec = { o: o }; if (Object.keys(ov).length) rec.rep = ov;
+  var data = any ? rec : null, g = C.P.g, month = C.month, w = C.P.w; $('mmsst').textContent = 'Saving...';
+  return rpc('mat_save', { p_ws: w, p_kind: 'oil', p_month: month, p_data: data, p_clear_open: !!(isStart && hasOpen) }).then(function () {
+    g.oil = g.oil || {}; if (data) g.oil[month] = data; else delete g.oil[month];
+    if (isStart && hasOpen) Object.keys(g.oil).forEach(function (m) { if (m !== month && g.oil[m].o) for (var t in g.oil[m].o) delete g.oil[m].o[t].open; });
+    C.start = mmOilStartM(C.P); var s = $('mmsst'); if (s) s.textContent = '✓ Saved ' + new Date().toTimeString().slice(0, 5);
+  }).catch(function (er) { var s = $('mmsst'); if (s) s.textContent = ''; msg('mmmsg', esc(er.message), 'err'); });
+}
+function mmOilRange(P, a, b) {
+  var rows = {}, rep = {}, dtc = {}, cf = {}, cr = {}, rec = {}, first = null, last = null;
+  MM_OT.forEach(function (t) { rows[t[0]] = { open: 0, recv: 0, trf: 0, dist: 0, other: 0, close: 0 }; }); MM_OC.forEach(function (k) { rep[k] = 0; dtc[k] = 0; cf[k] = 0; cr[k] = 0; rec[k] = 0; });
+  for (var m = a; m <= b; m = mmShift(m, 1)) {
+    var f = mmOilFull(P, m); if (!first) first = f; last = f;
+    MM_OT.forEach(function (t) { ['recv', 'trf', 'dist', 'other'].forEach(function (x) { rows[t[0]][x] += f.rows[t[0]][x]; }); });
+    MM_OC.forEach(function (k) { rep[k] += f.rep[k]; dtc[k] += f.dtc[k]; cf[k] += f.cf[k]; cr[k] += f.cr[k]; rec[k] += f.rec[k]; });
+  }
+  MM_OT.forEach(function (t) { rows[t[0]].open = first.rows[t[0]].open; rows[t[0]].close = last.rows[t[0]].close; });
+  return { rows: rows, rep: rep, dtc: dtc, cf: cf, cr: cr, rec: rec };
+}
+function mmOilSum() {
+  MM.cur = null; var a = MM.from, b = MM.to, lab = mmMonthName(a) + (a === b ? '' : ' to ' + mmMonthName(b)), rows = {}, rep = {}, dtc = {}, cf = {}, cr = {}, rec = {}, per = {};
+  MM_OT.forEach(function (t) { rows[t[0]] = { open: 0, recv: 0, trf: 0, dist: 0, other: 0, close: 0 }; }); MM_OC.forEach(function (k) { rep[k] = 0; dtc[k] = 0; cf[k] = 0; cr[k] = 0; rec[k] = 0; });
+  MM.names.forEach(function (w) {
+    var f = mmOilRange(MM.per[w], a, b); per[w] = {};
+    MM_OT.forEach(function (t) { for (var x in rows[t[0]]) rows[t[0]][x] += f.rows[t[0]][x]; per[w][t[0]] = f.rows[t[0]].close; });
+    MM_OC.forEach(function (k) { rep[k] += f.rep[k]; dtc[k] += f.dtc[k]; cf[k] += f.cf[k]; cr[k] += f.cr[k]; rec[k] += f.rec[k]; });
+  });
+  var one = MM.names.length === 1, sum = function (o) { return mmR3(MM_OC.reduce(function (q, k) { return q + o[k]; }, 0)); };
+  var t1 = mmKva('mmot', 'Transformer repaired / DTC and oil std - ' + lab, MM_OC, mmCapLab, MM_OTH, [1], function (k, c) {
+    if (c === 1) return mmCalcTd(1, mmR3(rep[k])); if (c === 2) return mmCalcTd(2, mmR3(cf[k])); if (c === 3) return mmCalcTd(3, mmR3(cr[k])); if (c === 4) return mmCalcTd(4, mmR3(cf[k] + cr[k]));
+    if (c === 5) return mmCalcTd(5, mmR3(dtc[k])); return mmCalcTd(6, mmR3(rec[k]));
+  });
+  var t2 = mmKva('mmoo', 'Oil account - ' + lab, MM_OR.map(function (r) { return r[0]; }), function (k) { return MM_OR.filter(function (r) { return r[0] === k; })[0][1]; }, ['Oil movement'].concat(MM_OT.map(function (t) { return t[1]; })).concat(['Total (without B&C)']), [], function (k, c) { return mmCalcTd(c, c === 5 ? mmOilTot(rows, k) : mmR3(rows[MM_OT[c - 1][0]][k])); });
+  var tc = ''; if (!one) tc = '<div style="height:12px"></div>' + mmKva('mmow', 'Closing balance - ' + mmMonthName(b), MM.names, function (k) { return k; }, ['Workshop'].concat(MM_OT.map(function (t) { return t[1]; })).concat(['Total (without B&C)']), [], function (w, c) { if (c === 5) { var q = 0; MM_OT.forEach(function (x) { if (x[0] !== 'bc') q += per[w][x[0]]; }); return mmCalcTd(5, mmR3(q)); } return mmCalcTd(c, mmR3(per[w][MM_OT[c - 1][0]])); });
+  $('mmout').innerHTML = mmNote('Opening = opening of the <b>From</b> month, Closing = closing of the <b>To</b> month. Received, issued, repaired transformers, DTC and recovery of all months in between are added up.', true) + t1 + '<div style="height:12px"></div>' + t2 + '<div style="height:12px"></div>' + mmOilCalcHtml(sum(cf), sum(cr), mmR3(rows.fresh.trf), mmR3(rows.rc.trf)) + tc;
+  mmKvaTot('mmot', [1, 2, 3, 4, 5, 6]);
+}
+
+/* ---- Oil Receive: register (date, Fresh / Reclaim, from where, litre) ---- */
+function mmOu(rc) { return mmR3(rc / 0.97); }   // reclaim oil made from O&U oil is 3% less: O&U oil issued for reclaim = Reclaimed(O&U) / 0.97
+function mmIss(kind, q) { return kind === 'reclaim' ? mmDirty(q) : kind === 'reclaim_ou' ? mmOu(q) : 0; }
+function mmDirty(rc) { return mmR3(rc / 0.95); }   // reclaim oil is 5% less than the dirty oil it comes from: dirty oil = reclaim / 0.95 (10000 L reclaim = 10526.316 L dirty)
+function mmRcvDef(month) { var cm = mmNow(); if (month === cm) { var t = new Date(); return t.getFullYear() + '-' + p2(t.getMonth() + 1) + '-' + p2(t.getDate()); } var d = new Date(+month.slice(0, 4), +month.slice(5, 7), 0); return month + '-' + p2(d.getDate()); }
+function mmRcvMax(month) { var d = new Date(+month.slice(0, 4), +month.slice(5, 7), 0), e = month + '-' + p2(d.getDate()), t = new Date(), td = t.getFullYear() + '-' + p2(t.getMonth() + 1) + '-' + p2(t.getDate()); return e < td ? e : td; }
+function mmRcvRow(r, ed, month) {
+  var id = r ? r[0] : '', day = r ? r[1] : mmRcvDef(month), kind = r ? r[2] : 'fresh', src = r ? (r[3] || '') : '', qty = r ? r[4] : '', note = r ? (r[5] || '') : '';
+  var b = qty ? mmIss(kind, qty) : 0, KO = Object.keys(MM_RK);
+  if (!ed) return '<tr class="rv" data-kind="' + kind + '"><td class="c sl"></td><td class="c">' + esc(mrDmy(day)) + '</td><td class="l">' + esc(MM_RK[kind] || kind) + '</td><td class="nm">' + esc(src) + '</td><td class="c" data-c="4" data-v="' + qty + '">' + mmF(qty) + '</td><td class="c" data-c="5" data-v="' + b + '">' + mmF(b) + '</td><td class="nm wide">' + esc(note) + '</td></tr>';
+  return '<tr class="rv' + (r ? '' : ' blank') + '" data-id="' + id + '" data-kind="' + kind + '"><td class="c sl"></td><td class="in" data-c="1"><input type="date" class="mmr" data-rf="day" value="' + day + '" min="' + month + '-01" max="' + mmRcvMax(month) + '"></td>' +
+    '<td class="in" data-c="2"><select class="mmr" data-rf="kind">' + KO.map(function (x) { return '<option value="' + x + '"' + (kind === x ? ' selected' : '') + '>' + esc(MM_RK[x]) + '</option>'; }).join('') + '</select></td>' +
+    '<td class="in" data-c="3"><input type="text" class="mmr" data-rf="src" list="mmsrcs" maxlength="120" value="' + mmEsc(src) + '" placeholder="From where"></td>' +
+    '<td class="in" data-c="4"><input type="text" inputmode="decimal" autocomplete="off" class="mmr" data-rf="qty" value="' + qty + '"></td>' +
+    '<td class="c au" data-c="5" data-v="' + b + '">' + mmF(b) + '</td><td class="in wide" data-c="6"><textarea rows="1" class="mmr" data-rf="note" maxlength="300">' + esc(note) + '</textarea></td>' +
+    '<td class="c x" data-c="7">' + (r ? '<button type="button" class="mmdel" title="Delete this entry">&#10005;</button>' : '') + '</td></tr>';
+}
+function mmRcvTot() {
+  var t = $('mmrg'); if (!t) return; var o = { fresh: 0, reclaim: 0, ou: 0, reclaim_ou: 0 }, di = 0, oi = 0;
+  t.querySelectorAll('tr.rv').forEach(function (tr) {
+    if (tr.dataset.id === '' && tr.classList.contains('blank')) return;
+    var q = parseFloat((tr.querySelector('[data-rf="qty"]') || {}).value); if (isNaN(q)) q = parseFloat((tr.querySelector('td[data-c="4"]') || {}).dataset.v) || 0;
+    var s = tr.querySelector('select'), k = s ? s.value : (tr.dataset.kind || 'fresh'); tr.dataset.kind = k; o[k] += q;
+    var td = tr.querySelector('td[data-c="5"]'), b = mmIss(k, q); td.textContent = mmF(b); td.dataset.v = b; td.title = k === 'reclaim' ? 'taken from B&C (dirty) oil' : k === 'reclaim_ou' ? 'taken from O&U oil' : '';
+  });
+  var tf = $('mmrt'); if (tf) tf.innerHTML = '<td colspan="4" class="l">Total  (Fresh ' + mmF0(mmR3(o.fresh)) + '  +  Reclaim ' + mmF0(mmR3(o.reclaim)) + '  +  O&amp;U ' + mmF0(mmR3(o.ou)) + '  +  Reclaimed(O&amp;U) ' + mmF0(mmR3(o.reclaim_ou)) + ' L)</td><td data-v="' + mmR3(o.fresh + o.reclaim + o.ou + o.reclaim_ou) + '">' + mmF0(mmR3(o.fresh + o.reclaim + o.ou + o.reclaim_ou)) + '</td><td data-v="' + mmR3(mmDirty(o.reclaim) + mmOu(o.reclaim_ou)) + '" title="B&C ' + mmF0(mmDirty(o.reclaim)) + ' + O&U ' + mmF0(mmOu(o.reclaim_ou)) + '">' + mmF0(mmR3(mmDirty(o.reclaim) + mmOu(o.reclaim_ou))) + '</td><td colspan="2"></td>';
+}
+function mmRcvEntry() {
+  var P = MM.per[MM.ws], ed = !!P.g.edit, month = MM.month, L = P.list || { rows: [], srcs: [] }, h;
+  MM.cur = { P: P, ed: ed, month: month, kind: 'rcv' };
+  h = mmNote(ed ? 'Type a line: <b>Date, Oil (Fresh / Reclaim / O&amp;U / Reclaimed (O&amp;U)), From where, Qty (litre)</b>. It is saved by itself and goes into the <b>Oil Recovery Sheet</b> (Received). A <b>Reclaim</b> entry issues B&amp;C (dirty) oil for reclaim = <b>reclaim qty \u00F7 0.95</b> (10000 L reclaim = 10526.316 L dirty). A <b>Reclaimed (O&amp;U)</b> entry is added to Reclaim oil and issues O&amp;U oil for reclaim = <b>qty \u00F7 0.97</b> (O&amp;U reclaim loses 3%; 10000 L = 10309.278 L O&amp;U).' : 'View only: only the Admin (or a user with edit right) can add entries.') + '<datalist id="mmsrcs">' + (L.srcs || []).map(function (s) { return '<option value="' + mmEsc(s) + '">'; }).join('') + '</datalist>';
+  h += '<div class="bar" style="margin:0 0 8px"><span id="mmsst" class="muted" style="font-size:12.5px"></span></div><div class="wrap"><table class="mkt mmt" id="mmrg" style="width:auto;min-width:720px"><thead><tr><th colspan="' + (ed ? 8 : 7) + '" class="ttl">Oil Receive - ' + esc(mmMonthName(month)) + ' - ' + esc(MM.ws) + '</th></tr><tr><th>Sl</th><th>Date</th><th>Oil received</th><th>From (where)</th><th>Qty (L)</th><th>Issue for reclaim (L) (Reclaim \u00F7 0.95 from B&amp;C, Reclaimed(O&amp;U) \u00F7 0.97 from O&amp;U)</th><th>Note</th>' + (ed ? '<th></th>' : '') + '</tr></thead><tbody>';
+  L.rows.forEach(function (r) { h += mmRcvRow(r, ed, month); }); if (ed) h += mmRcvRow(null, ed, month);
+  h += '</tbody><tfoot><tr class="t" id="mmrt"></tr></tfoot></table></div>';
+  $('mmout').innerHTML = h; mmRcvNum(); mmRcvTot(); mmAutoAll();
+}
+function mmRcvNum() { document.querySelectorAll('#mmrg tr.rv').forEach(function (tr, i) { tr.querySelector('td.sl').textContent = i + 1; }); }
+function mmRcvSave(tr) {
+  var C = MM.cur; if (!C || !C.ed) return; var g = function (f) { return tr.querySelector('[data-rf="' + f + '"]').value; };
+  var day = g('day'), kind = g('kind'), src = g('src').trim(), qty = parseFloat(g('qty')), note = g('note').trim(), id = tr.dataset.id ? +tr.dataset.id : null;
+  mmRcvTot(); if (!day || !(qty > 0)) return;
+  if (day.slice(0, 7) !== C.month) return msg('mmmsg', 'The date must be in ' + esc(mmMonthName(C.month)) + '. Change the month on top to enter another month.', 'err');
+  $('mmsst').textContent = 'Saving...'; msg('mmmsg', '');
+  rpc('mat_recv_save', { p_ws: C.P.w, p_id: id, p_day: day, p_kind: kind, p_src: src || null, p_qty: qty, p_note: note || null }).then(function (nid) {
+    var wasBlank = tr.classList.contains('blank'); tr.dataset.id = nid; tr.classList.remove('blank');
+    var x = tr.querySelector('td.x'); if (x && !x.firstChild) x.innerHTML = '<button type="button" class="mmdel" title="Delete this entry">&#10005;</button>';
+    if (wasBlank) { tr.insertAdjacentHTML('afterend', mmRcvRow(null, true, C.month)); mmAutoAll(); }
+    mmRcvNum(); mmRcvTot(); var s = $('mmsst'); if (s) s.textContent = '✓ Saved ' + new Date().toTimeString().slice(0, 5);
+    if (src) { var dl = $('mmsrcs'); if (dl && ![].some.call(dl.options, function (o) { return o.value === src; })) dl.insertAdjacentHTML('beforeend', '<option value="' + mmEsc(src) + '">'); }
+  }).catch(function (er) { var s = $('mmsst'); if (s) s.textContent = ''; msg('mmmsg', esc(er.message), 'err'); });
+}
+function mmRcvSum() {
+  MM.cur = null; var a = MM.from, b = MM.to, lab = mmMonthName(a) + (a === b ? '' : ' to ' + mmMonthName(b)), all = MM.names.length > 1, byM = {}, byS = {}, reg = [], KO = Object.keys(MM_RK), z = function () { return { fresh: 0, reclaim: 0, ou: 0, reclaim_ou: 0 }; };
+  MM.names.forEach(function (w) { ((MM.per[w].list || {}).rows || []).forEach(function (r) { reg.push([w].concat(r)); }); });
+  reg.sort(function (x, y) { return x[2] < y[2] ? -1 : x[2] > y[2] ? 1 : x[1] - y[1]; });
+  reg.forEach(function (r) { var m = r[2].slice(0, 7), s = (r[4] || '(not written)').trim(), q = +r[5], k = r[3];
+    (byM[m] = byM[m] || z())[k] += q; (byS[s] = byS[s] || z())[k] += q; });
+  function tbl(id, ttl, head, keys, lf, cv) {
+    var h = '<div class="wrap"><table class="mkt mmt" id="' + id + '" style="width:auto;min-width:420px"><thead><tr><th colspan="' + head.length + '" class="ttl">' + esc(ttl) + '</th></tr><tr>' + head.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>', t = [];
+    keys.forEach(function (k) { var v = cv(k); h += '<tr data-k="' + mmEsc(k) + '"><td class="l">' + esc(lf(k)) + '</td>' + v.map(function (x, i) { t[i] = (t[i] || 0) + x; return mmCalcTd(i + 1, mmR3(x)); }).join('') + '</tr>'; });
+    return h + '<tr class="t"><td class="l">Total</td>' + head.slice(1).map(function (x, i) { var q = t[i] || 0; return '<td data-c="' + (i + 1) + '" data-v="' + mmR3(q) + '">' + mmF(mmR3(q)) + '</td>'; }).join('') + '</tr></tbody></table></div>';
+  }
+  var HD = KO.map(function (x) { return MM_RK[x] + ' (L)'; }).concat(['Total (L)', 'Issue for reclaim (L)']), vals = function (o) { return KO.map(function (x) { return o[x]; }).concat([o.fresh + o.reclaim + o.ou + o.reclaim_ou, mmDirty(o.reclaim) + mmOu(o.reclaim_ou)]); };
+  var ms = Object.keys(byM).sort(), ss = Object.keys(byS).sort();
+  var t1 = tbl('mmrm', 'Oil received month wise - ' + lab, ['Month'].concat(HD), ms, mmMonthName, function (k) { return vals(byM[k]); });
+  var t2 = tbl('mmrs', 'Oil received from where - ' + lab, ['From (where)'].concat(HD), ss, function (k) { return k; }, function (k) { return vals(byS[k]); });
+  var t3 = '<div class="wrap"><table class="mkt mmt" id="mmrl" style="width:auto;min-width:640px"><thead><tr><th colspan="' + (all ? 7 : 6) + '" class="ttl">Oil receive register - ' + esc(lab) + '</th></tr><tr><th>Sl</th>' + (all ? '<th>Workshop</th>' : '') + '<th>Date</th><th>Oil received</th><th>From (where)</th><th>Qty (L)</th><th>Note</th></tr></thead><tbody>' +
+    reg.map(function (r, i) { return '<tr><td class="c">' + (i + 1) + '</td>' + (all ? '<td class="nm">' + esc(r[0]) + '</td>' : '') + '<td class="c">' + esc(mrDmy(r[2])) + '</td><td class="l">' + esc(MM_RK[r[3]] || r[3]) + '</td><td class="nm">' + esc(r[4] || '') + '</td><td class="c" data-v="' + r[5] + '">' + mmF(+r[5]) + '</td><td class="nm wide">' + esc(r[6] || '') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  $('mmout').innerHTML = (reg.length ? '' : mmNote('No oil received in this period.')) + t1 + '<div style="height:12px"></div>' + t2 + '<div style="height:12px"></div>' + t3;
+}
+
+/* ---- Insulating Material: monthly stock like Wire & Strip; Consumed = as per STD (qty repaired x std) filled by itself, you can change it ---- */
+function mmRepI(P, month) { var au = mmAutoW(P.rep, month), ov = ((P.g.ins || {})[month] || {}).rep || {}, r = {}; MM_K.forEach(function (k) { r[k] = ov[k] !== undefined ? mmNum(ov[k]) : au[k]; }); return { auto: au, rep: r }; }
+function mmInsAuto(std, open, recv, tr) { return (std > 0 && mmR3(open + recv - tr) >= std) ? std : 0; }   // no material in stock = no use shown, so the balance never goes minus
+function mmInsOne(P, m, prev) {
+  var sv = ((P.g.ins || {})[m] || {}), rp = mmRepI(P, m).rep, ms = mmMstd(P), rows = {};
+  MM_INS.forEach(function (x) {
+    var s0 = (sv.rows && sv.rows[x.i]) || {}, r = {};
+    ['open', 'recv', 'tr', 'old'].forEach(function (f) { r[f] = s0[f] !== undefined ? mmNum(s0[f]) : 0; });
+    if (prev) { var q = prev[x.i]; r.open = mmR3(q.open + q.recv - q.tr - q.cons); }
+    r.std = mmStdI(x.i, rp, ms); r.auto = mmInsAuto(r.std, r.open, r.recv, r.tr); r.ed = s0.cons !== undefined; r.cons = r.ed ? mmNum(s0.cons) : r.auto;
+    rows[x.i] = r;
+  });
+  return rows;
+}
+function mmInsChain(P, upto) {
+  var out = {}, st = mmStart(P.g.ins), prev = null, n = 0; if (!st || upto < st) return out;
+  for (var m = st; m <= upto && n < 600; m = mmShift(m, 1), n++) { out[m] = mmInsOne(P, m, prev); prev = out[m]; }
+  return out;
+}
+function mmInsGrid(id, rows, ed, openEd, label, heads) {
+  var n = 10, nums = ['1', '2', '3', '4', '5', '6', '7', '8', '9 = 4+5-6-7', '10'], h = '<div class="wrap"><table class="mkt mmt" id="' + id + '"' + (ed ? ' data-edit="1"' : '') + '><thead><tr><th colspan="' + n + '" class="ttl">Details of Insulating Material availability &amp; Balance position</th></tr><tr><th rowspan="2">' + esc(heads[0]) + '</th><th rowspan="2">' + esc(heads[1]) + '</th><th rowspan="2">' + esc(heads[2]) + '</th><th colspan="' + (n - 3) + '" class="ed">' + esc(label) + '</th></tr><tr>';
+  for (var c0 = 3; c0 < n; c0++) h += '<th>' + esc(heads[c0]) + '</th>';
+  h += '</tr><tr class="nm">' + nums.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>';
+  var last = '';
+  MM_INS.forEach(function (x) {
+    if (x.cat !== last) { last = x.cat; h += '<tr class="grp"><td colspan="' + n + '">' + esc(x.cat) + '</td></tr>'; }
+    var r = rows[x.i], bal = mmR3(r.open + r.recv - r.tr - r.cons), v = { open: r.open, recv: r.recv, tr: r.tr, cons: r.cons, old: r.old, bal: bal };
+    h += '<tr class="it" data-i="' + x.i + '"><td class="l">' + x.sl + '</td><td class="nm">' + esc(x.name) + '</td><td>' + esc(x.unit) + '</td>';
+    for (var c = 3; c < 9; c++) {
+      var f = MM_FLD[c];
+      if (ed && (f === 'recv' || f === 'tr' || f === 'cons' || f === 'old' || (f === 'open' && openEd))) h += '<td class="in' + (f === 'cons' && !r.ed ? ' au' : '') + '" data-c="' + c + '">' + mmInp('data-f', f, v[f], false, ' data-i="' + x.i + '"' + (f === 'cons' ? ' data-ins="1" data-auto="' + (r.ed ? 0 : 1) + '"' : '')) + '</td>';
+      else h += '<td class="c' + (v[f] < 0 ? ' neg' : '') + '" data-c="' + c + '" data-v="' + v[f] + '">' + mmF(v[f]) + '</td>';
+    }
+    h += '<td class="c std" data-c="9" data-v="' + r.std + '">' + mmF(r.std) + '</td></tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+function mmInsEntry() {
+  var P = MM.per[MM.ws], g = P.g, ins = g.ins || {}, month = MM.month, ch = mmInsChain(P, month), rows = ch[month] || mmInsOne(P, month, null);
+  var st = mmStart(ins), ed = !!g.edit, openEd = ed && (!st || month <= st), before = !!(st && month < st), rp = mmRepI(P, month);
+  MM.cur = { P: P, ins: ins, month: month, start: st, openEd: openEd, before: before, ed: ed, auto: rp.auto, mstd: mmMstd(P), kind: 'ins' };
+  var note = '';
+  if (ed) {
+    if (!st) note = mmNote('No monthly entry yet. This is the first month, so enter the <b>Opening Balance</b> (only once). After that the opening of every month comes from the closing of the month before.');
+    else if (before) note = mmNote('This month is before the first month (<b>' + mmMonthName(st) + '</b>). The Opening Balance you enter here makes it the new first month.');
+    else if (openEd) note = mmNote('This is the first month: you can change the Opening Balance here. Later months get their opening by themselves.', true);
+    else note = mmNote('Opening Balance = closing balance of the month before (automatic). Fill the other yellow cells.', true);
+  } else note = mmNote('View only: only the Admin (or a user with edit right) can fill this page.');
+  var gr = mmInsGrid('mmg', rows, ed, openEd, mmMonthName(month), MM_HEAD.slice(0, 6).concat(['Consumed (auto = as per STD, you can change)', MM_HEAD[7], MM_HEAD[8], 'As per STD (qty repaired x material std)']));
+  var rt = mmKva('mmr', 'Qty of Repaired Transformer - ' + mmMonthName(month), MM_K, mmKLab, ['Capacity in KVA', 'Qty (from Repair tab)'], [1], function (k) { return ed ? '<td class="in' + (Math.abs(rp.rep[k] - rp.auto[k]) > 0.0005 ? ' chg' : '') + '" data-c="1">' + mmInp('data-q', k, rp.rep[k]) + '</td>' : mmCalcTd(1, rp.rep[k]); });
+  $('mmout').innerHTML = note + mmNote('<b>As per STD</b> = qty repaired (Repair tab) x material std of each capacity (250 KVA Al + Cu both counted). <b>Consumed</b> is filled with the As per STD qty by itself (green) and you can type another qty. If the stock (Opening + Received - Transfer) is less than the STD qty, the consumed qty is <b>not shown</b>, so the Balance never goes minus.') +
+    '<div class="bar" style="margin:0 0 8px">' + (ed ? '<button class="btn sec sm" type="button" id="mmreset">Reset repaired qty to Repair tab</button>' : '') + '<span id="mmsst" class="muted" style="font-size:12.5px"></span></div>' + gr + '<h3 class="sec" style="margin:14px 0 6px">Qty of Repaired Transformer</h3>' + rt;
+  mmInsRecalc();
+}
+function mmInsRecalc() {
+  var C = MM.cur, t = $('mmg'); if (!C || !t) return; var rep = {};
+  document.querySelectorAll('#mmr tr[data-k]').forEach(function (tr) { var k = tr.dataset.k, e = tr.querySelector('input'), td = tr.querySelector('td[data-c="1"]'); var q = e ? (parseFloat(e.value) || 0) : (parseFloat(td.dataset.v) || 0); rep[k] = q; td.classList.toggle('chg', Math.abs(q - C.auto[k]) > 0.0005); });
+  mmKvaTot('mmr', [1]); C.rep = rep;
+  t.querySelectorAll('tr.it').forEach(function (tr) {
+    var i = +tr.dataset.i, v = {}, std = mmStdI(i, rep, C.mstd), ce = tr.querySelector('input[data-f="cons"]');
+    ['open', 'recv', 'tr'].forEach(function (f) { var td = tr.querySelector('td[data-c="' + MM_FLD.indexOf(f) + '"]'), e = td.querySelector('input'); v[f] = e ? (parseFloat(e.value) || 0) : (parseFloat(td.dataset.v) || 0); });
+    var au = mmInsAuto(std, v.open, v.recv, v.tr);
+    if (ce) { if (ce.dataset.auto === '1') { if (document.activeElement !== ce) ce.value = au || ''; v.cons = au; } else v.cons = parseFloat(ce.value) || 0; ce.parentNode.classList.toggle('au', ce.dataset.auto === '1'); }
+    else { var tdc = tr.querySelector('td[data-c="6"]'); v.cons = parseFloat(tdc.dataset.v) || 0; }
+    var sd = tr.querySelector('td.std'); sd.textContent = mmF(std); sd.dataset.v = std; mmSetTd(tr, 8, mmR3(v.open + v.recv - v.tr - v.cons));
+  });
+}
+function mmInsSave() {
+  var C = MM.cur, t = $('mmg'); if (!C || !t || !C.ed) return; mmInsRecalc();
+  var rows = {}, any = false, hasOpen = false, rep = {}, isStart = !C.start || C.month <= C.start;
+  t.querySelectorAll('tr.it').forEach(function (tr) {
+    var i = +tr.dataset.i, o = {};
+    ['open', 'recv', 'tr', 'old'].forEach(function (f) { var e = tr.querySelector('input[data-f="' + f + '"]'); if (!e) return; var v = mmNum(e.value); if (v < 0) return; if (v) { o[f] = v; any = true; if (f === 'open') hasOpen = true; } });
+    var ce = tr.querySelector('input[data-f="cons"]'); if (ce && ce.dataset.auto === '0') { o.cons = Math.max(0, mmNum(ce.value)); any = true; }
+    if (Object.keys(o).length) rows[i] = o;
+  });
+  MM_K.forEach(function (k) { if (Math.abs(C.rep[k] - C.auto[k]) > 0.0005) { rep[k] = C.rep[k]; any = true; } });
+  var data = any ? { rows: rows, rep: rep } : null, g = C.P.g, month = C.month, w = C.P.w;
+  $('mmsst').textContent = 'Saving...';
+  return rpc('mat_save', { p_ws: w, p_kind: 'ins', p_month: month, p_data: data, p_clear_open: !!(isStart && hasOpen) }).then(function () {
+    g.ins = g.ins || {}; if (data) g.ins[month] = data; else delete g.ins[month];
+    if (isStart && hasOpen) Object.keys(g.ins).forEach(function (m) { if (m !== month && g.ins[m].rows) for (var i in g.ins[m].rows) delete g.ins[m].rows[i].open; });
+    C.start = mmStart(g.ins); var s = $('mmsst'); if (s) s.textContent = '✓ Saved ' + new Date().toTimeString().slice(0, 5);
+  }).catch(function (er) { var s = $('mmsst'); if (s) s.textContent = ''; msg('mmmsg', esc(er.message), 'err'); });
+}
+function mmInsSum() {
+  MM.cur = null; var a = MM.from, b = MM.to, rows = {}, rep = {}, lab = mmMonthName(a) + (a === b ? '' : ' to ' + mmMonthName(b));
+  MM_K.forEach(function (k) { rep[k] = 0; }); MM_INS.forEach(function (x) { rows[x.i] = { open: 0, recv: 0, tr: 0, cons: 0, old: 0, std: 0 }; });
+  MM.names.forEach(function (w) {
+    var P = MM.per[w], st = mmStart(P.g.ins), ch = mmInsChain(P, b);
+    for (var m = a, ix = 0; m <= b; m = mmShift(m, 1), ix++) {
+      var o = ch[m] || mmInsOne(P, m, null), r = mmRepI(P, m).rep; MM_K.forEach(function (k) { rep[k] += r[k]; });
+      MM_INS.forEach(function (x) { var A = rows[x.i], B = o[x.i]; if (ix === 0) A.open += (st && a < st && ch[st]) ? ch[st][x.i].open : B.open; A.recv += B.recv; A.tr += B.tr; A.cons += B.cons; A.old += B.old; A.std += B.std; });
+    }
+  });
+  MM_INS.forEach(function (x) { for (var f in rows[x.i]) rows[x.i][f] = mmR3(rows[x.i][f]); });
+  var heads = MM_HEAD.slice(0, 6).concat(['Consumed', MM_HEAD[7], 'Closing Balance (' + mmMonthName(b) + ')', 'As per STD (qty repaired x material std)']); heads[3] = 'Opening Balance (' + mmMonthName(a) + ')';
+  var rt = mmKva('mmr', 'Qty of Repaired Transformer - ' + lab, MM_K, mmKLab, ['Capacity in KVA', 'Qty'], [1], function (k) { return mmCalcTd(1, mmR3(rep[k])); });
+  $('mmout').innerHTML = mmNote((MM.names.length > 1 ? '<b>All workshops added up.</b> ' : '') + 'Opening = opening of the <b>From</b> month. Closing = closing of the <b>To</b> month. Received, transfer, consumed and repaired transformers of all months in between are added up.', true) + mmInsGrid('mmg', rows, false, false, lab, heads) + '<h3 class="sec" style="margin:14px 0 6px">Qty of Repaired Transformer</h3>' + rt;
+  mmKvaTot('mmr', [1]);
+}
+
+/* ---- Material Requirement: PRs of the same days of last year x STD (+ damage %), minus the stock, = actual requirement ---- */
+function mmTodayIso() { var t = new Date(); return t.getFullYear() + '-' + p2(t.getMonth() + 1) + '-' + p2(t.getDate()); }
+function mmReqCtl() {
+  if (!MM.qd) MM.qd = mmTodayIso(); if (!MM.qn) MM.qn = 30; if (MM.qp == null) MM.qp = 5;
+  return '<div class="mmrng"><label>From date <input type="date" id="mmqd" value="' + MM.qd + '"></label><label>Days <input type="number" id="mmqn" min="1" max="365" step="1" value="' + MM.qn + '" style="width:80px"></label><label>Damage % (PR increase) <input type="number" id="mmqp" min="0" max="100" step="0.5" value="' + MM.qp + '" style="width:80px"></label><button class="btn sm" type="button" id="mmqgo">Show</button></div>';
+}
+function mmReqGo() {
+  var d = $('mmqd').value, n = parseInt($('mmqn').value, 10), pc = parseFloat($('mmqp').value);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return msg('mmmsg', 'Choose the date.', 'err');
+  MM.qd = d; MM.qn = Math.max(1, Math.min(365, isNaN(n) ? 30 : n)); MM.qp = isNaN(pc) ? 5 : Math.max(0, Math.min(100, pc)); $('mmqn').value = MM.qn; $('mmqp').value = MM.qp; mmLoad();
+}
+function mmReqClose(rows) { return rows ? mmR3(rows.open + rows.recv - rows.tr - rows.cons) : 0; }
+function mmReqShow() {
+  MM.cur = null; var n = MM.qn, pc = MM.qp, now = mmNow(), cap = {}, lyc = {}, tot = { w1: '', w2: '' };
+  MM_K.forEach(function (k) { cap[k] = 0; }); MM_OC.forEach(function (k) { lyc[k] = 0; });
+  var req = {}, avl = {}, items = [];
+  MM_IT.forEach(function (x, i) { items.push({ i: i, cat: x.cat, name: x.name, unit: x.unit, src: 'ws' }); }); MM_INS.forEach(function (x) { items.push({ i: x.i, cat: x.cat, name: x.name, unit: x.unit, src: 'ins' }); });
+  items.forEach(function (x) { req[x.src + x.i] = 0; avl[x.src + x.i] = 0; });
+  MM.names.forEach(function (w) {
+    var P = MM.per[w], q = P.q || { rows: [] }, c = {}, ms = mmMstd(P), wch = mmWsChain(P.g.ws || {}, now), ich = mmInsChain(P, now);
+    tot.w1 = q.w1; tot.w2 = q.w2; MM_K.forEach(function (k) { c[k] = 0; });
+    (q.rows || []).forEach(function (r) { var k = +r[0] === 250 ? '250(al)' : String(r[0]); if (+r[0] === 250) lyc['250'] += +r[1]; else if (k in lyc) lyc[k] += +r[1]; if (k in c) c[k] += Math.ceil(+r[1] * (1 + pc / 100) - 1e-9); });   // PR has no Al / Cu: 250 KVA is taken as Al
+    MM_K.forEach(function (k) { cap[k] += c[k]; });
+    items.forEach(function (x) {
+      var key = x.src + x.i;
+      req[key] += x.src === 'ws' ? mmStdOf(x.i, c, ms) : mmStdI(x.i, c, ms);
+      avl[key] += x.src === 'ws' ? mmReqClose((wch[now] || {})[x.i]) : mmReqClose((ich[now] || {})[x.i]);
+    });
+  });
+  var h = mmNote('Last year PRs of <b>' + esc(mrDmy(tot.w1 || '')) + '</b> to <b>' + esc(mrDmy(tot.w2 || '')) + '</b> (' + n + ' days), PR + <b>' + pc + '%</b> damage, x material STD of each capacity = <b>Required as per STD</b>. <b>Available</b> = closing balance of ' + esc(mmMonthName(now)) + ' (Wire &amp; Strip, Insulating Material sheets). <b>Actual requirement</b> = Required - Available (0 when the stock is enough). 250 KVA PRs are taken as Al (a PR does not tell Al / Cu).' + (MM.names.length > 1 ? ' <b>All workshops added up.</b>' : ''), true);
+  var ck = ['10', '16', '25', '63', '100', '160', '250', '400', '630'];
+  h += '<div class="wrap"><table class="mkt mmt" id="mmqc" style="width:auto"><thead><tr><th class="ttl" colspan="' + (ck.length + 2) + '">Last year PR (' + esc(mrDmy(tot.w1 || '')) + ' to ' + esc(mrDmy(tot.w2 || '')) + ')</th></tr><tr><th>Capacity in KVA</th>' + ck.map(function (k) { return '<th>' + k + '</th>'; }).join('') + '<th>TOTAL</th></tr></thead><tbody><tr><td class="l">Last year PR</td>' +
+    ck.map(function (k) { return '<td class="c" data-v="' + lyc[k] + '">' + mmF(lyc[k]) + '</td>'; }).join('') + '<td class="c" data-v="' + ck.reduce(function (a, k) { return a + lyc[k]; }, 0) + '">' + mmF(ck.reduce(function (a, k) { return a + lyc[k]; }, 0)) + '</td></tr><tr><td class="l">PR + ' + pc + '%</td>' +
+    ck.map(function (k) { var v = cap[k === '250' ? '250(al)' : k]; return '<td class="c" data-v="' + v + '">' + mmF(v) + '</td>'; }).join('') + '<td class="c" data-v="' + ck.reduce(function (a, k) { return a + cap[k === '250' ? '250(al)' : k]; }, 0) + '">' + mmF(ck.reduce(function (a, k) { return a + cap[k === '250' ? '250(al)' : k]; }, 0)) + '</td></tr></tbody></table></div><div style="height:12px"></div>';
+  h += '<div class="wrap"><table class="mkt mmt" id="mmq"><thead><tr><th colspan="6" class="ttl">Material Requirement for ' + n + ' days from ' + esc(mrDmy(MM.qd)) + ' (last year PR + ' + pc + '%)</th></tr><tr><th>Sl No</th><th>Name of Material</th><th>Unit</th><th>Required as per STD</th><th>Available (' + esc(mmMonthName(now)) + ' closing)</th><th class="ed">ACTUAL REQUIREMENT</th></tr><tr class="nm"><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6 = 4-5</th></tr></thead><tbody>';
+  var last = '', sl = 0;
+  items.forEach(function (x) {
+    var key = x.src + x.i, q = mmR3(req[key]), a = mmR3(avl[key]), act = Math.max(0, mmR3(q - a)); if (x.unit === 'No') act = Math.ceil(act - 1e-9);
+    var g = (x.src === 'ws' ? '' : '') + x.cat; if (g !== last) { last = g; sl = 0; h += '<tr class="grp"><td colspan="6">' + esc(g) + '</td></tr>'; }
+    h += '<tr class="it"><td class="l">' + (++sl) + '</td><td class="nm">' + esc(x.name) + '</td><td>' + esc(x.unit) + '</td><td class="c" data-v="' + q + '">' + mmF(q) + '</td><td class="c' + (a < 0 ? ' neg' : '') + '" data-v="' + a + '">' + mmF(a) + '</td><td class="c std" data-v="' + act + '">' + mmF(act) + '</td></tr>';
+  });
+  $('mmout').innerHTML = h + '</tbody></table></div>';
+}
+
+/* ---- STD dialog (v2) ---- */
+function mmStdOpen() {
+  var P = MM.per && MM.per[MM.ws]; if (!P) return msg('mmmsg', 'Choose one workshop for the STD.', 'err');
+  var ed = !!P.g.edit, ins = MM.kind === 'ins', wsc = MM.kind === 'wsc' || ins, o = $('mmstdo'), h = '', cols = ins ? MM_K : MMK_STD, items = ins ? MM_INS : MM_IT.map(function (x, i) { return { i: i, cat: x.cat, name: x.name, unit: x.unit }; });
+  if (wsc) {
+    var ms = mmMstd(P), last = '';
+    h = '<p class="muted" style="font-size:12.5px;margin:0 0 8px">Quantity of each material needed for ONE transformer, capacity wise. <b>As per STD</b> = qty repaired x this std. ' + (ed ? 'Saved for the whole workshop.' : 'View only.') + '</p><div class="mmstdw"><table class="mkt mmt"><thead><tr><th>Material</th>' + cols.map(function (k) { return '<th>' + esc(k === '250(al)' ? '250 (Al)' : k === '250(cu)' ? '250 (Cu)' : k) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    items.forEach(function (x) { if (x.cat !== last) { last = x.cat; h += '<tr class="grp"><td colspan="' + (cols.length + 1) + '">' + esc(x.cat) + '</td></tr>'; } h += '<tr><td class="nm">' + esc(x.name) + ' <small>(' + esc(x.unit) + ')</small></td>' + cols.map(function (k) { var v = (ms[x.i] || {})[k]; return '<td class="in">' + (ed ? '<input class="mmn" type="text" inputmode="decimal" autocomplete="off" data-si="' + x.i + '" data-sk="' + mmEsc(k) + '" value="' + (v || '') + '">' : (v || '')) + '</td>'; }).join('') + '</tr>'; });
+    h += '</tbody></table></div>';
+  } else {
+    var os = mmOstd(P);
+    h = '<p class="muted" style="font-size:12.5px;margin:0 0 8px">Per transformer, capacity wise (litre). <b>Fresh</b> and <b>Reclaim</b> = oil used for ONE repair (the Consume columns). <b>Dirty</b> = oil recovered per ONE DTC (goes to B&amp;C / dirty oil Received). ' + (ed ? 'Saved for the whole workshop.' : 'View only.') + '</p><table class="mkt mmt" style="width:auto"><thead><tr><th>Capacity (KVA)</th><th>Fresh Oil std (L)</th><th>Reclaim Oil std (L)</th><th>Dirty Oil std (L)</th></tr></thead><tbody>' +
+      MM_OC.map(function (k) { return '<tr><td class="l">' + esc(mmCapLab(k)) + '</td>' + MM_OSK.map(function (t) { return '<td class="in">' + (ed ? '<input class="mmn" type="text" inputmode="decimal" autocomplete="off" data-so="' + k + '" data-st="' + t[0] + '" value="' + (os[t[0]][k] || '') + '">' : mmF(os[t[0]][k])) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>';
+  }
+  o.innerHTML = '<div class="mmbox"><div class="bar" style="justify-content:space-between"><b>STD - ' + esc(MM.ws) + ' - ' + (ins ? 'Insulating Material' : wsc ? 'Wire &amp; Strip' : 'Oil') + '</b><button class="btn sec sm" type="button" id="mmstdx">Close</button></div><div id="mmstdm"></div>' + h + (ed ? '<div class="bar" style="margin-top:10px;justify-content:flex-end"><button class="btn" type="button" id="mmstds">Save STD</button></div>' : '') + '</div>';
+  o.classList.remove('hide');
+  $('mmstdx').onclick = function () { o.classList.add('hide'); };
+  if (ed) $('mmstds').onclick = function () {
+    var nw = wsc ? JSON.parse(JSON.stringify(P.g.mstd || MM_DEF_STD)) : { f: {}, r: {}, d: {} }, kind = wsc ? 'mstd' : 'oilstd';
+    if (wsc) { items.forEach(function (x) { nw[x.i] = {}; }); o.querySelectorAll('input[data-si]').forEach(function (e) { var v = mmNum(e.value); if (v > 0) nw[e.dataset.si][e.dataset.sk] = v; }); }   // the other group (wire/strip or insulating) keeps its std
+    else o.querySelectorAll('input[data-so]').forEach(function (e) { nw[e.dataset.st][e.dataset.so] = Math.max(0, mmNum(e.value)); });
+    $('mmstds').disabled = true;
+    rpc('mat_std_save', { p_ws: MM.ws, p_kind: kind, p_data: nw }).then(function () { P.g[kind] = nw; o.classList.add('hide'); mmLoad(); }).catch(function (er) { $('mmstds').disabled = false; msg('mmstdm', esc(er.message), 'err'); });
+  };
+}
+
+/* ---- load (v2) ---- */
+function mmLoad() {
+  asFlushAll();
+  var seq = ++MM.seq, sum0 = MM.mode === 'sum', all = MM.ws === '__ALL__', sum = sum0 || all, names = all ? mrWs() : [MM.ws], k = MM.kind;   // All workshops = always the added-up view
+  if (!names[0]) return;
+  var a = sum0 ? MM.from : MM.month, b = sum0 ? MM.to : MM.month;
+  if (!/^\d{4}-\d{2}$/.test(a || '') || !/^\d{4}-\d{2}$/.test(b || '')) return msg('mmmsg', 'Choose the month.', 'err');
+  if (a > b) return msg('mmmsg', 'The "From" month cannot be after the "To" month.', 'err');
+  if (sum && mmShift(a, 36) <= b) return msg('mmmsg', 'Choose at most 36 months.', 'err');
+  msg('mmmsg', '<span class="sp" style="border-color:#3b5bdb55;border-top-color:#3b5bdb"></span>Loading...', 'info'); $('mmout').innerHTML = '';
+  Promise.all(names.map(function (w) {
+    return rpc('mat_get', { p_ws: w }).then(function (g) {
+      var P = { g: g || {}, w: w, rep: [], dtc: [], list: null }, ps = [];
+      if (k === 'low') ps.push(rpc('mat_low_list', { p_ws: w, p_from: a, p_to: b }).then(function (r) { P.low = r || []; }));
+      else if (k === 'req') ps.push(rpc('mat_req_pr', { p_ws: w, p_day: MM.qd, p_days: MM.qn }).then(function (r) { P.q = r || { rows: [] }; }));
+      else if (k === 'rcv') ps.push(rpc('mat_recv_list', { p_ws: w, p_from: a, p_to: b }).then(function (r) { P.list = r || { rows: [], srcs: [] }; }));
+      else ps.push(rpc('mat_rep', { p_ws: w, p_from: a, p_to: b }).then(function (r) { P.rep = r || []; }));
+      if (k === 'oil') { var st = mmOilStartM(P), df = st && st < a ? st : a, lim = mmShift(b, -119); if (df < lim) df = lim; ps.push(rpc('mat_dtc', { p_ws: w, p_from: df, p_to: b }).then(function (r) { P.dtc = r || []; })); ps.push(rpc('mat_low_adj', { p_ws: w, p_from: df, p_to: b }).then(function (r) { P.adj = r || []; })); }
+      return Promise.all(ps).then(function () { return P; });
+    });
+  })).then(function (arr) {
+    if (seq !== MM.seq) return; msg('mmmsg', ''); MM.per = {}; MM.names = names; names.forEach(function (w, i) { MM.per[w] = arr[i]; });
+    var sf = MM.from, st2 = MM.to; if (!sum0) { MM.from = MM.month; MM.to = MM.month; }
+    try { if (k === 'wsc') (sum ? mmWscSum() : mmWscEntry()); else if (k === 'ins') (sum ? mmInsSum() : mmInsEntry()); else if (k === 'req') mmReqShow(); else if (k === 'oil') (sum ? mmOilSum() : mmOilEntry()); else if (k === 'low') (sum ? mmLowSum() : mmLowEntry()); else (sum ? mmRcvSum() : mmRcvEntry()); } finally { MM.from = sf; MM.to = st2; }
+  }).catch(function (e) { if (seq === MM.seq) msg('mmmsg', /mat_|function/i.test(e.message || '') ? 'Run the new setup.sql in Supabase once (Material Management is not switched on in your database yet).' : esc(e.message), 'err'); });
+}
+function mmExcel() {
+  var ids = MM.kind === 'req' ? [['mmqc', 'LY PR'], ['mmq', 'Material Requirement']] : (MM.kind === 'wsc' || MM.kind === 'ins') ? [['mmg', MM.kind === 'ins' ? 'Insulating Material' : 'Wire & Strip'], ['mmr', 'Repaired Qty']] : MM.kind === 'oil' ? [['mmot', 'Oil std'], ['mmoo', 'Oil account'], ['mmoc', 'Oil recovery'], ['mmow', 'Closing wise']] : (MM.mode === 'sum' ? [['mmrm', 'Month wise'], ['mmrs', 'From wise'], ['mmrl', 'Register']] : [['mmrg', 'Oil Receive']]);
+  if (MM.kind === 'low') ids = MM.mode === 'sum' ? [['mmll', 'Oil found below STD']] : [['mmlg', 'Oil found below STD']];
+  var sh = []; ids.forEach(function (x) { var t = $(x[0]); if (t) sh.push(mmSheet(t, x[1])); });
+  if (!sh.length) return msg('mmmsg', 'Nothing to download yet.', 'err');
+  var per = MM.kind === 'req' ? MM.qd : MM.mode === 'sum' ? MM.from + '_to_' + MM.to : MM.month, nm = MM.kind === 'req' ? 'Material_Requirement_' : MM.kind === 'ins' ? 'Insulating_Material_' : MM.kind === 'wsc' ? 'Wire_Strip_Consumption_' : MM.kind === 'oil' ? 'Oil_Recovery_' : MM.kind === 'low' ? 'Oil_Found_Below_STD_' : 'Oil_Receive_';
+  xlsxDownload(nm + mrFile(MM.ws === '__ALL__' ? 'All' : MM.ws) + '_' + per + '.xlsx', sh);
+}
+
+/* ---- Excel-like keys: arrows / Enter move between cells, whole cell selected on entry, paste from Excel ---- */
+function mmAutoH(e) { e.style.height = 'auto'; e.style.height = Math.max(e.scrollHeight, 24) + 'px'; }
+function mmAutoAll() { document.querySelectorAll('#mmout textarea.mmr').forEach(mmAutoH); }
+document.addEventListener('input', function (e) { var t = e.target; if (t && t.tagName === 'TEXTAREA' && t.classList.contains('mmr')) mmAutoH(t); });
+function mmCol(td) { return td.dataset.c !== undefined ? td.dataset.c : 'i' + td.cellIndex; }
+function mmInpIn(td) { return td ? td.querySelector('input:not([disabled]):not([type=date]),select,textarea') : null; }
+function mmDown(inp, dir) {
+  var td = inp.closest('td'), tr = td.parentNode, col = mmCol(td);
+  while ((tr = dir > 0 ? tr.nextElementSibling : tr.previousElementSibling)) { var c = [].filter.call(tr.children, function (x) { return mmCol(x) === col && mmInpIn(x); })[0]; if (c) return mmInpIn(c); }
+  return null;
+}
+function mmSide(inp, dir) { var tr = inp.closest('tr'), all = [].filter.call(tr.querySelectorAll('td'), function (x) { return mmInpIn(x); }).map(mmInpIn), i = all.indexOf(inp); return all[i + dir] || null; }
+function mmFocus(e) { if (!e) return false; e.focus(); if (e.select && e.type !== 'date') e.select(); return true; }
+document.addEventListener('focusin', function (e) { var t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') && t.type !== 'date' && t.closest && t.closest('#mmout,#mmstdo')) setTimeout(function () { try { t.select(); } catch (x) { } }, 0); });
+document.addEventListener('keydown', function (e) {
+  var t = e.target; if (!t || !t.closest || !t.closest('#mmout,#mmstdo') || e.ctrlKey || e.altKey || e.metaKey) return;
+  if (t.tagName === 'SELECT' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return;
+  if (t.tagName === 'TEXTAREA') { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); var nx = mmDown(t, 1); if (nx) mmFocus(nx); else t.blur(); } return; }
+  if (t.tagName !== 'INPUT' && t.tagName !== 'SELECT') return; if (t.type === 'date') { if (e.key === 'Enter') { e.preventDefault(); mmFocus(mmSide(t, 1)); } return; }
+  var k = e.key, n = null;
+  if (k === 'Enter' || k === 'ArrowDown') n = mmDown(t, e.shiftKey && k === 'Enter' ? -1 : 1);
+  else if (k === 'ArrowUp') n = mmDown(t, -1);
+  else if (k === 'ArrowRight' && (t.tagName === 'SELECT' || (t.selectionEnd === t.value.length))) n = mmSide(t, 1);
+  else if (k === 'ArrowLeft' && (t.tagName === 'SELECT' || (t.selectionStart === 0))) n = mmSide(t, -1);
+  else return;
+  e.preventDefault(); if (!n && (k === 'Enter')) { t.blur(); return; } mmFocus(n);
+});
+document.addEventListener('paste', function (e) {
+  var t = e.target; if (!t || !t.classList || !t.classList.contains('mmn')) return;
+  var txt = (e.clipboardData || window.clipboardData).getData('text'); if (!/[\t\n]/.test(txt.replace(/[\r\n]+$/, ''))) return;
+  e.preventDefault(); var rows = txt.replace(/\r/g, '').replace(/\n+$/, '').split('\n').map(function (r) { return r.split('\t'); }), rowInp = t;
+  rows.forEach(function (cells, ri) {
+    if (ri > 0) rowInp = rowInp ? mmDown(rowInp, 1) : null; if (!rowInp) return; var cur = rowInp;
+    cells.forEach(function (c, ci) { if (ci > 0) cur = cur ? mmSide(cur, 1) : null; if (!cur || !cur.classList.contains('mmn')) return; var v = c.replace(/[^0-9.]/g, ''); cur.value = v; cur.dispatchEvent(new Event('input', { bubbles: true })); });
+  });
+});
+document.addEventListener('change', function (e) { var t = e.target; if (t && t.classList && t.classList.contains('mmr')) { var tr = t.closest('tr.rv'); if (tr) mmRcvSave(tr); else { tr = t.closest('tr.lw'); if (tr) mmLowSave(tr, t.dataset.rf === 'pr'); } } });
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('.mmdel'); if (!b || !MM.cur || !MM.cur.ed) return; var tr = b.closest('tr.rv,tr.lw'); if (!tr || !tr.dataset.id) return; var low = tr.classList.contains('lw');
+  if (!confirm('Delete this entry?')) return;
+  rpc(low ? 'mat_low_del' : 'mat_recv_del', { p_ws: MM.cur.P.w, p_id: +tr.dataset.id }).then(function () { tr.parentNode.removeChild(tr); if (low) { mmLowNum(); mmLowTot(); } else { mmRcvNum(); mmRcvTot(); } }).catch(function (er) { msg('mmmsg', esc(er.message), 'err'); });
+});
+
+/* ---- Wire & Strip: monthly entry ---- */
+function mmWscEntry() {
+  var P = MM.per[MM.ws], g = P.g, ws = g.ws || {}, month = MM.month, ch = mmWsChain(ws, month), rows = ch[month] || mmWsOne(ws[month] || {}, null);
+  var st = mmStart(ws), ed = !!g.edit, openEd = ed && (!st || month <= st), before = !!(st && month < st), rp = mmRepW(P, month), mstd = mmMstd(P), std = {};
+  MM_IT.forEach(function (x, i) { std[i] = mmStdOf(i, rp.rep, mstd); });
+  MM.cur = { P: P, ws: ws, month: month, start: st, openEd: openEd, before: before, ed: ed, auto: rp.auto, mstd: mstd };
+  var note = '';
+  if (ed) {
+    if (!st) note = mmNote('No monthly entry yet. This is the first month, so enter the <b>Opening Balance</b> (only once). After that the opening of every month comes from the closing of the month before.');
+    else if (before) note = mmNote('This month is before the first month (<b>' + mmMonthName(st) + '</b>). The Opening Balance you enter here makes it the new first month; the opening of ' + mmMonthName(st) + ' is then calculated from here.');
+    else if (openEd) note = mmNote('This is the first month: you can change the Opening Balance here. Later months get their opening by themselves.', true);
+    else note = mmNote('Opening Balance = closing balance of the month before (automatic). Fill the other yellow cells.', true);
+  } else note = mmNote('View only: only the Admin (or a user with edit right) can fill this page.');
+  var gr = mmGrid('mmg', rows, std, ed, openEd, mmMonthName(month), MM_HEAD);
+  var rt = mmKva('mmr', 'Qty of Repaired Transformer - ' + mmMonthName(month), MM_K, mmKLab, ['Capacity in KVA', 'Qty (from Repair tab)'], [1], function (k) { return ed ? '<td class="in' + (Math.abs(rp.rep[k] - rp.auto[k]) > 0.0005 ? ' chg' : '') + '" data-c="1">' + mmInp('data-q', k, rp.rep[k]) + '</td>' : mmCalcTd(1, rp.rep[k]); });
+  $('mmout').innerHTML = note + mmNote('<b>Qty of Repaired Transformer</b> is filled by itself from the <b>Repair tab</b> (all repairs of this month). You can type a different number (shown in orange). <b>As per STD</b> = qty repaired x material std; all the materials of a capacity are added together (merged cell). For 250 KVA only the <b>Al</b> transformers are counted (Cu is not).') +
+    '<div class="bar" style="margin:0 0 8px">' + (ed ? '<button class="btn sec sm" type="button" id="mmreset">Reset repaired qty to Repair tab</button>' : '') + '<span id="mmsst" class="muted" style="font-size:12.5px"></span></div>' + gr + '<h3 class="sec" style="margin:14px 0 6px">Qty of Repaired Transformer</h3>' + rt;
+  mmWscRecalc();
+}
+function mmWscRecalc() {
+  var C = MM.cur, t = $('mmg'); if (!C || !t) return; var rep = {}, std = {};
+  document.querySelectorAll('#mmr tr[data-k]').forEach(function (tr) { var k = tr.dataset.k, e = tr.querySelector('input'), td = tr.querySelector('td[data-c="1"]'); var q = e ? (parseFloat(e.value) || 0) : (parseFloat(td.dataset.v) || 0); rep[k] = q; td.classList.toggle('chg', Math.abs(q - C.auto[k]) > 0.0005); });
+  mmKvaTot('mmr', [1]); C.rep = rep;
+  t.querySelectorAll('tr.it').forEach(function (tr) {
+    var i = +tr.dataset.i, v = {};
+    ['open', 'recv', 'tr', 'cons'].forEach(function (f) { var c = MM_FLD.indexOf(f), td = tr.querySelector('td[data-c="' + c + '"]'), e = td.querySelector('input'); v[f] = e ? (parseFloat(e.value) || 0) : (parseFloat(td.dataset.v) || 0); });
+    mmSetTd(tr, 8, mmR3(v.open + v.recv - v.tr - v.cons)); std[i] = mmStdOf(i, rep, C.mstd);
+  });
+  t.querySelectorAll('tr.it td.std').forEach(function (td) { var i = +td.parentNode.dataset.i, n = td.rowSpan || 1, sg = 0; for (var j = i; j < i + n; j++) sg += std[j] || 0; sg = mmR3(sg); td.textContent = mmF(sg); td.dataset.v = sg; });
+  mmTotals('mmg');
+}
+function mmWscSave() {
+  var C = MM.cur, t = $('mmg'); if (!C || !t || !C.ed) return; mmWscRecalc();
+  var rows = {}, any = false, hasOpen = false, rep = {}, isStart = !C.start || C.month <= C.start;
+  t.querySelectorAll('tr.it').forEach(function (tr) {
+    var i = +tr.dataset.i, o = {};
+    ['open', 'recv', 'tr', 'cons', 'old'].forEach(function (f) {
+      var e = tr.querySelector('input[data-f="' + f + '"]'); if (!e) return; var v = mmNum(e.value); if (v < 0) return;
+      if (v) { o[f] = v; any = true; if (f === 'open') hasOpen = true; }
+    });
+    if (Object.keys(o).length) rows[i] = o;
+  });
+  MM_K.forEach(function (k) { if (Math.abs(C.rep[k] - C.auto[k]) > 0.0005) { rep[k] = C.rep[k]; any = true; } });
+  var data = any ? { rows: rows, rep: rep } : null, g = C.P.g, month = C.month, w = C.P.w;
+  $('mmsst').textContent = 'Saving...';
+  return rpc('mat_save', { p_ws: w, p_kind: 'ws', p_month: month, p_data: data, p_clear_open: !!(isStart && hasOpen) }).then(function () {
+    g.ws = g.ws || {}; if (data) g.ws[month] = data; else delete g.ws[month];
+    if (isStart && hasOpen) Object.keys(g.ws).forEach(function (m) { if (m !== month && g.ws[m].rows) for (var i in g.ws[m].rows) delete g.ws[m].rows[i].open; });
+    C.start = mmStart(g.ws); var s = $('mmsst'); if (s) s.textContent = '✓ Saved ' + new Date().toTimeString().slice(0, 5);
+  }).catch(function (er) { var s = $('mmsst'); if (s) s.textContent = ''; msg('mmmsg', esc(er.message), 'err'); });
+}
+function mmWscRange(P, a, b) {
+  var ws = P.g.ws || {}, st = mmStart(ws), ch = mmWsChain(ws, b), rows = {}, rep = {}, mstd = mmMstd(P), months = [];
+  for (var m = a; m <= b; m = mmShift(m, 1)) months.push(m);
+  MM_K.forEach(function (k) { rep[k] = 0; }); MM_IT.forEach(function (x, i) { rows[i] = { open: 0, recv: 0, tr: 0, cons: 0, old: 0 }; });
+  months.forEach(function (mm, ix) {
+    var o = ch[mm] || mmWsOne(ws[mm] || {}, null), r = mmRepW(P, mm).rep;
+    MM_K.forEach(function (k) { rep[k] += r[k]; });
+    MM_IT.forEach(function (x, i) { var A = rows[i], B = o[i]; if (ix === 0) A.open = (st && a < st && ch[st]) ? ch[st][i].open : B.open; A.recv += B.recv; A.tr += B.tr; A.cons += B.cons; A.old += B.old; });
+  });
+  var std = {}; MM_IT.forEach(function (x, i) { std[i] = mmStdOf(i, rep, mstd); });
+  return { rows: rows, rep: rep, std: std };
+}
+function mmWscSum() {
+  MM.cur = null; var a = MM.from, b = MM.to, rows = {}, rep = {}, std = {}, lab = mmMonthName(a) + (a === b ? '' : ' to ' + mmMonthName(b));
+  MM_K.forEach(function (k) { rep[k] = 0; }); MM_IT.forEach(function (x, i) { rows[i] = { open: 0, recv: 0, tr: 0, cons: 0, old: 0 }; std[i] = 0; });
+  MM.names.forEach(function (w) {
+    var r = mmWscRange(MM.per[w], a, b);
+    MM_IT.forEach(function (x, i) { MM_WF.forEach(function (f) { rows[i][f] += r.rows[i][f]; }); std[i] += r.std[i]; }); MM_K.forEach(function (k) { rep[k] += r.rep[k]; });
+  });
+  MM_IT.forEach(function (x, i) { MM_WF.forEach(function (f) { rows[i][f] = mmR3(rows[i][f]); }); std[i] = mmR3(std[i]); });
+  var heads = MM_HEAD.slice(); heads[3] = 'Opening Balance (' + mmMonthName(a) + ')'; heads[8] = 'Closing Balance (' + mmMonthName(b) + ')';
+  var rt = mmKva('mmr', 'Qty of Repaired Transformer - ' + lab, MM_K, mmKLab, ['Capacity in KVA', 'Qty'], [1], function (k) { return mmCalcTd(1, mmR3(rep[k])); });
+  $('mmout').innerHTML = mmNote('Opening = opening of the <b>From</b> month. Closing = closing of the <b>To</b> month. Received, transfer, consumed and repaired transformers of all months in between are added up. For 250 KVA only Al is counted in the STD.', true) + mmGrid('mmg', rows, std, false, false, lab, heads) + '<h3 class="sec" style="margin:14px 0 6px">Qty of Repaired Transformer</h3>' + rt;
+  mmTotals('mmg'); mmKvaTot('mmr', [1]);
+}
+
+/* ---- Oil Found Below STD: PR wise list (oil found in a PR; used in the Oil Recovery Sheet in place of the Dirty std) ---- */
+function mmLowRow(r, ed, month, P) {
+  var id = r ? r[0] : '', day = r ? r[1] : mmRcvDef(month), pr = r ? r[2] : '', vill = r ? (r[3] || '') : '', sub = r ? (r[4] || '') : '', je = r ? (r[5] || '') : '', dv = r ? (r[6] || '') : '', cap = r ? r[7] : '', fnd = r ? r[8] : '', rs = r ? (r[9] || '') : '', rm = r ? (r[10] || '') : '';
+  var std = cap ? mmOstd(P).d[String(cap)] : '';
+  function au(c, v) { return '<td class="nm au" data-c="' + c + '">' + esc(v) + '</td>'; }
+  if (!ed) return '<tr class="lw"><td class="c sl"></td><td class="c">' + esc(mrDmy(day)) + '</td><td class="nm">' + esc(pr) + '</td>' + au(3, vill) + au(4, sub) + au(5, je) + au(6, dv) + '<td class="c" data-c="7">' + esc(cap) + '</td><td class="c" data-c="8" data-v="' + fnd + '">' + mmF(fnd) + '</td><td class="c" data-c="9" data-v="' + (std || 0) + '">' + mmF(std) + '</td><td class="nm wide">' + esc(rs) + '</td><td class="nm wide">' + esc(rm) + '</td></tr>';
+  return '<tr class="lw' + (r ? '' : ' blank') + '" data-id="' + id + '"><td class="c sl"></td><td class="in" data-c="1"><input type="date" class="mmr" data-rf="day" value="' + day + '" min="' + month + '-01" max="' + mmRcvMax(month) + '"></td>' +
+    '<td class="in" data-c="2"><input type="text" class="mmr" data-rf="pr" maxlength="60" value="' + mmEsc(pr) + '" placeholder="PR no"></td>' + au(3, vill) + au(4, sub) + au(5, je) + au(6, dv) +
+    '<td class="c au" data-c="7">' + esc(cap) + '</td><td class="in" data-c="8"><input type="text" inputmode="decimal" autocomplete="off" class="mmr" data-rf="found" value="' + fnd + '"></td><td class="c" data-c="9" data-v="' + (std || 0) + '">' + mmF(std) + '</td>' +
+    '<td class="in wide" data-c="10"><textarea rows="1" class="mmr" data-rf="reason" maxlength="300">' + esc(rs) + '</textarea></td><td class="in wide" data-c="11"><textarea rows="1" class="mmr" data-rf="remark" maxlength="300">' + esc(rm) + '</textarea></td>' +
+    '<td class="c x" data-c="12">' + (r ? '<button type="button" class="mmdel" title="Delete this entry">&#10005;</button>' : '') + '</td></tr>';
+}
+function mmLowNum() { document.querySelectorAll('#mmlg tr.lw').forEach(function (tr, i) { tr.querySelector('td.sl').textContent = i + 1; }); }
+function mmLowTot() {
+  var t = $('mmlg'), n = 0, s = 0; if (!t) return;
+  t.querySelectorAll('tr.lw').forEach(function (tr) { if (tr.classList.contains('blank')) return; var e = tr.querySelector('[data-rf="found"]'), q = e ? parseFloat(e.value) : parseFloat((tr.querySelector('td[data-c="8"]') || {}).dataset.v); if (isNaN(q)) return; n++; s += q; });
+  var f = $('mmlt'); if (f) f.innerHTML = '<td colspan="8" class="l">Total  (' + n + ' PR)</td><td data-v="' + mmR3(s) + '">' + mmF0(mmR3(s)) + '</td><td colspan="4"></td>';
+}
+function mmLowEntry() {
+  var P = MM.per[MM.ws], ed = !!P.g.edit, month = MM.month, rows = P.low || [], h;
+  MM.cur = { P: P, ed: ed, month: month, kind: 'low' };
+  h = mmNote(ed ? 'Type the <b>PR no</b>: Vill, Substation, JE name, Division and Capacity come from the Data Sheet. Then type the <b>Oil found (L)</b>, the <b>reason of low oil</b> and a remark. It saves by itself. In the <b>Oil Recovery Sheet</b>, for this PR (PR date in the month) the <b>oil found</b> is taken as the recovered oil in place of the Dirty std.' : 'View only: only the Admin (or a user with edit right) can add entries.');
+  h += '<div class="bar" style="margin:0 0 8px"><span id="mmsst" class="muted" style="font-size:12.5px"></span></div><div class="wrap"><table class="mkt mmt" id="mmlg" style="width:auto;min-width:900px"><thead><tr><th colspan="' + (ed ? 13 : 12) + '" class="ttl">Oil found below STD - ' + esc(mmMonthName(month)) + ' - ' + esc(MM.ws) + '</th></tr><tr><th>Sl</th><th>Date</th><th>PR No</th><th>Vill name</th><th>Substation</th><th>JE name</th><th>Division</th><th>Capacity (KVA)</th><th>Oil found (L)</th><th>Dirty oil std (L)</th><th>Reason of low oil</th><th>Remark</th>' + (ed ? '<th></th>' : '') + '</tr></thead><tbody>';
+  rows.forEach(function (r) { h += mmLowRow(r, ed, month, P); }); if (ed) h += mmLowRow(null, ed, month, P);
+  h += '</tbody><tfoot><tr class="t" id="mmlt"></tr></tfoot></table></div>';
+  $('mmout').innerHTML = h; mmLowNum(); mmLowTot(); mmAutoAll();
+}
+function mmLowFill(tr, d) {
+  [['3', d.vill], ['4', d.sub], ['5', d.je], ['6', d.div], ['7', d.cap]].forEach(function (x) { var td = tr.querySelector('td[data-c="' + x[0] + '"]'); if (td) td.textContent = x[1] === null || x[1] === undefined ? '' : x[1]; });
+  var sd = tr.querySelector('td[data-c="9"]'), v = d.cap ? mmOstd(MM.cur.P).d[String(d.cap)] : 0; if (sd) { sd.textContent = mmF(v); sd.dataset.v = v; }
+}
+function mmLowSave(tr, prChanged) {
+  var C = MM.cur; if (!C || !C.ed) return; var g = function (f) { return tr.querySelector('[data-rf="' + f + '"]').value; };
+  var pr = g('pr').trim(), day = g('day'), fnd = g('found').trim(), id = tr.dataset.id ? +tr.dataset.id : null;
+  mmLowTot(); if (!pr) return;
+  if (day && day.slice(0, 7) !== C.month) return msg('mmmsg', 'The date must be in ' + esc(mmMonthName(C.month)) + '. Change the month on top to enter another month.', 'err');
+  msg('mmmsg', '');
+  if (prChanged || fnd === '') {
+    rpc('mat_pr_lookup', { p_ws: C.P.w, p_pr: pr }).then(function (d) { mmLowFill(tr, d); if (fnd !== '') mmLowSave(tr, false); else { var s = $('mmsst'); if (s) s.textContent = 'PR found. Now type the oil found (L).'; } })
+      .catch(function (er) { mmLowFill(tr, { vill: '', sub: '', je: '', div: '', cap: '' }); msg('mmmsg', esc(er.message), 'err'); });
+    if (fnd === '' || prChanged) return;
+  }
+  var q = parseFloat(fnd); if (isNaN(q) || q < 0) return;
+  $('mmsst').textContent = 'Saving...';
+  rpc('mat_low_save', { p_ws: C.P.w, p_id: id, p_pr: pr, p_day: day, p_found: q, p_reason: g('reason').trim() || null, p_remark: g('remark').trim() || null }).then(function (d) {
+    var wasBlank = tr.classList.contains('blank'); tr.dataset.id = d.id; tr.classList.remove('blank'); tr.querySelector('[data-rf="pr"]').value = d.pr; mmLowFill(tr, d);
+    var x = tr.querySelector('td.x'); if (x && !x.firstChild) x.innerHTML = '<button type="button" class="mmdel" title="Delete this entry">&#10005;</button>';
+    if (wasBlank) { tr.insertAdjacentHTML('afterend', mmLowRow(null, true, C.month, C.P)); mmAutoAll(); }
+    mmLowNum(); mmLowTot(); var s = $('mmsst'); if (s) s.textContent = '✓ Saved ' + new Date().toTimeString().slice(0, 5);
+  }).catch(function (er) { var s = $('mmsst'); if (s) s.textContent = ''; msg('mmmsg', esc(er.message), 'err'); });
+}
+function mmLowSum() {
+  MM.cur = null; var a = MM.from, b = MM.to, lab = mmMonthName(a) + (a === b ? '' : ' to ' + mmMonthName(b)), all = MM.names.length > 1, reg = [], n = 0, s = 0, sd = 0;
+  MM.names.forEach(function (w) { (MM.per[w].low || []).forEach(function (r) { reg.push([w].concat(r)); }); });
+  reg.sort(function (x, y) { return x[2] < y[2] ? -1 : x[2] > y[2] ? 1 : x[1] - y[1]; });
+  var body = reg.map(function (r, i) {
+    var P = MM.per[r[0]], std = r[8] ? mmOstd(P).d[String(r[8])] || 0 : 0, f = +r[9], low = mmR3(std - f); n++; s += f; sd += low;
+    return '<tr><td class="c">' + (i + 1) + '</td>' + (all ? '<td class="nm">' + esc(r[0]) + '</td>' : '') + '<td class="c">' + esc(mrDmy(r[2])) + '</td><td class="nm">' + esc(r[3]) + '</td><td class="nm">' + esc(r[4] || '') + '</td><td class="nm">' + esc(r[5] || '') + '</td><td class="nm">' + esc(r[6] || '') + '</td><td class="nm">' + esc(r[7] || '') + '</td><td class="c">' + esc(r[8] || '') + '</td><td class="c" data-v="' + f + '">' + mmF(f) + '</td><td class="c" data-v="' + std + '">' + mmF(std) + '</td><td class="c" data-v="' + low + '">' + mmF(low) + '</td><td class="nm wide">' + esc(r[10] || '') + '</td><td class="nm wide">' + esc(r[11] || '') + '</td></tr>';
+  }).join('');
+  var cols = all ? 14 : 13;
+  $('mmout').innerHTML = (reg.length ? '' : mmNote('No PR in this period.')) + '<div class="wrap"><table class="mkt mmt" id="mmll" style="width:auto;min-width:900px"><thead><tr><th colspan="' + cols + '" class="ttl">Oil found below STD - ' + esc(lab) + '</th></tr><tr><th>Sl</th>' + (all ? '<th>Workshop</th>' : '') + '<th>Date</th><th>PR No</th><th>Vill name</th><th>Substation</th><th>JE name</th><th>Division</th><th>Capacity (KVA)</th><th>Oil found (L)</th><th>Dirty oil std (L)</th><th>Below std (L)</th><th>Reason of low oil</th><th>Remark</th></tr></thead><tbody>' + body +
+    '<tr class="t"><td class="l" colspan="' + (all ? 9 : 8) + '">Total  (' + n + ' PR)</td><td data-v="' + mmR3(s) + '">' + mmF0(mmR3(s)) + '</td><td></td><td data-v="' + mmR3(sd) + '">' + mmF0(mmR3(sd)) + '</td><td colspan="2"></td></tr></tbody></table></div>';
+}
+
 function mrAfterLogin() {
   MR = { on: false, tab: 'msum', month: '', ws: '', st: 'all', q: '', rows: [], total: 0, cnt: {}, dirty: {}, kws: '', kday: '', kd: null, sum: null, qt: null };
   var t = new Date(), td = fmt(t);
@@ -5948,10 +6880,10 @@ $('kspr').onclick = function () {
 };
 /* ---- LY REPAIR, DAY BY DAY: one table for a workshop and a month of last year (rows = days, columns = capacities) ---- */
 var LYG = {};
-function lyGrid(host, msgId, ws, m) {
-  var g = LYG[host] = { ws: ws, m: m, dirty: {}, msgId: msgId, seq: ((LYG[host] || {}).seq || 0) + 1 }, seq = g.seq;
+function lyGrid(host, msgId, ws, m, kind) {
+  var g = LYG[host] = { ws: ws, m: m, kind: kind || 'rep', dirty: {}, msgId: msgId, seq: ((LYG[host] || {}).seq || 0) + 1 }, seq = g.seq;
   msg(msgId, ''); $(host).innerHTML = '<div class="msg info">Loading...</div>';
-  rpc('kitty_lyd_json', { p_ws: ws, p_month: m + '-01' }).then(function (r) {
+  rpc(g.kind === 'kit' ? 'kitty_lykd_json' : 'kitty_lyd_json', { p_ws: ws, p_month: m + '-01' }).then(function (r) {
     if (LYG[host].seq !== seq) return; var y = +m.slice(0, 4), mo = +m.slice(5), nd = new Date(y, mo, 0).getDate(), v = {}, today = mrIso(fmt(new Date()));
     (r.rows || []).forEach(function (x) { v[x[0] + '|' + x[1]] = x[2]; }); g.ed = !!r.edit;
     var h = '<div class="wrap"><table class="mkt xg" data-lyd="1"><thead><tr><th class="l">DAY</th>' + STD_CAPS.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '<th class="ed">TOTAL</th></tr></thead><tbody>';
@@ -5977,10 +6909,10 @@ function lyTot(host) {
 }
 function lySave(host) {
   var g = LYG[host]; if (!g) return; var rows = [], k;
-  for (k in g.dirty) { var x = k.split('|'); rows.push({ day: x[0], cap: +x[1], repair: g.dirty[k] }); }
+  for (k in g.dirty) { var x = k.split('|'), o = { day: x[0], cap: +x[1] }; o[g.kind === 'kit' ? 'qty' : 'repair'] = g.dirty[k]; rows.push(o); }
   if (!rows.length) return; var sent = g.dirty; g.dirty = {}; msg(g.msgId, 'Saving...', 'info');
-  rpc('kitty_lyd_set', { p_ws: g.ws, p_rows: rows }).then(function () {
-    asMsg(g.msgId, 'Saved', 'ok'); if ($('mkneedout') && $('mkneedout').innerHTML && MR.kd && host === 'mklyt') mrNeedLoad();
+  rpc(g.kind === 'kit' ? 'kitty_lykd_set' : 'kitty_lyd_set', { p_ws: g.ws, p_rows: rows }).then(function () {
+    asMsg(g.msgId, 'Saved', 'ok'); if (g.kind === 'kit') { if (MR.lkOn && $('mklkout')) mrLykLoad(); } else if ($('mkneedout') && $('mkneedout').innerHTML && MR.kd && host === 'mklyt') mrNeedLoad();
   }).catch(function (er) { for (var q in sent) if (!(q in g.dirty)) g.dirty[q] = sent[q]; msg(g.msgId, esc(er.message), 'err'); });
 }
 document.addEventListener('input', function (e) {
@@ -6084,15 +7016,46 @@ var RP_DEFS = [
 ];
 var RP_PANEL = { cmp: 'rpcmpw', dw: 'rpcmpw', kit: 'rpkitw', ks: 'rpksw', lyk: 'rplykw', chm: 'rpchmw', pl: 'rppw' }, RPK = null, RPKS = 0, PLM = null, PLS = 0;
 function rpShow(k) {
-  ['rpcmpw', 'rpkitw', 'rpksw', 'rplykw', 'rpchmw', 'rppw'].forEach(function (id) { $(id).classList.add('hide'); });
+  ['rpcmpw', 'rpkitw', 'rpksw', 'rplykw', 'rpchmw', 'rppw', 'rpwebw'].forEach(function (id) { $(id).classList.add('hide'); });
+  if (k !== 'web') { try { $('rpwebf').src = 'about:blank'; } catch (e) { } }
   $('rpmenu').classList.toggle('hide', !!k);
-  if (k) $(RP_PANEL[k]).classList.remove('hide');
+  if (k) $(RP_PANEL[k] || 'rpwebw').classList.remove('hide');
+}
+var RPC = { rows: [], admin: false };
+function rpDrawChips() {
+  var mr = typeof mrAccess === 'function' && mrAccess(), h = '';
+  RP_DEFS.forEach(function (d) { if (d.mr && !mr) return; h += '<button type="button" class="achip" data-rp="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + esc(d.t) + '</b><small>' + esc(d.s) + '</small></span></button>'; });
+  RPC.rows.forEach(function (r) { h += '<button type="button" class="achip" data-rpweb="' + r[0] + '"><span class="ic" style="--c:#e0f2fe">\u{1F310}</span><span><b>' + esc(r[1]) + '</b><small>Added web app</small></span></button>'; });
+  if (RPC.admin) h += '<button type="button" class="achip" data-rpadd="1"><span class="ic" style="--c:#e4f6e8">+</span><span><b>Add report</b><small>Paste the link of your web app</small></span></button>';
+  $('rpchips').innerHTML = h;
 }
 function rpHome() {
   if (!ME || ['admin', 'je', 'discom'].indexOf(ME.role) < 0) return;
-  var mr = typeof mrAccess === 'function' && mrAccess(), h = '';
-  RP_DEFS.forEach(function (d) { if (d.mr && !mr) return; h += '<button type="button" class="achip" data-rp="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + esc(d.t) + '</b><small>' + esc(d.s) + '</small></span></button>'; });
-  $('rpchips').innerHTML = h; rpShow('');
+  RPC.admin = ME.role === 'admin'; rpDrawChips(); rpShow('');
+  rpc('rp_list').then(function (r) { RPC.rows = (r && r.rows) || []; RPC.admin = !!(r && r.admin); if (CURTAB === 'cmp' && !$('rpmenu').classList.contains('hide')) rpDrawChips(); }).catch(function () { });
+}
+function rpWebFit() { var f = $('rpwebf'); if (!f || f.offsetParent === null) return; var h = window.innerHeight - f.getBoundingClientRect().top - 10; f.style.height = Math.max(440, h) + 'px'; }
+window.addEventListener('resize', function () { setTimeout(rpWebFit, 50); });
+function rpWebOpen(id) {
+  var r = RPC.rows.filter(function (x) { return x[0] === id; })[0]; if (!r) return;
+  rpShow('web'); $('rpwebt').textContent = r[1]; $('rpwebx').href = r[2]; $('rpwebdel').classList.toggle('hide', !RPC.admin); $('rpwebdel').dataset.id = id; $('rpwebf').src = r[2]; rpWebFit(); setTimeout(rpWebFit, 150); setTimeout(rpWebFit, 600);
+}
+function rpAddOpen() {
+  var o = $('rpaddo');
+  o.innerHTML = '<div class="mmbox" style="width:min(520px,96vw)"><div class="bar" style="justify-content:space-between"><b>Add report</b><button class="btn sec sm" type="button" id="rpax">Close</button></div><div id="rpam"></div>' +
+    '<label>Report name</label><input type="text" id="rpan" maxlength="60" placeholder="e.g. Oil Stock App" style="width:100%">' +
+    '<label style="margin-top:8px">Link of the web app (https://...)</label><input type="text" id="rpau" maxlength="800" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" style="width:100%">' +
+    '<p class="muted" style="font-size:12px;margin:8px 0 0">Google Apps Script: Deploy &rarr; Web app &rarr; Who has access: <b>Anyone</b>, and the page must allow opening inside another page (<code>setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)</code>). The link is visible to all users of your division.</p>' +
+    '<div class="bar" style="margin-top:10px;justify-content:flex-end"><button class="btn" type="button" id="rpas">Add</button></div></div>';
+  o.classList.remove('hide'); $('rpan').focus();
+  $('rpax').onclick = function () { o.classList.add('hide'); };
+  $('rpas').onclick = function () {
+    var n = $('rpan').value.trim(), u = $('rpau').value.trim();
+    if (!n) return msg('rpam', 'Write the report name.', 'err');
+    if (!/^https:\/\/\S+$/i.test(u)) return msg('rpam', 'The link must start with https:// and have no spaces.', 'err');
+    $('rpas').disabled = true;
+    rpc('rp_add', { p_title: n, p_url: u }).then(function () { o.classList.add('hide'); rpHome(); }).catch(function (e) { $('rpas').disabled = false; msg('rpam', /rp_add|function/i.test(e.message || '') ? 'Run the new setup.sql in Supabase once (Add report is not switched on in your database yet).' : esc(e.message), 'err'); });
+  };
 }
 function rpOpen(k) {
   rpShow(k);
@@ -6106,6 +7069,9 @@ function rpOpen(k) {
 document.addEventListener('click', function (e) {
   var t = e.target; if (!t.closest) return;
   var b = t.closest('[data-rp]'); if (b && $('rpchips').contains(b)) return rpOpen(b.dataset.rp);
+  b = t.closest('[data-rpweb]'); if (b && $('rpchips').contains(b)) return rpWebOpen(+b.dataset.rpweb);
+  if (t.closest('[data-rpadd]') && $('rpchips').contains(t)) return rpAddOpen();
+  if (t.closest('#rpwebdel')) { var did = +$('rpwebdel').dataset.id; if (did && confirm('Remove this report from the list? (the web app itself is not deleted)')) rpc('rp_del', { p_id: did }).then(function () { rpHome(); }).catch(function (e) { alert(e.message); }); return; }
   if (t.closest('[data-rpback]')) rpHome();
 });
 /* Kitty (the same card as in the M&R Summary) */
@@ -6528,12 +7494,12 @@ document.addEventListener('change', function (e) { var t = e.target; if (t && t.
 
 
 
-/* ---- KITTY: small buttons on top (Compare, LY repair), next month need ---- */
+/* ---- KITTY: small buttons on top (Compare, LY Kitty), next month need ---- */
 function mrKitTop(K, r) {
   var d = parseD(K.d), ly = (d.getFullYear() - 1) + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
-  MR.kmanual = !!r.base && !!r.edit && (!r.first || ly < r.first);      // last year of this date is before the kitty started
-  $('mklyb').classList.toggle('hide', !MR.kmanual);
-  if (!MR.kmanual) $('mklyo').classList.add('hide');
+  var adm = !!ME && ME.role === 'admin' && !!r.base;                    // LY Kitty: the Admin only, users do not see it
+  $('mklyb').classList.toggle('hide', !adm);
+  if (!adm) $('mklyo').classList.add('hide');
 }
 function mrNeedHtml() {
   return '<div class="card" id="mkneed"><h3>Next month need <span class="muted" style="text-transform:none;font-weight:600">- last year same month</span></h3>' +
@@ -6549,7 +7515,7 @@ function mrNeedLoad() {
 function mrNeedDraw() {
   var r = MR.need, K = MR.kd, tot = [0, 0, 0, 0, 0, 0], need = [];
   var h = '';
-  if (r.manual && !r.ly_any) h += '<div class="msg info" style="margin:8px 0">Last year\'s repair is not filled yet. Tap <b>LY repair</b> at the top and fill it, then check again.</div>';
+  if (r.manual && !r.ly_any) h += '<div class="msg info" style="margin:8px 0">Last year\'s repair is not filled yet. Ask the Admin to fill <b>LY Repair</b> (Repair tab), then check again.</div>';
   h += '<div class="muted" style="font-size:12.5px;margin:8px 0 6px">Kitty of <b>' + esc(K.d) + '</b> &middot; last year days <b>' + mrDmy(r.w1) + '</b> to <b>' + mrDmy(r.w2) + '</b> (' + r.days + ' days)</div>' +
     '<div class="wrap"><table class="mkt xg"><thead><tr><th class="l">CAPACITY IN KVA</th><th>KITTY</th><th>+ LAST YEAR REPAIR</th><th>LAST YEAR PR</th><th>PR + ' + r.pct + '%</th><th>KITTY AFTER</th><th class="ed">NEED</th></tr></thead><tbody>';
   r.rows.forEach(function (x) {
@@ -6562,13 +7528,13 @@ function mrNeedDraw() {
 }
 function mrMonName(m) { var x = /^(\d{4})-(\d{2})/.exec(m || ''); return x ? ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][+x[2] - 1] + ' ' + x[1] : ''; }
 
-/* LY repair: last year's repair, a month total per capacity */
+/* LY Kitty (Admin): last year's kitty, day by day, capacity wise */
 function mrLyOpen() {
   var K = MR.kd; if (!K) return; var d = parseD(K.d), m = (d.getFullYear() - 1) + '-' + p2(d.getMonth() + 1);
   var o = $('mklyo'); o.classList.remove('hide'); $('mklym').value = MR.lym || m; mrLyLoad();
 }
 function mrLyLoad() {
-  var m = $('mklym').value; if (!/^\d{4}-\d{2}$/.test(m)) return; MR.lym = m; lyGrid('mklyt', 'mklymsg', MR.kd.ws, m);
+  var m = $('mklym').value; if (!/^\d{4}-\d{2}$/.test(m)) return; MR.lym = m; lyGrid('mklyt', 'mklymsg', MR.kd.ws, m, 'kit');
 }
 $('mklyb').onclick = mrLyOpen;
 $('mklym').addEventListener('change', mrLyLoad);
@@ -6615,7 +7581,7 @@ document.addEventListener('input', function (e) {
 
 
 /* ---- KITTY vs LAST YEAR: one table like the Excel sheet - capacity rows, every workshop: last year | this year, totals, DIFF.
-        Last year's kitty is typed or pasted (all workshops together) for the same date last year; if that date is missing the nearest date within 5 days is used. ---- */
+        Last year's kitty is filled by the Admin (LY Kitty button, day by day); if that date is missing the nearest date within 5 days is used. ---- */
 function mrLykHtml() {
   return '<div class="card" id="mklk"><div class="bar" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Kitty compared with last year <span class="muted" style="text-transform:none;font-weight:600">- same date, last year</span></h3><span><button class="btn" id="mklkb" type="button">Compare</button> <button class="btn sec hide" id="mklkpr" type="button">&#128424; Print</button> <button class="btn sec hide" id="mklkxl" type="button">&#11015; Excel</button></span></div><div id="mklkmsg"></div><div id="mklkout"></div></div>';
 }
@@ -6632,21 +7598,8 @@ function mrLykDraw() {
   L.ly = W.map(function (w) { var m = {}; w.rows.forEach(function (x) { m[x[0]] = x[2]; }); return m; });
   var canAny = W.some(function (w) { return w.edit; }), isAdm = !!ME && ME.role === 'admin';
   var h = '<div class="lkw">';
-  /* 1. last year's kitty: type or paste here (all workshops together) */
-  if (isAdm) {
-  h += '<details class="lkd" id="mklkd"' + (MR.lkOpen ? ' open' : '') + '><summary>LAST YEAR KITTY ON ' + esc(mrDmy(L.r.ly)) + (canAny ? ' <span>- click to open, then paste or type (saved by itself)</span>' : ' <span>- click to open</span>') + '</summary>' +
-    '<div class="wrap"><table class="lkt xg" id="mklky" data-lyk="1"><thead><tr><th rowspan="2">SL</th><th rowspan="2">CAPACITY OF<br>TRANSFORMERS</th><th colspan="' + n + '" class="wn">NAME OF WORKSHOP</th><th rowspan="2">TOTAL</th></tr><tr>' +
-    W.map(function (w) { return '<th class="wn">' + esc(dwNm(w.ws)) + '<div class="yr">AVAILABILITY</div></th>'; }).join('') + '</tr></thead><tbody>';
-  KCAPS.forEach(function (c, j) {
-    h += '<tr data-c="' + c + '"><td class="sl">' + (j + 1) + '</td><td class="cp">' + c + ' KVA</td>';
-    W.forEach(function (w, i) { h += '<td class="lyc">' + (w.edit ? '<input type="text" inputmode="numeric" autocomplete="off" class="mklk" data-w="' + esc(w.ws) + '" data-i="' + i + '" value="' + (L.ly[i][c] || 0) + '">' : '<span class="cl">' + (L.ly[i][c] || 0) + '</span>') + '</td>'; });
-    h += '<td class="rt"></td></tr>';
-  });
-  h += '<tr class="T"><td></td><td>TOTAL</td>' + W.map(function () { return '<td class="ct"></td>'; }).join('') + '<td class="rt gt"></td></tr></tbody></table></div>' +
-    '<div class="muted ins" style="font-size:12.5px;margin:6px 0 4px;font-family:Inter,system-ui,sans-serif">' + (canAny ? 'Copy the Excel block (rows = capacity, columns = workshops; a copied 800 KVA row is skipped) and paste it into the first cell.' : 'View only.') + '</div></details>';
-  }
   /* 2. the comparison, like the Excel sheet */
-  h += '<div class="wrap" style="margin-top:' + (isAdm ? '12' : '0') + 'px"><table class="lkt" id="mklkt"><thead><tr><th rowspan="3">CAPACITY<br>IN KVA</th><th colspan="' + (n * 2) + '" class="wn">NAME OF WORKSHOP</th>' + (n > 1 ? '<th rowspan="3" class="tl">' + ly + ' TOTAL</th><th rowspan="3" class="tl">' + ty + ' TOTAL</th>' : '') + '<th rowspan="3" class="tl">DIFF</th></tr>' +
+  h += '<div class="wrap" style="margin-top:0"><table class="lkt" id="mklkt"><thead><tr><th rowspan="3">CAPACITY<br>IN KVA</th><th colspan="' + (n * 2) + '" class="wn">NAME OF WORKSHOP</th>' + (n > 1 ? '<th rowspan="3" class="tl">' + ly + ' TOTAL</th><th rowspan="3" class="tl">' + ty + ' TOTAL</th>' : '') + '<th rowspan="3" class="tl">DIFF</th></tr>' +
     '<tr>' + W.map(function (w) { return '<th colspan="2" class="wn">' + esc(dwNm(w.ws)) + '</th>'; }).join('') + '</tr><tr>' + W.map(function () { return '<th class="yr">' + ly + '</th><th class="yr">' + ty + '</th>'; }).join('') + '</tr></thead><tbody>';
   KCAPS.forEach(function (c, j) {
     h += '<tr data-c="' + c + '"><td class="cp">' + c + '</td>';
@@ -6784,8 +7737,8 @@ function mrRepLoad(force) {
   if (!validD(d)) return msg('mpmsg', 'Enter the date in DD.MM.YYYY format.', 'err');
   msg('mpmsg', ''); $('mpout').innerHTML = '<div class="msg info">Loading...</div>'; var seq = MR.pseq = (MR.pseq || 0) + 1;
   var rrq = MR.pws === '__ALL__' ? Promise.all(mrWs().map(function (w) { return rpc('rr_json', { p_ws: w, p_day: mrIso(d) }); })).then(function (a) {
-    var m = {}, rows = []; a.forEach(function (x) { (x.rows || []).forEach(function (y) { var k = y[0] + '\u0001' + y[1] + '\u0001' + y[2]; if (!(k in m)) { m[k] = [y[0], y[1], y[2], 0]; rows.push(m[k]); } m[k][3] += y[3]; }); });
-    return { rows: rows, firms: [], edit: false, all: true };
+    var m = {}, rows = [], per = {}; mrWs().forEach(function (w, i) { per[w] = (a[i] && a[i].rows) || []; }); a.forEach(function (x) { (x.rows || []).forEach(function (y) { var k = y[0] + '\u0001' + y[1] + '\u0001' + y[2]; if (!(k in m)) { m[k] = [y[0], y[1], y[2], 0]; rows.push(m[k]); } m[k][3] += y[3]; }); });
+    return { rows: rows, firms: [], edit: false, all: true, per: per };
   }) : rpc('rr_json', { p_ws: MR.pws, p_day: mrIso(d) });
   rrq.then(function (r) { if (seq !== MR.pseq) return; MR.pd = { r: r, d: d }; MR.pd.ws = MR.pws; mrRepDraw(); if (r.all) msg('mpmsg', 'All workshops together (view only). Choose one workshop to type data.', 'info'); })
     .catch(function (er) { if (seq !== MR.pseq) return; MR.pd = null; $('mpout').innerHTML = ''; msg('mpmsg', esc(er.message), 'err'); });
@@ -6808,10 +7761,11 @@ function mrRepRender(F, can) {
   var RR_SUB = { REPAIR: 'T/F repaired today', ASSEMBLY: 'T/F sent to assembly today', OVEN: 'T/F sent to oven today' };
   h += '<div class="rrk">' + RR_BLK.map(function (b) { return '<div class="rrkc rrk-' + b + '"><i>' + b + '</i><b id="rrk-' + b + '">0</b><small>' + RR_SUB[b] + '</small></div>'; }).join('') + '</div>';
   RR_BLK.forEach(function (b) { h += '<div class="rrc rrc-' + b + '"><div class="rrh"><span class="rrd"></span>' + b + ' <small>' + RR_SUB[b] + ' &middot; firm-wise</small></div>' + mrRepBlock(b, F, can) + '</div>'; });
-  h += '<div class="bar">' + (can ? '<button class="btn sec" id="rradd" type="button">+ Add firm</button><button class="btn" id="mpsave" type="button" disabled>Save</button>' : '<span class="muted" style="flex:1">View only.</span>') + '<button class="btn sec" id="mpxl" type="button">&#11015; Excel</button></div>';
+  h += '<div class="bar">' + (can ? '<button class="btn sec" id="rradd" type="button">+ Add firm</button><button class="btn" id="mpsave" type="button" disabled>Save</button>' : '<span class="muted" style="flex:1">View only.</span>') + '<button class="btn sec" id="mpxl" type="button">&#11015; Excel</button><button class="btn sec" id="mppdf" type="button">&#128196; PDF</button></div>';
   $('mpout').innerHTML = h; mrRepTotal();
 }
 function mrRepDraw() {
+  if (MR.pd.r.all && MR.pd.r.per) return mrRepAll();
   var r = MR.pd.r, F = [], idx = {};
   var get = function (n) { if (!(n in idx)) idx[n] = F.push({ firm: n, q: {} }) - 1; return F[idx[n]]; };
   (r.rows || []).forEach(function (x) { get(x[1]).q[x[0] + '|' + x[2]] = x[3]; });
@@ -6872,6 +7826,7 @@ document.addEventListener('click', function (e) {
     busy(b, true, 'Saving...'); rpc('rr_save', { p_ws: MR.pd.ws, p_day: mrIso(MR.pd.d), p_rows: mrRepCollect() }).then(function () { busy(b, false); mrRepLoad(true); setTimeout(function () { msg('mpmsg', 'Saved.', 'ok'); }, 0); }).catch(function (er) { busy(b, false); msg('mpmsg', esc(er.message), 'err'); }); return;
   }
   if ((b = t.closest('#mpxl'))) {
+    if (MR.pd && MR.pd.r.all && MR.pd.r.per) return mrRepAllXl();
     var rows = [];
     document.querySelectorAll('#mpout table.rrt').forEach(function (tb) {
       rows.push(['', 'NAME OF FIRM'].concat(RR_CAPS.map(function (c) { return RR_LBL[c] || c; }), ['TOTAL']));
@@ -6884,6 +7839,106 @@ document.addEventListener('click', function (e) {
     });
     xlsxDownload('Repair_' + mrFile(MR.pd.ws) + '_' + mrFile(MR.pd.d) + '.xlsx', [{ name: 'Repair', rows: rows }]);
   }
+});
+/* ---- Repair tab, "All workshops" (Admin): workshop wise, then firm wise or workshop + firm wise ---- */
+var RR_SUBT = { REPAIR: 'T/F repaired today', ASSEMBLY: 'T/F sent to assembly today', OVEN: 'T/F sent to oven today' };
+function mrRepAllData(b) {
+  var per = MR.pd.r.per, W = [], F = {}, WF = {};
+  mrWs().forEach(function (w) {
+    var q = {}; (per[w] || []).forEach(function (y) {
+      if (y[0] !== b) return; var c = y[2], n = +y[3] || 0; q[c] = (q[c] || 0) + n;
+      (F[y[1]] = F[y[1]] || {})[c] = ((F[y[1]] || {})[c] || 0) + n; ((WF[w] = WF[w] || {})[y[1]] = (WF[w][y[1]] || {}))[c] = ((WF[w][y[1]] || {})[c] || 0) + n;
+    });
+    W.push({ l: [w], q: q });
+  });
+  var firms = Object.keys(F).sort(function (a, b2) { return a.toLowerCase() < b2.toLowerCase() ? -1 : 1; }).map(function (k) { return { l: [k], q: F[k] }; }), wf = [];
+  mrWs().forEach(function (w) { Object.keys(WF[w] || {}).sort(function (a, b2) { return a.toLowerCase() < b2.toLowerCase() ? -1 : 1; }).forEach(function (f) { wf.push({ l: [w, f], q: WF[w][f] }); }); });
+  return { W: W, F: firms, WF: wf };
+}
+function mrRepAllTab(b, heads, lines, grouped) {
+  var h = '<div class="wrap"><table class="rrt2 xg" data-b="' + b + '"><thead><tr>' + heads.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join(''), ct = {}, gt = 0, span = {};
+  RR_CAPS.forEach(function (c) { h += '<th>' + (RR_LBL[c] || c) + '</th>'; }); h += '<th>TOTAL</th></tr></thead><tbody>';
+  if (grouped) lines.forEach(function (ln, i) { if (i > 0 && lines[i - 1].l[0] === ln.l[0]) return; var n = 1; while (lines[i + n] && lines[i + n].l[0] === ln.l[0]) n++; span[i] = n; });
+  lines.forEach(function (ln, i) {
+    var t = 0; h += '<tr>';
+    if (grouped) { if (span[i]) h += '<td class="bl" rowspan="' + span[i] + '">' + esc(ln.l[0]) + '</td>'; h += '<td class="l">' + esc(ln.l[1]) + '</td>'; } else h += '<td class="l">' + esc(ln.l[0]) + '</td>';
+    RR_CAPS.forEach(function (c) { var v = ln.q[c] || 0; t += v; ct[c] = (ct[c] || 0) + v; h += '<td>' + (v || '') + '</td>'; }); gt += t; h += '<td class="tt">' + t + '</td></tr>';
+  });
+  if (!lines.length) h += '<tr class="empty"><td colspan="' + (heads.length + RR_CAPS.length + 1) + '" class="muted">No entry.</td></tr>';
+  h += '<tr class="tr"><td class="tl" colspan="' + heads.length + '">TOTAL</td>'; RR_CAPS.forEach(function (c) { h += '<td class="tt">' + (ct[c] || 0) + '</td>'; }); h += '<td class="tt">' + gt + '</td></tr>';
+  return { html: h + '</tbody></table></div>', total: gt };
+}
+function mrRepAllGrp(title, first, groups) {          // groups = [{b, lines:[{n, q}]}] : one table, a merged category cell per group, a TOTAL line, an empty line between groups
+  var N = RR_CAPS.length + 3, h = '<div class="rrh rrh2"><span class="rrd"></span>' + esc(title) + '</div><div class="wrap"><table class="rrt2 xg"><thead><tr><th></th><th>' + esc(first) + '</th>', tots = {};
+  RR_CAPS.forEach(function (c) { h += '<th>' + (RR_LBL[c] || c) + '</th>'; }); h += '<th>TOTAL</th></tr></thead><tbody>';
+  groups.forEach(function (g, gi) {
+    var ct = {}, gt = 0, L = g.lines.length ? g.lines : [{ n: '', q: {} }];
+    if (gi) h += '<tr class="sp"><td colspan="' + N + '"></td></tr>';
+    L.forEach(function (ln, i) {
+      var t = 0; h += '<tr>' + (i ? '' : '<td class="bl" rowspan="' + (L.length + 1) + '">' + esc(g.b) + '</td>') + '<td class="l">' + esc(ln.n) + '</td>';
+      RR_CAPS.forEach(function (c) { var v = ln.q[c] || 0; t += v; ct[c] = (ct[c] || 0) + v; h += '<td>' + (v || '') + '</td>'; }); gt += t; h += '<td class="tt">' + (t || '') + '</td></tr>';
+    });
+    h += '<tr class="tr"><td class="tl">TOTAL</td>'; RR_CAPS.forEach(function (c) { h += '<td class="tt">' + (ct[c] || 0) + '</td>'; }); h += '<td class="tt">' + gt + '</td></tr>'; tots[g.b] = gt;
+  });
+  return { html: h + '</tbody></table></div>', tots: tots };
+}
+function mrRepAllSets() {                              // [{title, first, groups}] : WORKSHOP WISE, then FIRM WISE of every workshop
+  var D = {}, S = [], any = {};
+  RR_BLK.forEach(function (b) { D[b] = mrRepAllData(b); });
+  S.push({ title: 'WORKSHOP WISE', first: 'WORKSHOP', groups: RR_BLK.map(function (b) { return { b: b, lines: D[b].W.filter(function (x) { return Object.keys(x.q).length; }).map(function (x) { return { n: x.l[0], q: x.q }; }) }; }) });
+  mrWs().forEach(function (w) {
+    var gs = RR_BLK.map(function (b) { return { b: b, lines: D[b].WF.filter(function (x) { return x.l[0] === w; }).map(function (x) { return { n: x.l[1], q: x.q }; }) }; });
+    if (gs.some(function (g) { return g.lines.length; })) S.push({ title: 'FIRM WISE ' + w, first: 'FIRM', groups: gs });
+  });
+  return S;
+}
+function mrRepAll() {
+  var S = mrRepAllSets(), h = '', cards = '', tot = {};
+  S.forEach(function (st, i) { var t = mrRepAllGrp(st.title, st.first, st.groups); if (!i) tot = t.tots; cards += '<div class="rrc">' + t.html.replace(/^<div class="rrh rrh2">/, '<div class="rrh">') + '</div>'; });
+  h += '<div class="rrk">' + RR_BLK.map(function (b) { return '<div class="rrkc rrk-' + b + '"><i>' + b + '</i><b>' + (tot[b] || 0) + '</b><small>' + RR_SUBT[b] + '</small></div>'; }).join('') + '</div>' + cards;
+  h += '<div class="bar"><span class="muted" style="flex:1">View only.</span><button class="btn sec" id="mpxl" type="button">&#11015; Excel</button><button class="btn sec" id="mppdf" type="button">&#128196; PDF</button></div>';
+  $('mpout').innerHTML = h;
+}
+function mrRepAllXl() {
+  var rows = [], merges = [], N = RR_CAPS.length + 3;
+  mrRepAllSets().forEach(function (st) {
+    var r0 = rows.length; rows.push([st.title]); merges.push([r0, 0, r0, N - 1]);
+    rows.push(['', st.first].concat(RR_CAPS.map(function (c) { return RR_LBL[c] || c; }), ['TOTAL']));
+    st.groups.forEach(function (g, gi) {
+      if (gi) rows.push([]);
+      var L = g.lines.length ? g.lines : [{ n: '', q: {} }], ct = {}, gt = 0, s0 = rows.length;
+      L.forEach(function (ln, i) { var t = 0, line = [i ? '' : g.b, ln.n]; RR_CAPS.forEach(function (c) { var x = ln.q[c] || 0; t += x; ct[c] = (ct[c] || 0) + x; line.push(x || ''); }); line.push(t); gt += t; rows.push(line); });
+      var tl = ['', 'TOTAL']; RR_CAPS.forEach(function (c) { tl.push(ct[c] || 0); }); tl.push(gt); rows.push(tl);
+      merges.push([s0, 0, rows.length - 1, 0]);
+    });
+    rows.push([]); rows.push([]);
+  });
+  xlsxDownload('Repair_All_workshops_' + mrFile(MR.pd.d) + '.xlsx', [{ name: 'Repair', rows: rows, merges: merges, cw: [14, 24].concat(RR_CAPS.map(function () { return 7; }), [9]) }]);
+}
+/* PDF = the print window (choose "Save as PDF") */
+function mrRepPdfHtml(root) {
+  var h = '';
+  [].forEach.call(root.children, function (el) {
+    if (el.classList.contains('rrc')) { [].forEach.call(el.children, function (x) { h += mrRepPdfEl(x); }); } else h += mrRepPdfEl(el);
+  });
+  return h;
+}
+function mrRepPdfEl(x) {
+  if (x.classList.contains('rrh')) return '<h3>' + esc(x.textContent.replace(/\s+/g, ' ').trim()) + '</h3>';
+  var t = x.tagName === 'TABLE' ? x : x.querySelector && x.querySelector('table'); if (!t) return '';
+  var c = t.cloneNode(true); [].forEach.call(c.querySelectorAll('input'), function (i) { var sp = document.createElement('span'); sp.textContent = i.value; i.parentNode.replaceChild(sp, i); });
+  [].forEach.call(c.querySelectorAll('.x'), function (e) { e.remove(); }); c.removeAttribute('class'); c.className = 'rpt'; c.removeAttribute('style'); return c.outerHTML;
+}
+function mrRepPrint(title, html) {
+  var st = document.getElementById('chmpgs'); if (st) st.remove(); st = document.createElement('style'); st.id = 'chmpgs';
+  st.textContent = '@media print{@page{size:A4 landscape;margin:10mm}#pz table.rpt{border-collapse:collapse;width:100%;font-size:11px;margin:0 0 10px;page-break-inside:avoid}#pz table.rpt th,#pz table.rpt td{border:1px solid #000;padding:3px 6px;text-align:center;background:#fff;color:#000}#pz table.rpt td.l,#pz table.rpt td.nm{text-align:left}#pz table.rpt th{font-weight:700;background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#pz h3{font-size:13px;margin:10px 0 4px}#pz h2{font-size:16px}}';
+  document.head.appendChild(st); printHtml(title, html);
+}
+document.addEventListener('click', function (e) {
+  var t = e.target; if (!t.closest) return; var b = t.closest('[data-rv]');
+  if (b && b.closest('#mpout')) { MR.rview = b.dataset.rv; if (MR.pd && MR.pd.r.all) mrRepAll(); return; }
+  if (t.closest('#mppdf')) { if (MR.pd) mrRepPrint('Repair - ' + (MR.pd.ws === '__ALL__' ? 'All workshops' : MR.pd.ws) + ' - ' + MR.pd.d, mrRepPdfHtml($('mpout'))); return; }
+  if (t.closest('#rspdf')) { var o = $('rsout'); if (RS && RS.r && o) mrRepPrint('Repair summary - ' + RS.f + ' to ' + RS.t + ' - ' + (RS.w || 'All workshops'), mrRepPdfHtml(o)); return; }
 });
 function mrRepDay(n) { var v = $('mpd').value.trim(); if (!validD(v)) return; var d = parseD(v); d.setDate(d.getDate() + n); $('mpd').value = fmt(d); mrRepLoad(); }
 $('mpprev').onclick = function () { mrRepDay(-1); }; $('mpnext').onclick = function () { mrRepDay(1); };
@@ -7476,6 +8531,126 @@ function homeFit() {
 window.addEventListener('resize', homeFit); window.addEventListener('load', function () { setTimeout(homeFit, 50); });
 new MutationObserver(function () { setTimeout(homeFit, 30); }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 </script>
-<script>if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(function () {});</script>
+<script>if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(function () {});
+/* =====================  SE WORKSHOP  =====================
+   The SE logs in to the DEFAULT project (role 'se'). Each division's Admin shares chosen reports with a secret code (se_share).
+   The SE adds the divisions (se_src); every report he opens asks each division's project (se_call, read only) and the answers are put together. */
+var SE = { list: [], byId: {}, cl: {}, map: {}, warn: {} }, SEG = null, SE_NEW = '';
+var SE_PERMS = [['sum', 'R&R Summary (division wise, capacity wise, age wise)'], ['rrs', 'R&R Repair / Assembly / Oven daily report'], ['mrs', 'M&R Summary and Kitty'], ['scrap', 'Scrap'],
+  ['mat_ws', 'Material Management: Wire & Strip consumption'], ['mat_oil', 'Material Management: Oil Recovery Sheet (and Oil Found Below STD)'], ['mat_ins', 'Material Management: Insulating Material'], ['mat_rcv', 'Material Management: Oil Receive list'], ['mat_req', 'Material Management: Material Requirement'],
+  ['cmp', 'Reports: PR Comparative'], ['day', 'Reports: Daywise & Division wise PR and Repair'], ['plinth', 'Reports: Same Plinth Damage']];
+var SE_FED = {}; 'summary_json dashboard_json rr_summary_json mr_summary_json mr_repair_json mr_pending_json kitty_range_json kitty_json kitty_cmp_json kitty_lyk_json kitty_need_json scrap_json scrap_range_json scrap_cap_json mat_get mat_rep mat_dtc mat_low_adj mat_low_list mat_recv_list mat_req_pr compare_all installed_all_json daywise_json plinth_json'.split(' ').forEach(function (f) { SE_FED[f] = 1; });
+var _rpcBase = rpc;
+rpc = function (fn, args) { return (ME && ME.role === 'se' && SE_FED[fn]) ? seFed(fn, args || {}) : _rpcBase(fn, args); };
+var _wsSelBase = wsSelect;
+wsSelect = function () { return (ME && ME.role === 'se') ? seBoot().then(function (rows) { return { data: rows }; }) : _wsSelBase(); };
+function seBoot() {
+  return _rpcBase('se_src_list', {}).then(function (list) {
+    SE.list = list; SE.byId = {}; SE.cl = {}; SE.map = {}; SE.warn = {}; var rows = [];
+    return Promise.all(list.map(function (x) {
+      SE.byId[x.id] = x; SE.cl[x.id] = window.supabase.createClient(x.url, x.key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+      return SE.cl[x.id].rpc('se_info', { p_code: x.code }).then(function (r) {
+        if (r.error) throw new Error(friendly(r.error)); x.perms = r.data.perms || {}; x.label = r.data.label || x.name;
+        (r.data.wd || (r.data.ws || []).map(function (n) { return { name: n, div: x.label }; })).forEach(function (w) { SE.map[w.name] = x.id; rows.push({ name: w.name, org_division: w.div || x.label }); });
+      }).catch(function (e) { SE.warn[x.name] = e.message; });
+    })).then(function () { seWarnShow(); return rows; });
+  });
+}
+function seWarnShow() {
+  var d = $('sewarn'); if (!d) { d = document.createElement('div'); d.id = 'sewarn'; d.style.cssText = 'position:fixed;right:12px;bottom:12px;max-width:340px;z-index:90;background:#fff7ed;border:1px solid #fdba74;border-radius:10px;padding:8px 12px;font-size:12.5px;color:#9a3412;box-shadow:0 4px 14px rgba(0,0,0,.15)'; document.body.appendChild(d); }
+  var k = Object.keys(SE.warn); if (!k.length) { d.style.display = 'none'; return; }
+  d.style.display = 'block'; d.innerHTML = '<b>Not shown:</b> ' + k.map(function (n) { return esc(n) + ' (' + esc(SE.warn[n]) + ')'; }).join(' &middot; ') + ' <a href="#" id="sewx" style="margin-left:6px">hide</a>';
+}
+document.addEventListener('click', function (e) { if (e.target && e.target.id === 'sewx') { e.preventDefault(); $('sewarn').style.display = 'none'; } });
+function seCall(id, fn, args) {
+  var x = SE.byId[id]; if (!x) return Promise.reject(new Error('Division not found.'));
+  return SE.cl[id].rpc('se_call', { p_code: x.code, p_fn: fn, p_args: args || {} }).then(function (r) {
+    if (r.error) throw new Error(friendly(r.error)); var d = r.data; if (d && typeof d === 'object' && !Array.isArray(d) && 'edit' in d) d.edit = false; return d;     // the SE only looks
+  });
+}
+function seMerge(list) {
+  var out; list.forEach(function (v) {
+    if (out === undefined) { out = JSON.parse(JSON.stringify(v)); return; }
+    if (Array.isArray(out) && Array.isArray(v)) { out = out.concat(v); return; }
+    if (out && v && typeof out === 'object' && typeof v === 'object') for (var k in v) { if (Array.isArray(v[k]) && Array.isArray(out[k])) out[k] = out[k].concat(v[k]); else if (out[k] === undefined || out[k] === null) out[k] = v[k]; }
+  });
+  return out;
+}
+function seFed(fn, args) {
+  var w = args.p_ws; if (w && w !== '__ALL__') { if (SE.map[w]) return seCall(SE.map[w], fn, args); return Promise.reject(new Error('This workshop is not in your divisions.')); }
+  var ids = Object.keys(SE.byId).filter(function (id) { return !SE.warn[SE.byId[id].name] || true; });
+  if (!ids.length) return Promise.reject(new Error('No division added yet. Open the Admin tab and add a division.'));
+  SE.warn = {}; var bad = [];
+  return Promise.all(ids.map(function (id) { return seCall(id, fn, args).then(function (v) { return { v: v }; }).catch(function (e) { SE.warn[SE.byId[id].name] = e.message; return null; }); })).then(function (rs) {
+    seWarnShow(); var ok = rs.filter(function (x) { return x && x.v !== undefined && x.v !== null; }).map(function (x) { return x.v; });
+    if (!ok.length) throw new Error('No division has shared this report yet.');
+    return seMerge(ok);
+  });
+}
+/* ---- Admin side: share with the SE ---- */
+function seShareLoad() {
+  rpc('se_share_get', {}).then(function (r) { SEG = r; seShareDraw(); }).catch(function (e) { $('sebox').innerHTML = ''; msg('semsg', /Could not find the function|schema cache|does not exist/i.test(e.message) ? 'Run the new <b>setup.sql</b> (STEP 115) in your Supabase SQL Editor once, then reload.' : esc(e.message), 'err'); });
+}
+function seConnText(code) { var C = ttConn(); return 'TFSE1.' + btoa(unescape(encodeURIComponent(JSON.stringify({ n: (($('sel') || {}).value || SEG.label || '').trim(), u: C.u, k: C.k, c: code })))); }
+function seShareDraw() {
+  var g = SEG, h = '<p class="muted" style="font-size:12.5px;margin:0 0 8px">The SE Workshop can <b>only look</b> at the reports you tick here. Nothing else leaves your project. You can stop it any time.</p>' +
+    '<div class="bar" style="align-items:flex-end"><div><label>Division name (the SE sees this)</label><input id="sel" type="text" value="' + esc(g.label || '') + '" style="min-width:240px"></div><span class="pill ' + (g.active ? 'ok' : '') + '" style="font-weight:700">' + (g.active ? 'SHARING IS ON' : 'sharing is off') + '</span></div><div class="seg" style="margin:8px 0">';
+  SE_PERMS.forEach(function (p) { h += '<label style="display:flex;gap:8px;align-items:center;margin:3px 0;font-size:13.5px"><input type="checkbox" data-sp="' + p[0] + '"' + (g.perms[p[0]] ? ' checked' : '') + '> ' + esc(p[1]) + '</label>'; });
+  h += '</div><div class="bar"><button class="btn sec" id="sesv" type="button">Save ticks</button><button class="btn" id="senc" type="button">' + (g.has_code ? 'New code (old stops)' : 'Start sharing: make code') + '</button>' + (g.active ? '<button class="btn sec" id="sest" type="button">Stop sharing</button>' : '') + '</div>';
+  if (SE_NEW) h += '<div class="msg ok" style="margin-top:10px"><b>Give this text to the SE Workshop.</b> It is shown only now; if you lose it, make a new code.<br><textarea id="sect" readonly rows="4" style="width:100%;font-size:12px;margin:6px 0">' + esc(SE_NEW) + '</textarea><button class="btn sm" id="secp" type="button">Copy</button></div>';
+  $('sebox').innerHTML = h;
+}
+function sePerms() { var o = {}; document.querySelectorAll('#sebox [data-sp]').forEach(function (c) { o[c.dataset.sp] = c.checked; }); return o; }
+function seShareSet(code, active) {
+  msg('semsg', 'Saving...', 'info');
+  return rpc('se_share_set', { p_perms: sePerms(), p_active: active, p_new_code: code, p_label: ($('sel').value || '').trim() }).then(function (r) {
+    if (r && r.code) SE_NEW = seConnText(r.code); else if (!active) SE_NEW = ''; msg('semsg', 'Saved', 'ok'); return rpc('se_share_get', {}).then(function (x) { SEG = x; seShareDraw(); });
+  }).catch(function (e) { msg('semsg', esc(e.message), 'err'); });
+}
+document.addEventListener('click', function (e) {
+  var t = e.target && e.target.closest ? e.target.closest('button') : null; if (!t) return;
+  if (t.id === 'sesv') seShareSet(false, !!SEG.active);
+  else if (t.id === 'senc') { if (SEG.has_code && !confirm('Make a NEW code? The old code stops working and the SE must add the new text.')) return; seShareSet(true, true); }
+  else if (t.id === 'sest') { if (confirm('Stop sharing with the SE Workshop?')) seShareSet(false, false); }
+  else if (t.id === 'secp') { var a = $('sect'); a.select(); try { navigator.clipboard.writeText(a.value); } catch (x) { document.execCommand('copy'); } t.textContent = 'Copied'; }
+  else if (t.id === 'sdadd') seDivAdd();
+  else if (t.dataset && t.dataset.sdel) { if (confirm('Remove this division?')) _rpcBase('se_src_del', { p_id: +t.dataset.sdel }).then(function () { seBootAgain(); }).catch(function (er) { msg('sdmsg', esc(er.message), 'err'); }); }
+  else if (t.id === 'sdreq') { var tx = 'Sir, please open the app > Admin tab > "Share with SE Workshop", tick the reports you can share, press "Start sharing: make code", then copy the text and send it to me.'; try { navigator.clipboard.writeText(tx); } catch (x) { } t.textContent = 'Request text copied'; }
+});
+/* ---- SE side: divisions ---- */
+function seParse(t) {
+  t = String(t || '').trim(); var m = /^TFSE1\.([A-Za-z0-9+\/=]+)$/.exec(t); if (!m) return null;
+  try { var o = JSON.parse(decodeURIComponent(escape(atob(m[1])))); return o && o.u && o.k && o.c ? o : null; } catch (e) { return null; }
+}
+function seDivAdd() {
+  var o = seParse($('sdt').value) || { n: $('sdn').value, u: $('sdu').value, k: $('sdk').value, c: $('sdc').value };
+  if (!o.u) return msg('sdmsg', 'Paste the text you got from the Admin, or fill the details below.', 'err');
+  msg('sdmsg', 'Checking...', 'info'); var cl = window.supabase.createClient(String(o.u).trim(), String(o.k).trim(), { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+  cl.rpc('se_info', { p_code: String(o.c).trim() }).then(function (r) {
+    if (r.error) throw new Error(friendly(r.error)); var nm = (o.n || '').trim() || r.data.label || o.u;
+    return _rpcBase('se_src_add', { p_name: nm, p_url: o.u, p_key: o.k, p_code: o.c }).then(function () { msg('sdmsg', 'Added: ' + esc(nm) + ' (' + (r.data.ws || []).length + ' workshops)', 'ok'); $('sdt').value = ''; seBootAgain(); });
+  }).catch(function (e) { msg('sdmsg', esc(e.message), 'err'); });
+}
+function seBootAgain() { return seBoot().then(function (rows) { WSL = rows.map(function (x) { return x.name; }); WSDIV = {}; rows.forEach(function (x) { WSDIV[x.name] = sp(x.org_division); }); seDivDraw(); }); }
+function seDivDraw() {
+  var h = '<p class="muted" style="font-size:12.5px;margin:0 0 8px">Each division\'s Admin ticks the reports he shares and sends you a text. Paste it here once. Then Summary, M&amp;R and Reports show every division together.</p>' +
+    '<div class="bar" style="align-items:flex-end"><div style="flex:1;min-width:260px"><label>Text from the Admin</label><input id="sdt" type="text" placeholder="TFSE1...." autocomplete="off" spellcheck="false" style="width:100%"></div><button class="btn" id="sdadd" type="button">Add division</button><button class="btn sec" id="sdreq" type="button">Copy request text for an Admin</button></div>' +
+    '<details style="margin:6px 0"><summary class="muted" style="cursor:pointer;font-size:12.5px">Or type the details</summary><div class="bar"><input id="sdn" placeholder="Division name"><input id="sdu" placeholder="https://xxxx.supabase.co"><input id="sdk" placeholder="Publishable key"><input id="sdc" placeholder="Share code"></div></details>';
+  h += '<div class="wrap"><table class="mkt mmt"><thead><tr><th>Division</th><th>Workshops</th><th>Shared reports</th><th>Status</th><th></th></tr></thead><tbody>';
+  SE.list.forEach(function (x) {
+    var wsn = Object.keys(SE.map).filter(function (w) { return SE.map[w] === x.id; }), pm = x.perms ? SE_PERMS.filter(function (p) { return x.perms[p[0]]; }).map(function (p) { return p[1].replace(/^Material Management: /, '').replace(/^Reports: /, ''); }) : [], er = SE.warn[x.name];
+    h += '<tr><td class="nm"><b>' + esc(x.name) + '</b></td><td class="nm">' + esc(wsn.join(', ')) + '</td><td class="nm wide">' + esc(pm.join(', ')) + '</td><td>' + (er ? '<span style="color:#b91c1c">' + esc(er) + '</span>' : '<span style="color:#15803d">OK</span>') + '</td><td><button class="btn sec sm" type="button" data-sdel="' + x.id + '">Remove</button></td></tr>';
+  });
+  if (!SE.list.length) h += '<tr><td colspan="5" class="nm">No division yet.</td></tr>';
+  $('sdbox').innerHTML = h + '</tbody></table></div>';
+}
+function seAdmInit() {
+  if (!$('secard')) return; var r = ME && ME.role;
+  $('secard').classList.toggle('hide', r !== 'admin'); $('sdcard').classList.toggle('hide', r !== 'se');
+  if (r === 'se') { [].forEach.call($('t-adm').children, function (el) { if (el.id !== 'sdcard') el.classList.add('hide'); }); seDivDraw(); }
+  else if (r === 'admin') seShareLoad();
+}
+var _admLoadBase = admLoad; admLoad = function () { var p = _admLoadBase.apply(this, arguments); try { seAdmInit(); } catch (e) { } return p; };
+</script>
 </body>
 </html>
