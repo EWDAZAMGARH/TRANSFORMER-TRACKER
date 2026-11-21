@@ -2304,6 +2304,14 @@ nav button#tmr{margin-top:auto}
   #mrout th.l{font-size:8px!important}
   #mrout #mrkit td.l{font-size:9px!important}
 }
+
+.setog{cursor:pointer;user-select:none}.setog td,div.setog{background:#eef2ff;color:#3b5bdb;font-weight:800;text-align:left!important;padding:8px 12px!important;border:1px solid #c7d2fe;letter-spacing:.3px}
+.setog td:after,div.setog:after{content:' \25BE   TAP TO OPEN';font-weight:600;margin-left:10px;font-size:11.5px;opacity:.8}.card.seopen .setog td:after,.card.seopen div.setog:after{content:' \25B4   TAP TO CLOSE'}
+.card:not(.seopen) .sew,.card:not(.seopen) .sebody{display:none}
+.sedn{font-weight:800;margin:12px 0 4px;color:#1e3a8a}tr.dtot td{background:#f1f5f9;font-weight:800}
+@media print{.sew{display:table-row!important}.sebody{display:block!important}.setog{display:none!important}}
+.ps .sew{display:table-row!important}.ps .sebody{display:block!important}.ps .setog{display:none!important}
+body.se-on #mkbc,body.se-on #msbase,body.se-on #mssave,body.se-on #mkbase,body.se-on #mksave,body.se-on #chmbase,body.se-on #mmstd,body.se-on #mmreset,body.se-on #rpweb,body.se-on .ulnew{display:none!important}
 </style>
 </head>
 <body class="on-home">
@@ -3274,15 +3282,15 @@ function splitCap() {
 }
 
 /* ---------- Summary: Excel / Print ---------- */
-var SNAMES = ['Workshop wise', 'Division wise', 'Pending age wise', 'Capacity wise'];
+var SNAMES = ['Workshop wise', 'Division wise', 'Pending age wise', 'Capacity wise']; function snames() { return ME && ME.role === 'se' ? ['Division wise', 'Age wise', 'Capacity wise'] : SNAMES; }
 $('sxl').onclick = function () {
   if (!SUM) return msg('smsg', 'Show the summary first.', 'info');
   var sheets = [];
   document.querySelectorAll('#sout .card').forEach(function (card, i) {
-    var t = card.querySelector('table'); if (!t) return;
-    var a = tableToAoa(t), title = (card.querySelector('h3') || {}).textContent || '';
+    var a = cardAoa(card); if (!a) return;
+    var title = (card.querySelector('h3') || {}).textContent || '';
     var head = [[{ v: title, s: 3 }], [{ v: 'Date ' + SUM.date + '   |   From ' + SUM.from + ' to ' + SUM.to, s: 0 }]];
-    sheets.push({ name: SNAMES[i] || 'Sheet ' + (i + 1), rows: head.concat(a.rows), merges: a.merges.map(function (m) { return [m[0] + 2, m[1], m[2] + 2, m[3]]; }), hdr: 0, skipw: 2 });
+    sheets.push({ name: snames()[sheets.length] || 'Sheet ' + (sheets.length + 1), rows: head.concat(a.rows), merges: a.merges.map(function (m) { return [m[0] + 2, m[1], m[2] + 2, m[3]]; }), hdr: 0, skipw: 2 });
   });
   if (!sheets.length) return;
   xlsxDownload('Summary_' + fileSafe(SUM.date) + '.xlsx', sheets);
@@ -4375,7 +4383,7 @@ function cmpFill(raw) {                      // the workshop filter: every works
   sel.value = CSEL;
 }
 function cmpLoad() {
-  if (!ME || ['admin', 'je', 'discom'].indexOf(ME.role) < 0) return Promise.resolve();
+  if (!ME || ['admin', 'je', 'discom', 'se'].indexOf(ME.role) < 0) return Promise.resolve();
   if (!validD($('cf').value.trim()) || !validD($('cto').value.trim())) { msg('cmsg', 'Enter both dates in DD.MM.YYYY format.', 'err'); return Promise.resolve(); }
   var f = $('cf').value.trim(), t = $('cto').value.trim();
   if (parseD(f) > parseD(t)) { msg('cmsg', 'The "From" date cannot be later than the "To" date.', 'err'); return Promise.resolve(); }
@@ -4397,8 +4405,8 @@ var DW = null;
 function dwIso(d) { return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()); }
 function dwLy(d) { return (d.getMonth() === 1 && d.getDate() === 29) ? new Date(d.getFullYear() - 1, 1, 28) : new Date(d.getFullYear() - 1, d.getMonth(), d.getDate()); }
 function dwTitle(d) { return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()] + '-' + String(d.getFullYear()).slice(2); }
-function dwWs() { var l = CWS.length ? CMPW() : WSL_SORTED(); return l.length ? l : WSL_SORTED(); }
-function dwNm(w) { return w.charAt(0) + w.slice(1).toLowerCase(); }
+function dwWs() { if (ME && ME.role === 'se') return seDivList(); var l = CWS.length ? CMPW() : WSL_SORTED(); return l.length ? l : WSL_SORTED(); }
+function dwNm(w) { return (ME && ME.role === 'se') ? w : w.charAt(0) + w.slice(1).toLowerCase(); }
 function dwBuild() {
   var D = DW, f = parseD(D.f), t = parseD(D.t), ws = dwWs(), days = [];
   for (var d = new Date(f.getFullYear(), f.getMonth(), f.getDate()); d <= t; d.setDate(d.getDate() + 1)) days.push(new Date(d.getTime()));
@@ -4407,7 +4415,7 @@ function dwBuild() {
   if (!same) lyT = fmt(dwLy(f)) + ' to ' + fmt(dwLy(t));
   var out = {};
   ['pr', 'rp'].forEach(function (k) {
-    var M = { c: {}, p: {} }; (D.r[k] || []).forEach(function (x) { M[x[0]][x[1] + '|' + x[2]] = (M[x[0]][x[1] + '|' + x[2]] || 0) + x[3]; });
+    var M = { c: {}, p: {} }; (D.r[k] || []).forEach(function (x) { var wn = (ME && ME.role === 'se') ? (WSDIV[x[1]] || x[1]) : x[1]; M[x[0]][wn + '|' + x[2]] = (M[x[0]][wn + '|' + x[2]] || 0) + x[3]; });
     var rows = [], tc = ws.map(function () { return 0; }), tp = ws.map(function () { return 0; });
     days.forEach(function (d) {
       var ly = dwLy(d), c = ws.map(function (w) { return M.c[w + '|' + dwIso(d)] || 0; }), p = ws.map(function (w) { return M.p[w + '|' + dwIso(ly)] || 0; });
@@ -5632,13 +5640,14 @@ function mmOpen(k) {
   $('mmstd').classList.toggle('hide', k === 'rcv' || k === 'low' || k === 'req'); var mt = document.querySelector('[data-mmmode]'); if (mt) mt.parentNode.classList.toggle('hide', k === 'req'); if (k === 'req') MM.mode = 'entry'; $('mmreset') && 0;
   var ws = mrWs(), o = ws.map(function (w) { return '<option' + wsAttr(w) + '>' + esc(w) + '</option>'; }).join('');
   MM.all = !!(ME && ME.role === 'admin' && ws.length > 1);
+  if (seIsSE()) { MM.all = true; o = '<option value="__ALL__">All divisions (total)</option>' + seDivList().map(function (d) { return '<option value="DIV::' + esc(d) + '">' + esc(d) + '</option>'; }).join(''); }
   $('mmw').dataset.o = o; mmSetMode(MM.mode || 'entry', true);
 }
 function mmSetMode(m, noLoad) {
   asFlushAll(); MM.mode = m;
   var o = $('mmw').dataset.o || '', cur = $('mmw').value;
-  $('mmw').innerHTML = (MM.all ? '<option value="__ALL__">All workshops</option>' : '') + o;
-  if (cur && [].some.call($('mmw').options, function (x) { return x.value === cur; })) $('mmw').value = cur; else { var f1 = [].filter.call($('mmw').options, function (x) { return x.value !== '__ALL__'; })[0]; if (f1) $('mmw').value = f1.value; } MM.ws = $('mmw').value;
+  $('mmw').innerHTML = (MM.all && !seIsSE() ? '<option value="__ALL__">All workshops</option>' : '') + o;
+  if (cur && [].some.call($('mmw').options, function (x) { return x.value === cur; })) $('mmw').value = cur; else if (seIsSE()) { $('mmw').value = '__ALL__'; } else { var f1 = [].filter.call($('mmw').options, function (x) { return x.value !== '__ALL__'; })[0]; if (f1) $('mmw').value = f1.value; } MM.ws = $('mmw').value;
   document.querySelectorAll('[data-mmmode]').forEach(function (b) { b.classList.toggle('on', b.dataset.mmmode === m); });
   var cm = mmNow();
   $('mmper').innerHTML = MM.kind === 'req' ? mmReqCtl() : m === 'entry'
@@ -6088,6 +6097,7 @@ function mmReqGo() {
 }
 function mmReqClose(rows) { return rows ? mmR3(rows.open + rows.recv - rows.tr - rows.cons) : 0; }
 function mmReqShow() {
+  if (seIsSE()) return seReqShow();
   MM.cur = null; var n = MM.qn, pc = MM.qp, now = mmNow(), cap = {}, lyc = {}, tot = { w1: '', w2: '' };
   MM_K.forEach(function (k) { cap[k] = 0; }); MM_OC.forEach(function (k) { lyc[k] = 0; });
   var req = {}, avl = {}, items = [];
@@ -6148,7 +6158,7 @@ function mmStdOpen() {
 /* ---- load (v2) ---- */
 function mmLoad() {
   asFlushAll();
-  var seq = ++MM.seq, sum0 = MM.mode === 'sum', all = MM.ws === '__ALL__', sum = sum0 || all, names = all ? mrWs() : [MM.ws], k = MM.kind;   // All workshops = always the added-up view
+  var seq = ++MM.seq, sum0 = MM.mode === 'sum', all = MM.ws === '__ALL__' || /^DIV::/.test(MM.ws || ''), sum = sum0 || all, names = MM.ws === '__ALL__' ? mrWs() : /^DIV::/.test(MM.ws || '') ? seDivWs(MM.ws.slice(5)) : [MM.ws], k = MM.kind;   // All workshops = always the added-up view
   if (!names[0]) return;
   var a = sum0 ? MM.from : MM.month, b = sum0 ? MM.to : MM.month;
   if (!/^\d{4}-\d{2}$/.test(a || '') || !/^\d{4}-\d{2}$/.test(b || '')) return msg('mmmsg', 'Choose the month.', 'err');
@@ -6177,7 +6187,7 @@ function mmExcel() {
   var sh = []; ids.forEach(function (x) { var t = $(x[0]); if (t) sh.push(mmSheet(t, x[1])); });
   if (!sh.length) return msg('mmmsg', 'Nothing to download yet.', 'err');
   var per = MM.kind === 'req' ? MM.qd : MM.mode === 'sum' ? MM.from + '_to_' + MM.to : MM.month, nm = MM.kind === 'req' ? 'Material_Requirement_' : MM.kind === 'ins' ? 'Insulating_Material_' : MM.kind === 'wsc' ? 'Wire_Strip_Consumption_' : MM.kind === 'oil' ? 'Oil_Recovery_' : MM.kind === 'low' ? 'Oil_Found_Below_STD_' : 'Oil_Receive_';
-  xlsxDownload(nm + mrFile(MM.ws === '__ALL__' ? 'All' : MM.ws) + '_' + per + '.xlsx', sh);
+  xlsxDownload(nm + mrFile(MM.ws === '__ALL__' ? 'All' : String(MM.ws).replace(/^DIV::/, '')) + '_' + per + '.xlsx', sh);
 }
 
 /* ---- Excel-like keys: arrows / Enter move between cells, whole cell selected on entry, paste from Excel ---- */
@@ -7024,13 +7034,13 @@ function rpShow(k) {
 var RPC = { rows: [], admin: false };
 function rpDrawChips() {
   var mr = typeof mrAccess === 'function' && mrAccess(), h = '';
-  RP_DEFS.forEach(function (d) { if (d.mr && !mr) return; h += '<button type="button" class="achip" data-rp="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + esc(d.t) + '</b><small>' + esc(d.s) + '</small></span></button>'; });
-  RPC.rows.forEach(function (r) { h += '<button type="button" class="achip" data-rpweb="' + r[0] + '"><span class="ic" style="--c:#e0f2fe">\u{1F310}</span><span><b>' + esc(r[1]) + '</b><small>Added web app</small></span></button>'; });
+  var se = ME && ME.role === 'se'; RP_DEFS.forEach(function (d) { if (d.mr && !mr) return; if (se && ['cmp', 'dw', 'pl'].indexOf(d.k) < 0) return; h += '<button type="button" class="achip" data-rp="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + esc(d.t) + '</b><small>' + esc(d.s) + '</small></span></button>'; });
+  (se ? [] : RPC.rows).forEach(function (r) { h += '<button type="button" class="achip" data-rpweb="' + r[0] + '"><span class="ic" style="--c:#e0f2fe">\u{1F310}</span><span><b>' + esc(r[1]) + '</b><small>Added web app</small></span></button>'; });
   if (RPC.admin) h += '<button type="button" class="achip" data-rpadd="1"><span class="ic" style="--c:#e4f6e8">+</span><span><b>Add report</b><small>Paste the link of your web app</small></span></button>';
   $('rpchips').innerHTML = h;
 }
 function rpHome() {
-  if (!ME || ['admin', 'je', 'discom'].indexOf(ME.role) < 0) return;
+  if (!ME || ['admin', 'je', 'discom', 'se'].indexOf(ME.role) < 0) return;
   RPC.admin = ME.role === 'admin'; rpDrawChips(); rpShow('');
   rpc('rp_list').then(function (r) { RPC.rows = (r && r.rows) || []; RPC.admin = !!(r && r.admin); if (CURTAB === 'cmp' && !$('rpmenu').classList.contains('hide')) rpDrawChips(); }).catch(function () { });
 }
@@ -7301,9 +7311,9 @@ function mrTbl(t) { var rows = []; [].forEach.call(t.querySelectorAll('tr'), fun
 $('mrxl').onclick = function () {
   if (!MR.sum) return; var sheets = [];
   [].forEach.call($('mrout').querySelectorAll('.card'), function (c, i) {
-    var t = c.querySelector('table'); if (!t) return;
-    var a = tableToAoa(t), title = (c.querySelector('h3') || {}).textContent || '', head = [[{ v: title, s: 3 }], [{ v: 'Date ' + MR.sum.d + '   |   From ' + MR.sum.f + ' to ' + MR.sum.t, s: 0 }]];
-    sheets.push({ name: ['Workshop', 'Capacity'][i] || 'Sheet' + (i + 1), rows: head.concat(a.rows), merges: a.merges.map(function (x) { return [x[0] + 2, x[1], x[2] + 2, x[3]]; }), hdr: 0, skipw: 2 });
+    var a = cardAoa(c); if (!a) return;
+    var title = (c.querySelector('h3') || {}).textContent || '', head = [[{ v: title, s: 3 }], [{ v: 'Date ' + MR.sum.d + '   |   From ' + MR.sum.f + ' to ' + MR.sum.t, s: 0 }]];
+    sheets.push({ name: (ME && ME.role === 'se' ? ['Workshop', 'Capacity', 'Capacity wise'] : ['Workshop', 'Capacity'])[sheets.length] || 'Sheet' + (sheets.length + 1), rows: head.concat(a.rows), merges: a.merges.map(function (x) { return [x[0] + 2, x[1], x[2] + 2, x[3]]; }), hdr: 0, skipw: 2 });
   });
   xlsxDownload('MR_Summary_' + mrFile(MR.sum.d) + '.xlsx', sheets);
 };
@@ -8539,19 +8549,20 @@ var SE = { list: [], byId: {}, cl: {}, map: {}, warn: {} }, SEG = null, SE_NEW =
 var SE_PERMS = [['sum', 'R&R Summary (division wise, capacity wise, age wise)'], ['rrs', 'R&R Repair / Assembly / Oven daily report'], ['mrs', 'M&R Summary and Kitty'], ['scrap', 'Scrap'],
   ['mat_ws', 'Material Management: Wire & Strip consumption'], ['mat_oil', 'Material Management: Oil Recovery Sheet (and Oil Found Below STD)'], ['mat_ins', 'Material Management: Insulating Material'], ['mat_rcv', 'Material Management: Oil Receive list'], ['mat_req', 'Material Management: Material Requirement'],
   ['cmp', 'Reports: PR Comparative'], ['day', 'Reports: Daywise & Division wise PR and Repair'], ['plinth', 'Reports: Same Plinth Damage']];
-var SE_FED = {}; 'summary_json dashboard_json rr_summary_json mr_summary_json mr_repair_json mr_pending_json kitty_range_json kitty_json kitty_cmp_json kitty_lyk_json kitty_need_json scrap_json scrap_range_json scrap_cap_json mat_get mat_rep mat_dtc mat_low_adj mat_low_list mat_recv_list mat_req_pr compare_all installed_all_json daywise_json plinth_json'.split(' ').forEach(function (f) { SE_FED[f] = 1; });
+var SE_FED = {}; 'summary_json dashboard_json rr_summary_json mr_summary_json mr_repair_json mr_pending_json kitty_range_json kitty_json kitty_cmp_json kitty_lyk_json kitty_need_json scrap_json scrap_range_json scrap_cap_json mat_get mat_rep mat_dtc mat_low_adj mat_low_list mat_recv_list mat_req_pr compare_all installed_all_json daywise_json plinth_json list_json struct_json rr_json mr_list_json'.split(' ').forEach(function (f) { SE_FED[f] = 1; });
 var _rpcBase = rpc;
 rpc = function (fn, args) { return (ME && ME.role === 'se' && SE_FED[fn]) ? seFed(fn, args || {}) : _rpcBase(fn, args); };
 var _wsSelBase = wsSelect;
-wsSelect = function () { return (ME && ME.role === 'se') ? seBoot().then(function (rows) { return { data: rows }; }) : _wsSelBase(); };
+wsSelect = function () { document.body.classList.remove('se-on'); return (ME && ME.role === 'se') ? seBoot().then(function (rows) { return { data: rows }; }) : _wsSelBase(); };
 function seBoot() {
+  document.body.classList.add('se-on');
   return _rpcBase('se_src_list', {}).then(function (list) {
     SE.list = list; SE.byId = {}; SE.cl = {}; SE.map = {}; SE.warn = {}; var rows = [];
     return Promise.all(list.map(function (x) {
       SE.byId[x.id] = x; SE.cl[x.id] = window.supabase.createClient(x.url, x.key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
       return SE.cl[x.id].rpc('se_info', { p_code: x.code }).then(function (r) {
         if (r.error) throw new Error(friendly(r.error)); x.perms = r.data.perms || {}; x.label = r.data.label || x.name;
-        (r.data.wd || (r.data.ws || []).map(function (n) { return { name: n, div: x.label }; })).forEach(function (w) { SE.map[w.name] = x.id; rows.push({ name: w.name, org_division: w.div || x.label }); });
+        (r.data.wd || (r.data.ws || []).map(function (n) { return { name: n, div: x.label }; })).forEach(function (w) { SE.map[w.name] = x.id; rows.push({ name: w.name, org_division: x.name || x.label || w.div }); });
       }).catch(function (e) { SE.warn[x.name] = e.message; });
     })).then(function () { seWarnShow(); return rows; });
   });
@@ -8651,6 +8662,190 @@ function seAdmInit() {
   else if (r === 'admin') seShareLoad();
 }
 var _admLoadBase = admLoad; admLoad = function () { var p = _admLoadBase.apply(this, arguments); try { seAdmInit(); } catch (e) { } return p; };
+
+/* =====================  SE: division wise layout (like the Excel files)  ===================== */
+function seDivList() { var o = [], seen = {}; mrWs().forEach(function (w) { var d = WSDIV[w] || ''; if (!seen[d]) { seen[d] = 1; o.push(d); } }); return o; }
+function seDivWs(d) { return mrWs().filter(function (w) { return WSDIV[w] === d; }); }
+function seNum(t) { t = String(t == null ? '' : t).replace(/\s+/g, ' ').trim(); return /^-?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : null; }
+function seTxt(c) { return String(c.textContent || '').replace(/\s+/g, ' ').trim(); }
+function seSumCell(base, cells) {          // a copy of one cell holding the sum of the cells
+  var c = base.cloneNode(true), tot = 0, dec = 0, n = 0, i;
+  for (i = 0; i < cells.length; i++) { var t = seTxt(cells[i]), v = seNum(t); if (v === null) continue; n++; tot += v; if (/\.\d/.test(t)) dec = Math.max(dec, t.split('.')[1].length); }
+  [].slice.call(c.attributes).forEach(function (a) { if (/^data-/.test(a.name)) c.removeAttribute(a.name); });
+  c.className = String(c.className).replace(/\bpdk\b/g, '').trim();
+  if (!n) { c.innerHTML = seTxt(cells[0]) === '' ? '' : esc(seTxt(cells[0])); return c; }
+  tot = Math.round(tot * 1000) / 1000; c.innerHTML = tot === 0 && !dec ? '<span class="z">0</span>' : (dec ? tot.toFixed(Math.min(dec, 2)) : String(tot)); return c;
+}
+function seDivRow(name, wsRows, tpl, cls) {
+  var tr = tpl.cloneNode(true); tr.className = cls || ''; var i, n = tr.cells.length;
+  for (i = 0; i < n; i++) {
+    var c = tr.cells[i];
+    if (i === 0) { [].slice.call(c.attributes).forEach(function (a) { if (/^data-/.test(a.name)) c.removeAttribute(a.name); }); c.innerHTML = esc(name); continue; }
+    var nc = seSumCell(c, wsRows.map(function (r) { return r.cells[i] || c; })); tr.replaceChild(nc, c);
+  }
+  return tr;
+}
+function seRows(table, withWs, label) {     // rows = workshops  ->  rows = divisions (+ the workshops under "tap to open")
+  var tb = table.tBodies[0]; if (!tb) return false;
+  var W = {}, tot = null; [].slice.call(tb.rows).forEach(function (r) { var n = seTxt(r.cells[0]); if (WSDIV[n] !== undefined && r.cells.length > 1) W[n] = r; else if (/\bt\b/.test(r.className)) tot = r; });
+  var divs = seDivList().filter(function (d) { return seDivWs(d).some(function (w) { return W[w]; }); }); if (!divs.length) return false;
+  var anyW = W[Object.keys(W)[0]], ncol = anyW.cells.length;
+  [].forEach.call(table.querySelectorAll('th.l'), function (th) { if (/^WORKSHOP/i.test(seTxt(th))) th.textContent = label || 'DIVISION NAME'; });
+  function inD(d) { return seDivWs(d).filter(function (w) { return W[w]; }).map(function (w) { return W[w]; }); }
+  var all = []; divs.forEach(function (d) { all = all.concat(inD(d)); });
+  var head = [].slice.call(table.tHead ? table.tHead.rows : []), nb = document.createDocumentFragment();
+  divs.forEach(function (d) { nb.appendChild(seDivRow(d, inD(d), anyW, '')); });
+  var T = divs.length > 1 ? (tot ? tot.cloneNode(true) : seDivRow('TOTAL', all, anyW, 't')) : null; if (T) nb.appendChild(T);
+  if (withWs) {
+    var tg = document.createElement('tr'); tg.className = 'setog'; tg.innerHTML = '<td colspan="' + ncol + '">WORKSHOP WISE</td>'; nb.appendChild(tg);
+    head.forEach(function (h) { var c = h.cloneNode(true); c.className = 'sew'; nb.appendChild(c); });
+    divs.forEach(function (d) { inD(d).forEach(function (r) { var c = r.cloneNode(true); c.className = 'sew'; nb.appendChild(c); }); nb.appendChild(seDivRow(d + ' TOTAL', inD(d), anyW, 'sew dtot')); });
+    if (T) { var t2 = T.cloneNode(true); t2.className = 'sew t'; nb.appendChild(t2); }
+  }
+  while (tb.firstChild) tb.removeChild(tb.firstChild); tb.appendChild(nb); return true;
+}
+function seColGroups(t) {                    // groups of workshop columns in the 2nd header row: [{start, n, tot, th}]
+  var h1 = t.rows[1] ? [].slice.call(t.rows[1].cells) : [], g = [], cur = null;
+  h1.forEach(function (c, i) {
+    var n = seTxt(c);
+    if (WSDIV[n] !== undefined) { if (!cur) { cur = { start: i, n: 0, tot: false }; g.push(cur); } cur.n++; }
+    else if (/^TOTAL$/i.test(n) && cur) { cur.tot = true; cur = null; } else cur = null;
+  });
+  return g;
+}
+function seColTable(src, mode, keep) {      // mode = 'div' (a column per division) or a division name (its workshops only)
+  var t = src.cloneNode(true), g = seColGroups(t), r0 = t.rows[0], h1 = t.rows[1]; if (!g.length) return null;
+  var top = [].slice.call(r0.cells), names = [].slice.call(h1.cells).map(seTxt), grpTop = top.slice(1);
+  var rows = [].slice.call(t.rows); var drop = {};
+  g.forEach(function (gr, gi) { var th = grpTop[gi]; if (keep && th && !keep.test(seTxt(th).toUpperCase())) drop[gi] = 1; });
+  var divs = seDivList();
+  function groupCells(row, gi, isHead1) {    // returns the new cells of group gi in this row
+    var gr = g[gi], off = isHead1 ? 0 : 1, cells = [].slice.call(row.cells), ws = [], out = [], i;
+    for (i = 0; i < gr.n; i++) ws.push({ w: names[gr.start + i], c: cells[gr.start + i + off] });
+    var totc = gr.tot ? cells[gr.start + gr.n + off] : null;
+    if (mode === 'div') {
+      divs.forEach(function (d) { var m = ws.filter(function (x) { return WSDIV[x.w] === d; }); if (!m.length) return; if (isHead1) { var th = m[0].c.cloneNode(true); th.textContent = d; th.removeAttribute('data-ws'); out.push(th); } else out.push(seSumCell(m[0].c, m.map(function (x) { return x.c; }))); });
+      if (totc) out.push(totc);
+    } else {
+      var m2 = ws.filter(function (x) { return WSDIV[x.w] === mode; }); m2.forEach(function (x) { out.push(x.c); });
+      if (totc) out.push(isHead1 ? totc : seSumCell(totc, m2.map(function (x) { return x.c; })));
+    }
+    return out;
+  }
+  var newTop = [];
+  rows.forEach(function (row, ri) {
+    if (ri === 0) return;
+    var isH = ri === 1, cells = [].slice.call(row.cells), keepFirst = isH ? [] : [cells[0]], parts = [];
+    g.forEach(function (gr, gi) { if (drop[gi]) return; parts.push(groupCells(row, gi, isH)); });
+    while (row.firstChild) row.removeChild(row.firstChild);
+    keepFirst.forEach(function (c) { row.appendChild(c); }); parts.forEach(function (p) { p.forEach(function (c) { row.appendChild(c); }); });
+    if (isH) newTop = parts.map(function (p) { return p.length; });
+  });
+  var k = 0; while (r0.cells.length > 1) r0.removeChild(r0.lastChild);
+  g.forEach(function (gr, gi) { if (drop[gi]) return; var th = grpTop[gi]; th.colSpan = Math.max(1, newTop[k++]); r0.appendChild(th); });
+  return t;
+}
+function seCapCard(card, keep) {              // capacity table -> division columns; the workshop columns of each division under "tap to open"
+  var wrap = card.querySelector('.wrap'), src = wrap && wrap.querySelector('table'); if (!src) return;
+  [].forEach.call(card.querySelectorAll('.capsplit'), function (x) { x.parentNode.removeChild(x); }); wrap.classList.remove('capfull');
+  var top = seColTable(src, 'div', keep); if (!top) return;
+  var tg = document.createElement('div'); tg.className = 'setog'; tg.textContent = 'WORKSHOP WISE';
+  var body = document.createElement('div'); body.className = 'sebody';
+  seDivList().forEach(function (d) {
+    var tb = seColTable(src, d, keep); if (!tb) return; var w = document.createElement('div'); w.className = 'wrap tbl11d capt';
+    var nm = document.createElement('div'); nm.className = 'sedn'; nm.textContent = d; w.appendChild(tb); body.appendChild(nm); body.appendChild(w);
+  });
+  wrap.innerHTML = ''; wrap.appendChild(top); wrap.parentNode.insertBefore(tg, wrap.nextSibling); tg.parentNode.insertBefore(body, tg.nextSibling);
+}
+function cardAoa(card) {
+  var ts = card.querySelectorAll('table'); if (!ts.length) return null;
+  if (ts.length === 1 && !card.querySelector('div.setog')) return tableToAoa(ts[0]);
+  var rows = [], merges = [], hdr = 0;
+  [].forEach.call(card.querySelectorAll('table, div.setog, .sedn'), function (el) {
+    if (el.tagName === 'TABLE') {
+      if (el.closest('.sebody') === null && el.closest('.setog')) return;
+      var a = tableToAoa(el), off = rows.length; if (!off) hdr = a.hdr;
+      a.rows.forEach(function (r) { rows.push(r); }); a.merges.forEach(function (m) { merges.push([m[0] + off, m[1], m[2] + off, m[3]]); });
+    } else { if (el.classList.contains('setog')) { rows.push([]); } rows.push([{ v: seTxt(el), s: 3 }]); }
+  });
+  return { rows: rows, merges: merges, hdr: hdr };
+}
+document.addEventListener('click', function (e) { var t = e.target && e.target.closest ? e.target.closest('.setog') : null; if (t) { var c = t.closest('.card'); if (c) c.classList.toggle('seopen'); } });
+function seIsSE() { return !!ME && ME.role === 'se'; }
+var _renderSummaryBase = renderSummary;
+renderSummary = function (s, quiet) {
+  _renderSummaryBase(s, quiet); if (!seIsSE()) return;
+  try {
+    var o = $('sout'), dv = o.querySelector('.k-div'); if (dv) dv.parentNode.removeChild(dv);
+    var ws = o.querySelector('.k-ws table'); if (ws) { seRows(ws, true, 'DIVISION NAME'); var h = o.querySelector('.k-ws h3'); if (h) h.textContent = 'Workshop wise summary'; }
+    var pd = o.querySelector('.k-pd table'); if (pd) seRows(pd, true, 'DIVISION NAME');
+    var cp = o.querySelector('.k-cap'); if (cp) seCapCard(cp, /PENDING FOR ISSUE|PR RECEIVED|AVERAGE PR PER DAY/);
+    [].forEach.call(o.querySelectorAll('.k-sir'), function (c) { c.parentNode.removeChild(c); });
+    [].forEach.call(o.querySelectorAll('.card'), function (c) { c.classList.remove('col'); });
+  } catch (e) { if (window.console) console.log('seSummary', e); }
+};
+var _mrSumDrawBase = mrSumDraw;
+mrSumDraw = function () {
+  _mrSumDrawBase.apply(this, arguments); if (!seIsSE()) return;
+  try {
+    var o = $('mrout'), ws = o.querySelector('.k-ws table'); if (ws) seRows(ws, false, 'DIVISION NAME');
+    var cp = o.querySelector('.k-cap'); if (cp) seCapCard(cp, /PR RECEIVED|REPAIR/);
+  } catch (e) { if (window.console) console.log('seMrSum', e); }
+};
+var _mrSumKitDrawBase = mrSumKitDraw;
+mrSumKitDraw = function (K0, el0) {
+  _mrSumKitDrawBase.apply(this, arguments); if (!seIsSE()) return;
+  try { var el = el0 || $('mrkit'), t = el.querySelector('table'); if (t && seRows(t, true, 'KITTY')) { el.classList.add('card'); } } catch (e) { if (window.console) console.log('seKit', e); }
+};
+
+/* ---- SE: Material Requirement, a column for every division (like the Excel) ---- */
+function seReqShow() {
+  MM.cur = null; var n = MM.qn, pc = MM.qp, now = mmNow(), tot = { w1: '', w2: '' }, ck = ['10', '16', '25', '63', '100', '160', '250', '400', '630'], items = [], grp = [];
+  MM_IT.forEach(function (x, i) { items.push({ i: i, cat: x.cat, name: x.name, unit: x.unit, src: 'ws' }); }); MM_INS.forEach(function (x) { items.push({ i: x.i, cat: x.cat, name: x.name, unit: x.unit, src: 'ins' }); });
+  if (MM.ws === '__ALL__') seDivList().forEach(function (d) { grp.push({ label: d, names: seDivWs(d) }); }); else seDivWs(String(MM.ws).replace(/^DIV::/, '')).forEach(function (w) { grp.push({ label: w, names: [w] }); });
+  grp.forEach(function (g) {
+    g.lyc = {}; g.cap = {}; g.req = {}; g.avl = {}; MM_OC.forEach(function (k) { g.lyc[k] = 0; }); MM_K.forEach(function (k) { g.cap[k] = 0; }); items.forEach(function (x) { g.req[x.src + x.i] = 0; g.avl[x.src + x.i] = 0; });
+    g.names.forEach(function (w) {
+      var P = MM.per[w]; if (!P) return; var q = P.q || { rows: [] }, c = {}, ms = mmMstd(P), wch = mmWsChain(P.g.ws || {}, now), ich = mmInsChain(P, now);
+      tot.w1 = q.w1 || tot.w1; tot.w2 = q.w2 || tot.w2; MM_K.forEach(function (k) { c[k] = 0; });
+      (q.rows || []).forEach(function (r) { var k = +r[0] === 250 ? '250(al)' : String(r[0]); if (+r[0] === 250) g.lyc['250'] += +r[1]; else if (k in g.lyc) g.lyc[k] += +r[1]; if (k in c) c[k] += Math.ceil(+r[1] * (1 + pc / 100) - 1e-9); });
+      MM_K.forEach(function (k) { g.cap[k] += c[k]; });
+      items.forEach(function (x) { var key = x.src + x.i; g.req[key] += x.src === 'ws' ? mmStdOf(x.i, c, ms) : mmStdI(x.i, c, ms); g.avl[key] += x.src === 'ws' ? mmReqClose((wch[now] || {})[x.i]) : mmReqClose((ich[now] || {})[x.i]); });
+    });
+  });
+  var many = grp.length > 1, nG = grp.length, h = mmNote('Last year PRs of <b>' + esc(mrDmy(tot.w1 || '')) + '</b> to <b>' + esc(mrDmy(tot.w2 || '')) + '</b> (' + n + ' days), PR + <b>' + pc + '%</b> damage, x material STD = <b>Required as per STD</b>. <b>Closing balance</b> = stock of ' + esc(mmMonthName(now)) + ' of each division. <b>Actual requirement</b> = Required - Closing balance.', true);
+  function sum(a) { return a.reduce(function (x, y) { return x + y; }, 0); }
+  function td(v, cls) { return '<td class="c' + (cls ? ' ' + cls : '') + (v < 0 ? ' neg' : '') + '" data-v="' + v + '">' + mmF(v) + '</td>'; }
+  h += '<div class="wrap"><table class="mkt mmt" id="mmqc" style="width:auto"><thead><tr><th class="ttl" colspan="' + (ck.length + 2) + '">Last year PR (' + esc(mrDmy(tot.w1 || '')) + ' to ' + esc(mrDmy(tot.w2 || '')) + ')</th></tr><tr><th>Capacity in KVA</th>' + ck.map(function (k) { return '<th>' + k + '</th>'; }).join('') + '<th>TOTAL</th></tr></thead><tbody>';
+  grp.forEach(function (g) { var v = ck.map(function (k) { return g.lyc[k]; }); h += '<tr><td class="l">' + esc(g.label) + ' PR</td>' + v.map(function (x) { return td(x); }).join('') + td(sum(v)) + '</tr>'; });
+  if (many) { var tv = ck.map(function (k) { return sum(grp.map(function (g) { return g.lyc[k]; })); }); h += '<tr class="t"><td class="l">TOTAL PR</td>' + tv.map(function (x) { return td(x); }).join('') + td(sum(tv)) + '</tr>'; }
+  grp.forEach(function (g) { var v = ck.map(function (k) { return g.cap[k === '250' ? '250(al)' : k]; }); h += '<tr><td class="l">' + esc(g.label) + ' PR + ' + pc + '%</td>' + v.map(function (x) { return td(x); }).join('') + td(sum(v)) + '</tr>'; });
+  if (many) { var tp = ck.map(function (k) { return sum(grp.map(function (g) { return g.cap[k === '250' ? '250(al)' : k]; })); }); h += '<tr class="t"><td class="l">TOTAL PR + ' + pc + '%</td>' + tp.map(function (x) { return td(x); }).join('') + td(sum(tp)) + '</tr>'; }
+  var NC = 4 + (nG + 1) * 2;
+  h += '</tbody></table></div><div class="wrap"><table class="mkt mmt" id="mmq"><thead><tr><th colspan="' + NC + '" class="ttl">Material Requirement for ' + n + ' days from ' + esc(mrDmy(MM.qd)) + ' (last year PR + ' + pc + '%)</th></tr>' +
+    '<tr><th colspan="4"></th><th colspan="' + (nG + 1) + '">CLOSING BALANCE</th><th colspan="' + (nG + 1) + '">ACTUAL REQUIRMENT</th></tr>' +
+    '<tr><th>Sl No</th><th>Name of Material</th><th>Unit</th><th>Required as per STD</th>' + grp.map(function (g) { return '<th>' + esc(g.label) + '</th>'; }).join('') + '<th>TOTAL</th>' + grp.map(function (g) { return '<th>' + esc(g.label) + '</th>'; }).join('') + '<th>TOTAL</th></tr>' +
+    '<tr class="nm"><th>1</th><th>2</th><th>3</th><th>4</th><th colspan="' + (nG + 1) + '">5</th><th colspan="' + (nG + 1) + '">6 = 4-5</th></tr></thead><tbody>';
+  var last = '', sl = 0;
+  items.forEach(function (x) {
+    var key = x.src + x.i, rq = grp.map(function (g) { return mmR3(g.req[key]); }), av = grp.map(function (g) { return mmR3(g.avl[key]); }), rT = mmR3(sum(rq)), aT = mmR3(sum(av));
+    function act(r, a) { var v = Math.max(0, mmR3(r - a)); return x.unit === 'No' ? Math.ceil(v - 1e-9) : v; }
+    if (x.cat !== last) { last = x.cat; sl = 0; h += '<tr class="grp"><td colspan="' + NC + '">' + esc(x.cat) + '</td></tr>'; }
+    h += '<tr class="it"><td class="l">' + (++sl) + '</td><td class="nm">' + esc(x.name) + '</td><td>' + esc(x.unit) + '</td>' + td(rT) + av.map(function (v) { return td(v); }).join('') + td(aT) + grp.map(function (g, gi) { return td(act(rq[gi], av[gi]), 'std'); }).join('') + td(act(rT, aT), 'std') + '</tr>';
+  });
+  $('mmout').innerHTML = h + '</tbody></table></div>';
+}
+
+var _mrScDrawBase = mrScDraw;
+mrScDraw = function () { _mrScDrawBase.apply(this, arguments); if (!seIsSE()) return; try { var t = $('mstb'); if (t) seRows(t, false, 'NAME OF DIVISION'); } catch (e) { } };
+(function () {      // the SE only looks: entry boxes of the M&R tab become read only
+  var busy2 = false;
+  new MutationObserver(function () {
+    if (busy2 || !seIsSE()) return; busy2 = true;
+    try { [].forEach.call(document.querySelectorAll('#t-mr input[type=text]:not(.dtx), #t-mr textarea, #mmout input:not([type=date]):not([type=month])'), function (e) { if (!e.readOnly && !e.closest('.bar,.mmrng,.tg')) { e.readOnly = true; e.title = 'View only'; } }); } catch (x) { }
+    busy2 = false;
+  }).observe(document.body, { childList: true, subtree: true });
+})();
 </script>
 </body>
 </html>

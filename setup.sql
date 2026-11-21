@@ -4584,7 +4584,7 @@ revoke all on public.se_share from public, anon, authenticated;
 -- which report (function) needs which ticks (any of them)
 create or replace function public.se_perm_of(p_fn text) returns text[] language sql immutable as $$
   select case p_fn
-    when 'summary_json' then array['sum'] when 'dashboard_json' then array['sum']
+    when 'summary_json' then array['sum'] when 'dashboard_json' then array['sum'] when 'list_json' then array['sum'] when 'struct_json' then array['sum', 'cmp'] when 'rr_json' then array['rrs'] when 'mr_list_json' then array['mrs']
     when 'rr_summary_json' then array['rrs']
     when 'mr_summary_json' then array['mrs'] when 'mr_repair_json' then array['mrs'] when 'mr_pending_json' then array['mrs']
     when 'kitty_range_json' then array['mrs'] when 'kitty_json' then array['mrs'] when 'kitty_cmp_json' then array['mrs'] when 'kitty_lyk_json' then array['mrs'] when 'kitty_need_json' then array['mrs']
@@ -4655,7 +4655,7 @@ begin
   for i in 1 .. coalesce(array_length(types, 1), 0) loop
     if coalesce(p_args, '{}'::jsonb) ? names[i] then
       lst := lst || case when lst = '' then '' else ', ' end || quote_ident(names[i]) || ' => ' ||
-             case when format_type(types[i], null) = 'jsonb' then '($1->' || quote_literal(names[i]) || ')' else '($1->>' || quote_literal(names[i]) || ')::' || format_type(types[i], null) end;
+             case when format_type(types[i], null) = 'jsonb' then '($1->' || quote_literal(names[i]) || ')' when format_type(types[i], null) like '%[]' then 'coalesce(array(select jsonb_array_elements_text($1->' || quote_literal(names[i]) || ')), array[]::text[])::' || format_type(types[i], null) else '($1->>' || quote_literal(names[i]) || ')::' || format_type(types[i], null) end;
     end if;
   end loop;
   perform set_config('request.jwt.claim.sub', uid::text, true);
