@@ -2311,7 +2311,7 @@ nav button#tmr{margin-top:auto}
 .sedn{font-weight:800;margin:12px 0 4px;color:#1e3a8a}tr.dtot td{background:#f1f5f9;font-weight:800}
 @media print{.sew{display:table-row!important}.sebody{display:block!important}.setog{display:none!important}}
 .ps .sew{display:table-row!important}.ps .sebody{display:block!important}.ps .setog{display:none!important}
-body.se-on #mkbc,body.se-on #msbase,body.se-on #mssave,body.se-on #mkbase,body.se-on #mksave,body.se-on #chmbase,body.se-on #mmstd,body.se-on #mmreset,body.se-on #rpweb,body.se-on .ulnew{display:none!important}
+body.se-on #mkit,body.se-on #mrep,body.se-on #tsq,body.se-on #mkbc,body.se-on #msbase,body.se-on #mssave,body.se-on #mkbase,body.se-on #mksave,body.se-on #chmbase,body.se-on #mmstd,body.se-on #mmreset,body.se-on #rpweb,body.se-on .ulnew{display:none!important}
 </style>
 </head>
 <body class="on-home">
@@ -2409,7 +2409,7 @@ body.se-on #mkbc,body.se-on #msbase,body.se-on #mssave,body.se-on #mkbase,body.s
       <div id="dmsg"></div>
       <div class="gwrap"><table class="gt gt2 mt" id="dt"></table></div>
       <button class="btn sec lmore hide" id="dmore"></button>
-      <datalist id="wsdl"></datalist><datalist id="frdl"></datalist><datalist id="drdl"></datalist>
+      <datalist id="wsdl"></datalist><datalist id="ynl"><option value="Yes"><option value="No"></datalist><datalist id="frdl"></datalist><datalist id="drdl"></datalist>
     </section>
 
     <!-- EMERGENCY -->
@@ -2506,6 +2506,7 @@ body.se-on #mkbc,body.se-on #msbase,body.se-on #mssave,body.se-on #mkbase,body.s
         <div class="bar" style="align-items:flex-end"><div style="flex:1;min-width:220px"><label>Google Sheet link</label><input type="text" id="sirurl" placeholder="https://docs.google.com/spreadsheets/..." spellcheck="false" autocapitalize="off"></div>
           <div><label>Column heading of INDENT NO</label><input type="text" id="sircol" value="INDENT NO"></div></div>
         <div class="bar" style="margin-top:10px"><button class="btn" id="sirtest">Test</button><button class="btn" id="sirsave">Save</button><button class="btn" id="sirrm">Remove link</button></div>
+        <div class="bar" style="align-items:flex-end;margin-top:14px;border-top:1px solid #e2e8f0;padding-top:12px"><div style="flex:1;min-width:220px"><label>SIR form link (the "Fill SIR" button of the Summary opens this page)</label><input type="text" id="sirform" placeholder="https://..." spellcheck="false" autocapitalize="off"></div><button class="btn" id="sirformsave" type="button">Save form link</button></div>
       </div>
       <div class="card acard" id="wscard"><h3>Workshops</h3>
         <div class="muted" style="font-size:12px;margin-bottom:6px">Write the names of your own workshops here. Then give each user the workshops he works for. <b>Short name (phone)</b>: what the phone screen shows in the tables instead of the long name (e.g. AZM for AZAMGARH). Leave it empty for the automatic short name.</div>
@@ -3394,7 +3395,7 @@ function cleanMob(v) {            // '' | 10 digit | null (invalid, e.g. 8.88E+0
 function dotFmt(v) { var d = String(v).replace(/\D/g, '').slice(0, 8), o = d.slice(0, 2); if (d.length > 2) o += '.' + d.slice(2, 4); if (d.length > 4) o += '.' + d.slice(4); return o; }
 // grid columns: [index in the 20-value row, heading, kind]   (Category (6) and TIME (17) are not used any more)
 var DCOL = [[0, 'WORKSHOP', 'ws'], [1, 'DIVISION'], [2, 'SUBSTATION'], [3, 'FEEDER'], [4, 'PLACE OF DAMAGE'], [5, 'CAPACITY'], [7, 'COMPLAIN NUMBER'], [8, 'PR NO'], [9, 'PR DATE', 'date'], [10, 'JE NAME'], [11, 'JE MOBILE', 'mob'],
-  [12, 'ISSUED TO FIRM'], [13, 'ISSUE DATE', 'date'], [14, 'DRIVER NAME'], [15, 'DRIVER MOBILE', 'mob'], [16, 'REPLACEMENT DATE', 'date'], [18, 'RETURN DATE', 'date'], [19, 'REMARK']];
+  [12, 'ISSUED TO FIRM'], [13, 'ISSUE DATE', 'date'], [14, 'DRIVER NAME'], [15, 'DRIVER MOBILE', 'mob'], [16, 'REPLACEMENT DATE', 'date'], [18, 'RETURN DATE', 'date'], [23, 'HT PROTECTION', 'yn'], [24, 'LT PROTECTION', 'yn'], [19, 'REMARK']];
 var ALLCOLS = ['Workshop', 'DIVISION', 'SUBSTATION', 'FEEDER', 'PLACE OF DAMAGE', 'CAPACITY', 'Category of Transformer', 'COMPLAIN NUMBER', 'PR NO', 'PR DATE', 'JE Name', 'JE Mobile', 'ISSUED TO FIRM', 'ISSUE DATE', 'DRIVER NAME', 'DRIVER MOBILE', 'REPLACEMENT DATE', 'TIME', 'RETURN DATE', 'REMARK'];
 var DATE_IDX = [9, 13, 16, 18], DATE_UI = [9, 13, 16, 18, 22], EDIT_FROM = 10, DSHOW = 400;
 var DROWS = [], DCAN = false, DTOTAL = 0, DSEQ = 0, DTM = null, DSAVING = false, DNEED = false, DLOADED = '';
@@ -3410,7 +3411,7 @@ function mlabel(t) {            // headings -> data-l of every cell (phones show
 function newRow() { var c = blank20(); c[0] = oneWs(); c[9] = $('dd').value.trim(); return { o: null, k: null, c: c, dirty: false, bad: false, ver: 0, isNew: true, keep: true }; }
 var DUP_AFTER = [13, 14, 15, 16, 18];       // issue date, driver name, driver mobile, replacement date, return date
 function dupFix(c) { if (isDupFirm(c[12])) { c[13] = ''; c[14] = 'JE(D)'; c[15] = ''; c[16] = ''; c[18] = ''; } return c; }
-function rowLocked(r, i) { if (i === 21 || i === 22) return !(r.did && r.ded); return i === 20 || !canWrite() || (!r.isNew && i < EDIT_FROM) || (DUP_AFTER.indexOf(i) >= 0 && isDupFirm(r.c[12])); }
+function rowLocked(r, i) { if (i === 23 || i === 24) return !canWrite() || !r.k; if (i === 21 || i === 22) return !(r.did && r.ded); return i === 20 || !canWrite() || (!r.isNew && i < EDIT_FROM) || (DUP_AFTER.indexOf(i) >= 0 && isDupFirm(r.c[12])); }
 var BLANKS = 20;
 function isBlankNew(r) { return r.isNew && !r.dirty && !r.k; }
 function padBlank() {      // empty rows to type or paste into, like an Excel sheet
@@ -3430,7 +3431,7 @@ function drawData() {
     var r = DROWS[ri];
     h += '<tr data-r="' + ri + '" class="' + (r.dirty ? 'dirty ' : '') + (r.bad ? 'bad ' : '') + (r.sel ? 'sel' : '') + '"><td class="ix rn" title="Click to select this row (Shift = range)">' + (n + 1) + '</td>' + DCOL.map(function (c) {
       var i = c[0], lk = rowLocked(r, i), kind = c[2] || '';
-      return '<td class="gc' + (lk ? ' lk' : '') + (i === 20 ? (r.c[20] === 'DONE' ? ' sirD' : r.c[20] ? ' sirP' : '') : (i === 21 || i === 22 ? ' dtc' : '')) + '"><input type="text" data-i="' + i + '" value="' + esc(r.c[i]) + '"' + (lk ? ' readonly tabindex="-1"' : '') + (kind === 'date' ? ' inputmode="numeric" maxlength="10" placeholder="DD.MM.YYYY"' : kind === 'mob' ? ' inputmode="numeric"' : kind === 'ws' ? ' list="wsdl"' : i === 12 ? ' list="frdl"' : i === 14 ? ' list="drdl"' : '') + (i === 8 || i === 9 ? ' class="b"' : '') + '></td>';
+      return '<td class="gc' + (lk ? ' lk' : '') + (i === 20 ? (r.c[20] === 'DONE' ? ' sirD' : r.c[20] ? ' sirP' : '') : (i === 21 || i === 22 ? ' dtc' : '')) + '"><input type="text" data-i="' + i + '" value="' + esc(r.c[i]) + '"' + (lk ? ' readonly tabindex="-1"' : '') + (kind === 'date' ? ' inputmode="numeric" maxlength="10" placeholder="DD.MM.YYYY"' : kind === 'mob' ? ' inputmode="numeric"' : kind === 'ws' ? ' list="wsdl"' : kind === 'yn' ? ' list="ynl" maxlength="3" placeholder="Yes / No"' : i === 12 ? ' list="frdl"' : i === 14 ? ' list="drdl"' : '') + (i === 8 || i === 9 ? ' class="b"' : '') + '></td>';
     }).join('') + '<td class="ix">' + (canWrite() ? '<button class="rx" title="Delete this row">&#10005;</button>' : '') + '</td></tr>';
   });
   $('dt').innerHTML = h + '</tbody>';
@@ -3478,7 +3479,7 @@ function loadData(force) {
     DCAN = !!r.canEdit; DTOTAL = r.total; DLOADED = all ? 'ALL' : d;
     DROWS = r.rows.map(function (a) { return { o: a.slice(0, 20), k: [a[0], a[8]], c: a.slice(0, 20), dirty: false, bad: false, ver: 0, isNew: false }; });
     DSHOW = 400; dstat('');
-    return (typeof sirDataPrep === 'function' ? sirDataPrep(force) : Promise.resolve()).then(function () { return dtcDataPrep(); }).then(function () { if (seq === DSEQ) drawData(); });
+    return (typeof sirDataPrep === 'function' ? sirDataPrep(force) : Promise.resolve()).then(function () { return dtcDataPrep(); }).then(function () { return protDataPrep(); }).then(function () { if (seq === DSEQ) drawData(); });
   }).catch(function (e) { if (seq !== DSEQ) return; dstat(''); msg('dmsg', esc(e.message), 'err'); });
 }
 function fixRow(c) {     // the values the way they are sent: dates as DD.MM.YYYY, PR no without ".0"
@@ -3486,7 +3487,7 @@ function fixRow(c) {     // the values the way they are sent: dates as DD.MM.YYY
 }
 function newReady(c) { return !!(c[0] && c[1] && c[5] && c[8] && c[9]); }      // a NEW row is saved by itself only when these are filled (Save button: any time)
 function flushData(force) {
-  clearTimeout(DTM); dtcFlush();
+  clearTimeout(DTM); dtcFlush(); protFlush();
   if (DSAVING) { DNEED = true; return DWAIT; }
   var items = [], map = [];
   DROWS.forEach(function (r, ri) { if (!r.dirty) return; if (r.isNew && !force && !newReady(r.c)) return; var rr = fixRow(r.c); if (!String(rr[8]).trim()) return; items.push(r.k ? { k: r.k, o: r.o, r: rr } : { r: rr }); map.push(ri); });
@@ -3497,11 +3498,11 @@ function flushData(force) {
     DSAVING = false;
     if (res && (res.added || res.updated)) { cclear(); SKEY = ''; SUM = null; CMP = null; }     // saved figures changed: the Summary / Comparison must not reuse the 5-minute old copy
     map.forEach(function (ri, j) {
-      var r = DROWS[ri]; if (!r) return; var k21 = r.c[21], k22 = r.c[22];
+      var r = DROWS[ri]; if (!r) return; var k21 = r.c[21], k22 = r.c[22], k23 = r.c[23], k24 = r.c[24];
       if (res.bad.indexOf(j) >= 0) { r.bad = true; return; }
       var sv = res.rows[String(j)] ? res.rows[String(j)].slice(0, 20) : fixRow(r.c); r.bad = false; r.o = sv; r.k = [sv[0], sv[8]]; r.isNew = false;
       if (r.ver === vers[j]) { r.c = sv.slice(); r.dirty = false; } else r.dirty = true;
-      r.c[21] = k21; r.c[22] = k22;
+      r.c[21] = k21; r.c[22] = k22; r.c[23] = k23; r.c[24] = k24;
     });
     var parts = []; if (res.added) parts.push(res.added + ' added'); if (res.updated) parts.push(res.updated + ' updated'); if (res.skipped) parts.push(res.skipped + ' NOT saved');
     dstat(res.skipped ? '' : 'Saved' + (parts.length ? ' (' + parts.join(', ') + ')' : ''), res.skipped ? 'bad' : 'ok');
@@ -3517,6 +3518,7 @@ $('dt').addEventListener('input', function (e) {
   var inp = e.target; if (!inp.dataset || inp.dataset.i === undefined) return;
   var tr = inp.closest('tr'), r = DROWS[+tr.dataset.r], i = +inp.dataset.i;
   if (DATE_UI.indexOf(i) >= 0 && /^[\d.]*$/.test(inp.value)) { var f = dotFmt(inp.value); if (f !== inp.value) inp.value = f; }
+  if (i === 23 || i === 24) { r.c[i] = inp.value; return; }
   if (i === 21 || i === 22) { r.c[i] = inp.value; dstat('Unsaved DTC...'); queueSave(); return; }
   r.c[i] = inp.value; r.ver++; r.dirty = true; r.bad = false; tr.classList.add('dirty'); tr.classList.remove('bad');
   dstat('Unsaved changes...'); queueSave();
@@ -3525,6 +3527,7 @@ $('dt').addEventListener('change', function (e) {          // when a cell is lef
   var inp = e.target; if (!inp.dataset || inp.dataset.i === undefined) return;
   var tr = inp.closest('tr'), r = DROWS[+tr.dataset.r], i = +inp.dataset.i;
   if (DATE_UI.indexOf(i) >= 0 && inp.value) { var v = normDate(inp.value); if (v !== inp.value) { inp.value = v; r.c[i] = v; } }
+  if (i === 23 || i === 24) { var yn = /^\s*y/i.test(inp.value) ? 'Yes' : /^\s*n/i.test(inp.value) ? 'No' : ''; inp.value = yn; r.c[i] = yn; protFlush(); return; }
   if (i === 21 || i === 22) { r.c[i] = inp.value; dtcFlush(); return; }
   if ((i === 11 || i === 15) && inp.value) { var m = cleanMob(inp.value); if (m && m !== inp.value) { inp.value = m; r.c[i] = m; } }
   if (i === 12 || i === 14) drvAuto(inp, r, i, tr);
@@ -5565,8 +5568,11 @@ var MM_RK = { fresh: 'Fresh Oil', reclaim: 'Reclaim Oil', ou: 'O&U Oil', reclaim
 var MM_K = ['10', '16', '25', '63', '100', '160', '250(al)', '250(cu)', '400', '630'];
 var MMK_STD = ['10', '16', '25', '63', '100', '160', '250(al)', '400', '630'];   // the Cu 250 KVA is not counted in the wire / strip consumption
 var MM_OC = ['10', '16', '25', '63', '100', '160', '250', '400', '630', '1000'];
-var MM_DEF_STD = {"0":{"10":1},"1":{"10":3},"2":{"25":6},"3":{"25":3},"4":{"63":4},"5":{"63":14},"6":{"16":9,"100":12.5},"7":{"100":12.5},"8":{"160":30},"9":{"250(al)":21.5},"10":{"250(al)":21.5},"11":{"10":7},"12":{"25":13},"13":{"25":3},"14":{"16":11,"63":12.5},"15":{"63":12.5},"16":{"63":3.5},"17":{"63":3.5},"18":{"100":17.5},"19":{"100":17.5},"20":{"100":4.5},"21":{"100":4.5},"22":{"160":60},"23":{"250(al)":40},"24":{"250(al)":32},"25":{"10":2,"16":2,"25":3.5,"63":3.5,"100":3.5,"160":6,"250(al)":6,"250(cu)":6,"400":6,"630":6},"26":{"10":1,"16":1,"25":1,"63":1,"100":1,"160":4},"27":{"10":1,"16":1,"25":1,"63":2,"100":2,"160":5,"250(al)":8,"250(cu)":8,"400":8,"630":8},"28":{"10":1,"16":1,"25":2},"29":{"63":2.5,"100":2.5,"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"30":{"10":0.02,"16":0.03,"25":0.05,"63":0.05,"100":0.05,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"31":{"10":3,"16":3,"25":3,"63":3,"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"32":{"10":2,"16":2,"25":3,"63":3,"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"33":{"10":2,"16":2,"25":4,"63":4,"100":4},"34":{"160":4,"250(al)":4,"250(cu)":4,"400":4},"35":{"630":4},"37":{"10":2,"16":2,"25":4,"63":4,"100":4},"38":{"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"39":{"10":2,"16":2,"25":4,"63":4,"100":4},"40":{"160":4,"250(al)":4,"250(cu)":4,"400":4},"41":{"630":4},"42":{"10":1,"16":1,"25":1,"63":1,"100":1},"43":{"160":1,"250(al)":1,"250(cu)":1,"400":1,"630":1},"44":{"10":2,"16":2,"25":4,"63":4,"100":4,"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"45":{"10":2,"16":2,"25":4,"63":4,"100":4,"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"46":{"10":1,"16":1,"25":3,"63":3,"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"47":{"10":1,"16":1,"25":3,"63":3,"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"48":{"10":1,"16":1,"25":3,"63":3,"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"49":{"25":4,"63":4,"100":4,"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"50":{"100":3,"160":3,"250(al)":3,"250(cu)":3,"400":3,"630":3},"51":{"10":3,"16":3,"25":3,"63":3,"100":3},"52":{"10":3,"16":3,"25":3,"63":3,"100":3},"53":{"10":3,"16":3,"25":3,"63":3,"100":3},"54":{"10":3,"16":3,"25":3,"63":3,"100":3},"55":{"10":3,"16":3,"25":3,"63":3,"100":3},"56":{"160":4,"250(al)":4,"250(cu)":4,"400":4},"57":{"160":4,"250(al)":4,"250(cu)":4,"400":4},"58":{"10":0.5,"16":0.5,"25":0.5,"63":0.5},"59":{"100":1,"160":1,"250(al)":1,"250(cu)":1,"400":1,"630":1},"60":{"10":2,"16":2,"25":4,"63":4,"100":4},"61":{"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"62":{"10":2,"16":2,"25":4,"63":4,"100":4,"160":4,"250(al)":4,"250(cu)":4,"400":4,"630":4},"63":{"160":5,"250(al)":5,"250(cu)":5,"400":5,"630":5},"64":{"10":8,"16":8,"25":12,"63":12,"100":12,"160":12,"250(al)":12,"250(cu)":12,"400":12,"630":12},"65":{"10":4,"16":4,"25":4,"63":4,"100":5,"160":5,"250(al)":5,"250(cu)":5,"400":5,"630":5}};
+var MM_DEF_STD = {"0":{"10":1},"1":{"10":3},"2":{"25":6},"3":{"25":3},"4":{"63":4},"5":{"63":14},"6":{"16":9,"100":12.5},"7":{"100":12.5},"8":{"160":30},"9":{"250(al)":21.5},"10":{"250(al)":21.5},"11":{"10":7},"12":{"25":13},"13":{"25":3},"14":{"16":11,"63":12.5},"15":{"63":12.5},"16":{"63":3.5},"17":{"63":3.5},"18":{"100":17.5},"19":{"100":17.5},"20":{"100":4.5},"21":{"100":4.5},"22":{"160":60},"23":{"250(al)":40},"24":{"250(al)":32},"25":{"10":2,"16":3,"25":3.5,"63":3.5,"100":4,"160":5,"400":5,"630":6,"250(al)":5,"250(cu)":5},"26":{"10":1,"16":1,"25":1,"63":1,"100":1.5,"160":2,"400":2,"630":2,"250(al)":2,"250(cu)":2},"27":{"10":1,"16":1,"25":2,"63":2,"100":2,"160":3,"400":3,"630":3,"250(al)":3,"250(cu)":3},"28":{"10":1,"16":1.5,"25":2,"63":2,"100":2.5,"160":3,"400":3,"630":3,"250(al)":3,"250(cu)":3},"29":{"10":1,"16":1.5,"25":2,"63":2.5,"100":2.5,"160":3,"400":3,"630":3,"250(al)":3,"250(cu)":3},"30":{"10":0.6,"16":1,"25":2,"63":3,"100":3.5,"160":4,"400":6,"630":7,"250(al)":5,"250(cu)":5},"31":{"10":0.25,"16":0.3,"25":0.8,"63":1,"100":1.2,"160":1.5,"400":2.5,"630":3,"250(al)":2,"250(cu)":2},"32":{"10":2,"16":2,"25":3,"63":3,"100":3,"160":3,"400":3,"630":3,"250(al)":3,"250(cu)":3},"33":{"10":2,"16":2,"25":4,"63":4,"100":4},"34":{"160":4,"400":4,"250(al)":4,"250(cu)":4},"35":{"630":4},"37":{"10":2,"16":2,"25":4,"63":4,"100":4},"38":{"160":4,"400":4,"630":4,"250(al)":4,"250(cu)":4},"39":{"10":2,"16":2,"25":4,"63":4,"100":4},"40":{"160":4,"400":4,"250(al)":4,"250(cu)":4},"41":{"630":4},"42":{"10":1,"16":1,"25":1,"63":1,"100":1},"43":{"160":1,"400":1,"630":1,"250(al)":1,"250(cu)":1},"44":{"10":2,"16":2,"25":4,"63":4,"100":4,"160":4,"400":4,"630":4,"250(al)":4,"250(cu)":4},"45":{"10":2,"16":2,"25":4,"63":4,"100":4,"160":4,"400":4,"630":4,"250(al)":4,"250(cu)":4},"46":{"10":1,"16":1,"25":2,"63":2,"100":2,"160":2,"400":2,"630":2,"250(al)":2,"250(cu)":2},"47":{"10":1,"16":1,"25":1,"63":1,"100":1,"160":1,"400":1,"630":1,"250(al)":1,"250(cu)":1},"48":{"100":2,"160":2,"400":2,"630":2,"250(al)":2,"250(cu)":2},"49":{"100":4,"160":4,"400":4,"630":4,"250(al)":4,"250(cu)":4},"50":{"100":2,"160":2,"400":2,"630":2,"250(al)":2,"250(cu)":2},"51":{"10":1,"16":2,"25":2,"63":2,"100":2},"52":{"10":1,"16":2,"25":2,"63":3,"100":3},"53":{"160":4,"400":4,"630":4,"250(al)":4,"250(cu)":4},"54":{"160":2,"400":2,"630":2,"250(al)":2,"250(cu)":2},"55":{"160":1,"400":1,"630":1,"250(al)":1,"250(cu)":1},"56":{"160":1,"400":1,"630":1,"250(al)":1,"250(cu)":1},"57":{"160":1,"400":1,"630":1,"250(al)":1,"250(cu)":1},"58":{"10":0.5,"16":0.5,"25":0.5,"63":0.5},"59":{"100":1,"160":1,"400":1,"630":1,"250(al)":1,"250(cu)":1},"60":{"10":2,"16":2,"25":4,"63":4,"100":4},"61":{"160":4,"400":4,"630":4,"250(al)":4,"250(cu)":4},"62":{"10":2,"16":2,"25":4,"63":4,"100":4,"160":4,"400":4,"630":4,"250(al)":4,"250(cu)":4},"63":{"160":5,"400":5,"630":5,"250(al)":5,"250(cu)":5},"64":{"10":8,"16":8,"25":12,"63":12,"100":12,"160":12,"400":12,"630":12,"250(al)":12,"250(cu)":12},"65":{"10":3,"16":4,"25":5,"63":4,"100":7,"160":7,"400":8,"630":9,"250(al)":8,"250(cu)":8}};
 var MM_OIL_STD = { '10': 40, '16': 50, '25': 90, '63': 150, '100': 190, '160': 220, '250': 380, '400': 480, '630': 650, '1000': 0 };
+var MM_OIL_F = { '10': 16, '16': 20, '25': 36, '63': 60, '100': 76, '160': 220, '250': 380, '400': 480, '630': 650, '1000': 0 };   // default oil std (L): fresh oil of ONE repair
+var MM_OIL_R = { '10': 24, '16': 30, '25': 54, '63': 90, '100': 114, '160': 0, '250': 0, '400': 0, '630': 0, '1000': 0 };   // reclaim oil of ONE repair
+var MM_OIL_D = { '10': 24, '16': 30, '25': 54, '63': 90, '100': 114, '160': 154, '250': 266, '400': 336, '630': 455, '1000': 0 };   // dirty oil recovered per ONE DTC
 var MM_OIL_FAC = { '10': 0.6, '16': 0.6, '25': 0.6, '63': 0.6, '100': 0.6, '160': 0.7, '250': 0.7, '400': 0.7, '630': 0.7, '1000': 0 };
 var MM_OT = [['fresh', 'Fresh Oil'], ['bc', 'B&C Oil'], ['rc', 'Reclaim Oil'], ['ou', 'O&U']];
 var MM_OR = [['open', 'Opening Balance'], ['recv', 'Received During Month'], ['trf', 'Issued for TF Repairing'], ['dist', 'Issued to Dist division'], ['other', 'Issue for reclaim'], ['close', 'Closing Balance']];
@@ -5621,7 +5627,7 @@ function mmWsChain(ws, upto) {
 /* ---- Oil: month chain ---- */
 
 /* ---- menu / page ---- */
-var MM_DEFS = [
+var MM_DEFS_ALL = [
   { k: 'wsc', t: 'Wire & Strip Consumption', s: 'Monthly stock, consumed and as per STD', i: '\u{1F9F5}', c: '#e4f6e8' },
   { k: 'oil', t: 'Oil Recovery Sheet', s: 'Oil account and recovery from DTC', i: '\u{1F6E2}️', c: '#fff4cc' },
   { k: 'rcv', t: 'Oil Receive', s: 'Fresh / Reclaim oil received: date, from where', i: '\u26FD', c: '#e0f2fe' },
@@ -5629,7 +5635,9 @@ var MM_DEFS = [
   { k: 'req', t: 'Material Requirement', s: 'Wire, strip and insulating: need for N days from last year PRs minus stock', i: '\u{1F4CB}', c: '#ffe8d6' },
   { k: 'low', t: 'Oil Found Below STD', s: 'PR wise: oil found, reason of low oil', i: '\u{1F4C9}', c: '#fde8e8' }
 ];
+var MM_DEFS = MM_DEFS_ALL;
 function mmHome() {
+  MM_DEFS = MM_DEFS_ALL.filter(function (d) { return !(seIsSE() && d.k === 'low'); });
   var h = ''; MM_DEFS.forEach(function (d) { h += '<button type="button" class="achip" data-mmk="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + esc(d.t) + '</b><small>' + esc(d.s) + '</small></span></button>'; });
   $('mmchips').innerHTML = h; $('mmmenu').classList.remove('hide'); $('mmpanel').classList.add('hide'); MM.kind = '';
 }
@@ -5776,9 +5784,9 @@ var MM_OSK = [['f', 'Fresh Oil'], ['r', 'Reclaim Oil'], ['d', 'Dirty Oil']];
 function mmOstd(P) {
   var s = P.g.oilstd || {}, legacy = s.f === undefined && s.r === undefined && s.d === undefined, o = { f: {}, r: {}, d: {} };
   MM_OC.forEach(function (k) {
-    o.f[k] = legacy ? (s[k] !== undefined ? mmNum(s[k]) : MM_OIL_STD[k]) : (s.f && s.f[k] !== undefined ? mmNum(s.f[k]) : MM_OIL_STD[k]);
-    o.r[k] = (!legacy && s.r && s.r[k] !== undefined) ? mmNum(s.r[k]) : 0;
-    o.d[k] = (!legacy && s.d && s.d[k] !== undefined) ? mmNum(s.d[k]) : mmR3(MM_OIL_STD[k] * MM_OIL_FAC[k]);
+    o.f[k] = legacy ? (s[k] !== undefined ? mmNum(s[k]) : MM_OIL_F[k]) : (s.f && s.f[k] !== undefined ? mmNum(s.f[k]) : MM_OIL_F[k]);
+    o.r[k] = (!legacy && s.r && s.r[k] !== undefined) ? mmNum(s.r[k]) : MM_OIL_R[k];
+    o.d[k] = (!legacy && s.d && s.d[k] !== undefined) ? mmNum(s.d[k]) : MM_OIL_D[k];
   });
   return o;
 }
@@ -6632,13 +6640,13 @@ function tsLoad() {
     if (seq !== TS.seq) return; TS.std = {}; (a[0].rows || []).forEach(function (x) { TS.std[x[0]] = x; }); TS.stdEdit = !!a[0].edit;
     TS.rows = (a[1].rows || []).map(tsRow); TS.total = a[1].total || 0;
     var wl = {}; TS.rows.forEach(function (r) { wl[r.ws] = 1; }); wl[w || mrWs()[0]] = 1;
-    return Promise.all(Object.keys(wl).map(tsFirms)).then(function () { if (seq !== TS.seq) return; for (var i = 0; i < 10; i++) TS.rows.push(tsBlank()); busy(b, false); msg('tsmsg', TS.total > TS.rows.length - 10 ? 'First ' + (TS.rows.length - 10) + ' of ' + TS.total + ' rows are shown. Narrow the dates to see the rest.' : '', 'info'); tsDraw(); });
+    return Promise.all(Object.keys(wl).map(tsFirms)).then(function () { if (seq !== TS.seq) return; if (!seIsSE()) for (var i = 0; i < 10; i++) TS.rows.push(tsBlank()); busy(b, false); msg('tsmsg', TS.total > TS.rows.length - (seIsSE() ? 0 : 10) ? 'First ' + (TS.rows.length - 10) + ' of ' + TS.total + ' rows are shown. Narrow the dates to see the rest.' : '', 'info'); tsDraw(); });
   }).catch(function (e) { busy(b, false); if (seq === TS.seq) msg('tsmsg', esc(e.message), 'err'); });
 }
 function tsOpts(list, cur, blank) { var h = '<option value="">' + (blank || '') + '</option>', seen = false; list.forEach(function (x) { if (String(x) === String(cur)) seen = true; h += '<option' + (String(x) === String(cur) ? ' selected' : '') + '>' + esc(x) + '</option>'; }); if (cur && !seen) h += '<option selected>' + esc(cur) + '</option>'; return h; }
 function tsInp(k, v, ph, dflt, i, dis) { return '<input type="text" data-k="' + k + '" autocomplete="off" value="' + esc(v) + '"' + (ph ? ' placeholder="' + ph + '"' : '') + (dflt ? ' class="dflt"' : '') + (dis ? ' disabled' : '') + '>'; }
 function tsRowHtml(r, i) {
-  var d = !r.edit, dt = function (v, def) { return v === def; };
+  var d = !r.edit || seIsSE(), dt = function (v, def) { return v === def; };
   var h = '<tr data-i="' + i + '"><td class="sn">' + (i + 1) + '</td>' +
     '<td data-h="WORKSHOP"><select data-k="ws"' + (d || r.id ? ' disabled' : '') + '>' + tsOpts(mrWs(), r.ws) + '</select></td>' +
     '<td data-h="FIRM"><select data-k="firm"' + (d ? ' disabled' : '') + '>' + tsOpts(TS.firms[r.ws] || [], r.firm, '(choose firm)') + '</select></td>' +
@@ -6647,7 +6655,7 @@ function tsRowHtml(r, i) {
   h += '<td data-h="TURN RATIO">' + tsInp('tr0', r.tr[0], TS_DT, false, i, d) + '</td><td data-h="MEGGER">' + tsInp('mg0', r.mg[0], '2000-5000', false, i, d) + '</td>';
   h += '<td data-h="DVDF">' + tsInp('dvdf', r.dvdf, '', false, i, d) + '</td><td data-h="HIGH VOLTAGE">' + tsInp('hv', r.hv, '', false, i, d) + '</td><td data-h="NO LOAD LOSS (W)">' + tsInp('nll', r.nll, '', false, i, d) + '</td><td data-h="FULL LOAD LOSS">' + tsInp('fll', r.fll, '', false, i, d) + '</td>';
   h += '<td class="au q" data-h="IS LOSSES"></td><td class="au p" data-h="% LOSSES"></td>';
-  h += '<td data-h="REMARK" style="grid-column:1/-1">' + tsInp('remark', r.remark, '', false, i, d) + '</td><td class="rx">' + (r.edit ? '<button type="button" title="Delete this row">&times;</button>' : '') + '</td></tr>';
+  h += '<td data-h="REMARK" style="grid-column:1/-1">' + tsInp('remark', r.remark, '', false, i, d) + '</td><td class="rx">' + (r.edit && !seIsSE() ? '<button type="button" title="Delete this row">&times;</button>' : '') + '</td></tr>';
   return h;
 }
 function tsStd(cap) { var x = TS.std[cap]; return x && x[2] ? +x[2] : 0; }
@@ -8374,6 +8382,7 @@ function sirCfgLoad() { return rpc('sir_cfg_get').then(function (a) { a = a || [
 function sirAdmInit() {
   var top = $('sirtop'); if (!top) return;
   var on = ME.role === 'admin'; top.classList.toggle('hide', !(on || arOn())); $('sirtg').classList.toggle('hide', !on); $('sircfg').classList.toggle('hide', !on); if (!on) { admChips(); return; }
+  sirFormLoad();
   sirCfgLoad().then(function (c) { $('sirurl').value = c ? c.url : ''; $('sircol').value = c ? c.col : 'INDENT NO'; $('sirst').textContent = c ? 'Linked' : 'Not linked'; $('sirst').className = 'tag ' + (c ? 'ok' : ''); admChips(); }).catch(function () { });
 }
 function sirSave(clear) {
@@ -8395,13 +8404,15 @@ $('sirtest').onclick = sirTest;
 function sirCard(s) {
   return '<div class="card k-cap k-sir" id="sircard"><h3>SIR Summary <span class="muted" style="text-transform:none">(100 KVA &amp; above &middot; PRs raised between the two dates below)</span></h3>' +
     '<div class="bar sirbar" style="align-items:flex-end;margin-bottom:8px"><div><label>PR from</label><div class="dt"><input type="text" class="dtx" id="sirfrom" inputmode="numeric" placeholder="DD.MM.YYYY" value="' + esc(SIRFROM || s.from) + '"><span class="calw">&#128197;<input type="date" data-c="sirfrom"></span></div></div><div><label>Pending till</label><div class="dt"><input type="text" class="dtx" id="sirtill" inputmode="numeric" placeholder="DD.MM.YYYY" value="' + esc(SIRTILL || s.to) + '"><span class="calw">&#128197;<input type="date" data-c="sirtill"></span></div></div><button class="btn" id="sirgo">Show</button><button class="btn" id="sirre" title="Read the Google Sheet again">Refresh</button></div>' +
-    '<div id="sirbody" class="muted" style="padding:6px 2px">Loading...</div></div>';
+    '<div id="sirbody" class="muted" style="padding:6px 2px">Loading...</div>' +
+    '<div class="bar" style="margin-top:10px"><button class="btn hide" id="sirfill" type="button">Fill SIR</button></div></div>';
 }
 function sirAfter(s) {
   var o = $('sout'); if (!o) return;
   if (SIRTO !== s.from + '|' + s.to) { SIRTILL = ''; SIRFROM = ''; SIRTO = s.from + '|' + s.to; }      // a new Summary To date resets the pending-till date
   o.insertAdjacentHTML('beforeend', sirCard(s));
   SIRTILL = $('sirtill').value; SIRFROM = $('sirfrom').value;
+  sirFormLoad();
   $('sirgo').onclick = function () { SIRTILL = $('sirtill').value.trim(); SIRFROM = $('sirfrom').value.trim(); sirRun(s, false); };
   $('sirre').onclick = function () { sirRun(s, true); };
   sirRun(s, false);
@@ -8547,9 +8558,9 @@ new MutationObserver(function () { setTimeout(homeFit, 30); }).observe(document.
    The SE adds the divisions (se_src); every report he opens asks each division's project (se_call, read only) and the answers are put together. */
 var SE = { list: [], byId: {}, cl: {}, map: {}, warn: {} }, SEG = null, SE_NEW = '';
 var SE_PERMS = [['sum', 'R&R Summary (division wise, capacity wise, age wise)'], ['rrs', 'R&R Repair / Assembly / Oven daily report'], ['mrs', 'M&R Summary and Kitty'], ['scrap', 'Scrap'],
-  ['mat_ws', 'Material Management: Wire & Strip consumption'], ['mat_oil', 'Material Management: Oil Recovery Sheet (and Oil Found Below STD)'], ['mat_ins', 'Material Management: Insulating Material'], ['mat_rcv', 'Material Management: Oil Receive list'], ['mat_req', 'Material Management: Material Requirement'],
+  ['mat_ws', 'Material Management: Wire & Strip consumption'], ['mat_oil', 'Material Management: Oil Recovery Sheet'], ['test', 'Testing Register (view and download only)'], ['mat_ins', 'Material Management: Insulating Material'], ['mat_rcv', 'Material Management: Oil Receive list'], ['mat_req', 'Material Management: Material Requirement'],
   ['cmp', 'Reports: PR Comparative'], ['day', 'Reports: Daywise & Division wise PR and Repair'], ['plinth', 'Reports: Same Plinth Damage']];
-var SE_FED = {}; 'summary_json dashboard_json rr_summary_json mr_summary_json mr_repair_json mr_pending_json kitty_range_json kitty_json kitty_cmp_json kitty_lyk_json kitty_need_json scrap_json scrap_range_json scrap_cap_json mat_get mat_rep mat_dtc mat_low_adj mat_low_list mat_recv_list mat_req_pr compare_all installed_all_json daywise_json plinth_json list_json struct_json rr_json mr_list_json'.split(' ').forEach(function (f) { SE_FED[f] = 1; });
+var SE_FED = {}; 'summary_json dashboard_json rr_summary_json mr_summary_json mr_repair_json mr_pending_json kitty_range_json kitty_json kitty_cmp_json kitty_lyk_json kitty_need_json scrap_json scrap_range_json scrap_cap_json mat_get mat_rep mat_dtc mat_low_adj mat_low_list mat_recv_list mat_req_pr compare_all installed_all_json daywise_json plinth_json list_json struct_json rr_json mr_list_json test_std_json test_list_json test_report_json test_firms_json'.split(' ').forEach(function (f) { SE_FED[f] = 1; });
 var _rpcBase = rpc;
 rpc = function (fn, args) { return (ME && ME.role === 'se' && SE_FED[fn]) ? seFed(fn, args || {}) : _rpcBase(fn, args); };
 var _wsSelBase = wsSelect;
@@ -8846,6 +8857,40 @@ mrScDraw = function () { _mrScDrawBase.apply(this, arguments); if (!seIsSE()) re
     busy2 = false;
   }).observe(document.body, { childList: true, subtree: true });
 })();
+
+/* ---- Data Sheet: HT PROTECTION + LT PROTECTION (Yes / No), saved with prot_set ---- */
+var PROTBUSY = false;
+function protDataPrep() {
+  DROWS.forEach(function (r) { r.pS = ['', '']; r.c[23] = ''; r.c[24] = ''; });
+  var keys = DROWS.filter(function (r) { return r.k; }).map(function (r) { return r.k; }), parts = [];
+  for (var i = 0; i < keys.length; i += 1500) parts.push(keys.slice(i, i + 1500));
+  if (!parts.length) return Promise.resolve();
+  return Promise.all(parts.map(function (ks) { return rpc('prot_map_json', { p_keys: ks }); })).then(function (a) {
+    var m = {}; a.forEach(function (x) { (x || []).forEach(function (y) { m[y[0] + '\u0001' + y[1]] = y; }); });
+    DROWS.forEach(function (r) { var y = r.k && m[r.k[0] + '\u0001' + r.k[1]]; if (y) { r.c[23] = y[2]; r.c[24] = y[3]; r.pS = [y[2], y[3]]; } });
+  }).catch(function (e) { try { msg('dmsg', 'HT / LT protection not shown: ' + /Could not find|schema cache|does not exist/i.test(e.message) ? 'run the new setup.sql (STEP 116) once.' : esc(e.message), 'info'); } catch (x) { } });
+}
+function protFlush() {
+  if (PROTBUSY) return Promise.resolve();
+  var jobs = DROWS.filter(function (r) { return r.k && (String(r.c[23] || '') !== (r.pS ? r.pS[0] : '') || String(r.c[24] || '') !== (r.pS ? r.pS[1] : '')); });
+  if (!jobs.length) return Promise.resolve();
+  PROTBUSY = true; var bad = 0;
+  return jobs.reduce(function (p, r) {
+    return p.then(function () {
+      var ht = String(r.c[23] || ''), lt = String(r.c[24] || '');
+      return rpc('prot_set', { p_ws: r.k[0], p_pr: r.k[1], p_ht: ht, p_lt: lt }).then(function () { r.pS = [ht, lt]; }).catch(function (e) { bad++; msg('dmsg', 'HT / LT protection not saved: ' + esc(e.message), 'err'); });
+    });
+  }, Promise.resolve()).then(function () { PROTBUSY = false; if (!bad) dstat('Saved', 'ok'); });
+}
+/* ---- SIR Summary: "Fill SIR" opens the site inspection form ---- */
+var SIRFORM = '';
+function sirFormLoad() { return rpc('sir_form_get').then(function (u) { SIRFORM = u || ''; var b = $('sirfill'); if (b) b.classList.toggle('hide', !SIRFORM); var i = $('sirform'); if (i && ME && ME.role === 'admin') i.value = SIRFORM; }).catch(function () { }); }
+document.addEventListener('click', function (e) {
+  var b = e.target && e.target.closest ? e.target.closest('#sirfill,#sirformsave') : null; if (!b) return;
+  if (b.id === 'sirfill') { if (SIRFORM) window.open(SIRFORM, '_blank', 'noopener'); return; }
+  var u = ($('sirform').value || '').trim(); msg('sirmsg', 'Saving...', 'info');
+  rpc('sir_form_set', { p_url: u }).then(function () { SIRFORM = u; msg('sirmsg', u ? 'SIR form link saved. The "Fill SIR" button of the Summary opens it.' : 'SIR form link removed.', 'info'); }).catch(function (er) { msg('sirmsg', /Could not find|schema cache|does not exist/i.test(er.message) ? 'Run the new setup.sql (STEP 117) once, then try again.' : esc(er.message), 'err'); });
+});
 </script>
 </body>
 </html>

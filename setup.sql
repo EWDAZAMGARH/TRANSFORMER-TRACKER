@@ -4584,7 +4584,7 @@ revoke all on public.se_share from public, anon, authenticated;
 -- which report (function) needs which ticks (any of them)
 create or replace function public.se_perm_of(p_fn text) returns text[] language sql immutable as $$
   select case p_fn
-    when 'summary_json' then array['sum'] when 'dashboard_json' then array['sum'] when 'list_json' then array['sum'] when 'struct_json' then array['sum', 'cmp'] when 'rr_json' then array['rrs'] when 'mr_list_json' then array['mrs']
+    when 'summary_json' then array['sum'] when 'dashboard_json' then array['sum'] when 'test_std_json' then array['test'] when 'test_list_json' then array['test'] when 'test_report_json' then array['test'] when 'test_firms_json' then array['test'] when 'list_json' then array['sum'] when 'struct_json' then array['sum', 'cmp'] when 'rr_json' then array['rrs'] when 'mr_list_json' then array['mrs']
     when 'rr_summary_json' then array['rrs']
     when 'mr_summary_json' then array['mrs'] when 'mr_repair_json' then array['mrs'] when 'mr_pending_json' then array['mrs']
     when 'kitty_range_json' then array['mrs'] when 'kitty_json' then array['mrs'] when 'kitty_cmp_json' then array['mrs'] when 'kitty_lyk_json' then array['mrs'] when 'kitty_need_json' then array['mrs']
@@ -4707,4 +4707,49 @@ begin
 end $$;
 revoke all on function public.se_ok(), public.se_src_list(), public.se_src_add(text, text, text, text), public.se_src_del(bigint) from public, anon;
 grant execute on function public.se_ok(), public.se_src_list(), public.se_src_add(text, text, text, text), public.se_src_del(bigint) to authenticated;
+
+-- ################ STEP 116 : DATA SHEET - HT PROTECTION and LT PROTECTION (Yes / No, after the RETURN DATE) ################
+alter table public.data add column if not exists ht_prot text;
+alter table public.data add column if not exists lt_prot text;
+create or replace function public.prot_map_json(p_keys jsonb) returns jsonb language sql stable security invoker set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_array(d.workshop, d.pr_no, coalesce(d.ht_prot, ''), coalesce(d.lt_prot, ''))), '[]'::jsonb)
+    from public.data d join jsonb_array_elements(coalesce(p_keys, '[]'::jsonb)) k on d.workshop = k->>0 and d.pr_no = k->>1
+   where coalesce(d.ht_prot, '') <> '' or coalesce(d.lt_prot, '') <> '' $$;
+create or replace function public.prot_set(p_ws text, p_pr text, p_ht text, p_lt text) returns boolean language plpgsql security definer set search_path = public as $$
+declare ht text := case when upper(btrim(coalesce(p_ht, ''))) in ('YES', 'Y') then 'Yes' when upper(btrim(coalesce(p_ht, ''))) in ('NO', 'N') then 'No' else null end;
+        lt text := case when upper(btrim(coalesce(p_lt, ''))) in ('YES', 'Y') then 'Yes' when upper(btrim(coalesce(p_lt, ''))) in ('NO', 'N') then 'No' else null end;
+begin
+  if not public.can_edit_rows() then raise exception 'You do not have permission to change data.'; end if;
+  if not (p_ws = any (coalesce(public.my_workshops(), '{}'))) then raise exception 'You do not have permission to change this entry'; end if;
+  update public.data set ht_prot = ht, lt_prot = lt where workshop = p_ws and pr_no = p_pr;
+  return found;
+end $$;
+revoke all on function public.prot_map_json(jsonb), public.prot_set(text, text, text, text) from public, anon;
+grant execute on function public.prot_map_json(jsonb), public.prot_set(text, text, text, text) to authenticated;
+
+-- ################ STEP 117 : SIR FORM LINK (the "Fill SIR" button of the Summary opens the link the Admin pastes) ################
+create table if not exists public.sir_form (
+  org_division text primary key,
+  url text not null check (url ~ '^https://' and length(url) <= 700),
+  by_login text, at timestamptz not null default now()
+);
+alter table public.sir_form enable row level security;
+revoke all on public.sir_form from public, anon, authenticated;
+create or replace function public.sir_form_get() returns text
+language sql stable security definer set search_path = public as $$
+  select (select f.url from public.sir_form f
+           where f.org_division in (select w.org_division from public.workshops w where w.name = any (coalesce(public.my_workshops(), '{}'))) limit 1) $$;
+create or replace function public.sir_form_set(p_url text) returns text
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); u text := btrim(coalesce(p_url, ''));
+begin
+  if c.user_id is null or c.role <> 'admin' or not c.active or c.org_division is null then raise exception 'Only the Admin of the division can set the SIR form link.'; end if;
+  if u = '' then delete from public.sir_form where org_division = c.org_division; return 'removed'; end if;
+  if u !~* '^https://[^\s]+$' or length(u) > 700 then raise exception 'Paste a full link that starts with https://'; end if;
+  insert into public.sir_form(org_division, url, by_login, at) values (c.org_division, u, c.login_id, now())
+    on conflict (org_division) do update set url = excluded.url, by_login = excluded.by_login, at = now();
+  return 'saved';
+end $$;
+revoke all on function public.sir_form_get(), public.sir_form_set(text) from public, anon;
+grant execute on function public.sir_form_get(), public.sir_form_set(text) to authenticated;
 notify pgrst, 'reload schema';
