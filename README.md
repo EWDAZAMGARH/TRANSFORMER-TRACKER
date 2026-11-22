@@ -489,3 +489,112 @@ Cause: the Excel-like grid (class `xg`) had a global rule "only digits can be ty
 ## Step 91 - drive-archive.gs: the lock is taken after the ping, inside try (errors are returned to the app, not a silent Failed); authorizeOnce also asks for the lock permission
 
 ## Step 92 - Admin > Google Drive: first-time guide with Copy and Download buttons for drive-archive.gs, 7 steps and a "if the test fails" list
+
+## Step 93 - Login with only ID + password (directory in the DEFAULT project, SQL step 53)
+- SQL (inside setup.sql; also `site/supabase-step53-userdir.sql`): tables `ud_project`, `ud_login`, `ud_cfg`; functions `ud_register`, `ud_find`, `ud_status` (callable without login), `ud_logins_json`, `ud_cfg_get/set`, `ud_admin_list/set`. Run it in the DEFAULT project (config.js) AND in every Admin's project.
+- Admin tab > "Login without code": the Admin presses "Publish my IDs" once (the project URL + publishable key + the list of IDs go to the default project; a private token stays in his own project). New / deleted users are published again by themselves.
+- Admin tab > "Admin directory" (App Creator, default project): Approve / Block / Remove each Admin. Only approved Admins are used by the login page.
+- Login page: the ID is looked up in the directory; found once -> the app connects to that project and logs in; found in 2 approved projects -> login refused; not found -> the old way (the project of this device, then the default project). The workshop code and the staff link still work.
+- Creating a user whose ID is already used by another Admin is refused.
+- Tested only on a local Postgres + a mocked browser. NOT tested on a real Supabase.
+
+## Step 94 - ONE SQL file
+- `setup.sql` is the only SQL file. It contains everything (also the workshop-code registry, only created if it is not there). Every new user / project: run setup.sql once; after an update: run it again (safe). The separate supabase-stepNN files of steps 50-53 were removed.
+
+### Step 95 - New default project
+config.js now points to the default (App Creator) project https://ctmbrmymibxdyieqjmvz.supabase.co. Run setup.sql once there; every Admin then presses "Publish my IDs" again and the App Creator approves in Admin > Admin directory. Cache tt-mr57.
+
+### Step 96 - Default project changed again
+config.js now points to https://smfjkazjgjxfykbymipp.supabase.co (App Creator: k.mith313). Run setup.sql there, make the creator profile, every Admin presses "Publish my IDs" again. Cache tt-mr58.
+
+### Step 97 - PR / Complaint search (no login) finds the record in EVERY approved Admin
+- A device linked to one Admin (staff link / workshop code / earlier login) still searches only his project.
+- A fresh app (Play Store / APK / exe) asks the default project `ud_public_list()` (new, in setup.sql: only the publishable key and the DIVISION part of the label of APPROVED Admins, never an e-mail) and searches all of them, 6 at a time, 9 s limit each. The list shows the Admin division; tapping a row opens the card from that Admin project.
+- With more than one project the search runs on the Search button / Enter only (no live typing). Run setup.sql again in the DEFAULT project. Cache tt-mr59.
+
+### Step 98 - M&R workshop lists follow the Admin workshops at once
+Kitty / Repair / Scrap / Dtc workshop lists were built only at login, so a workshop added afterwards showed "No workshop is given to you." until the next login. New mrFillWs() rebuilds them (keeps the chosen workshop) after every add / rename / delete. Cache tt-mr60.
+
+### Step 99 - M&R summary on a phone
+Tables no longer squeezed (workshop names broken into letters, totals touching): on a screen up to 700 px they keep a readable size, the first column stays fixed and the table scrolls sideways; in the capacity table the workshop headings show 3 letters (AZA, MAU, BAL, TOT). Desktop and print unchanged. Cache tt-mr61.
+
+### Step 100 - Short workshop names on a phone
+In the M&R summary (workshop wise, Kitty, capacity wise) the workshop name is shown as 3+ letters (AZA, MAU, BAL; longer only if two names would clash) on screens up to 700 px; desktop, Print and Excel keep the full name (the full name stays in the text, the short one is a data-ws attribute shown by CSS). Cache tt-mr62.
+
+### Step 101 - Short workshop names in every table (phone)
+On a screen up to 700 px every table cell (td/th) that is only a workshop name shows the short name (AZA, MAU, BAL; longer if two names would clash). A small observer tags the cells after each redraw (display only: the full name stays in the text, so Excel, Print and the desktop view are unchanged). Cells that are links or inputs are left alone. Cache tt-mr63.
+
+### Step 102 - Admin sets the short workshop name
+Admin > Workshops has a new column "Short name (phone)" (max 8 characters, saved with Save): the phone screen shows it in every table instead of the long workshop name; empty = automatic short name. Stored in workshops.short_name (new column + RPC ws_set_short in setup.sql: an Admin can only change his own division workshops; the same short name cannot be used twice in a division). An older database without the column keeps working (the app reads it with a fallback). Run setup.sql again in each Admin project. Cache tt-mr64.
+
+### Step 103 - Same font for short and already-short workshop names
+A short name (AZA, BAL) was drawn bigger and bolder than a name that needs no shortening (MAU). The size the cell really has is now read before the short name is shown (--wf) and weight / line height are inherited, so every workshop name in every table has the same font on a phone. Cache tt-mr65.
+
+### Step 104 - M&R summary on one phone screen like R&R
+The sideways scroll of Step 99 is removed: the M&R summary tables (workshop wise, Kitty, capacity wise) use the same compact phone font as the R&R summary and, with the short workshop names, fit the screen width. The short name typed in Admin > Workshops is saved as soon as the box is left or Enter is pressed (no need to find Save). Cache tt-mr66.
+
+Step 105 - Reports tab (old Comparison): icon menu (PR Comparative, Daywise PR & Repair, Kitty, Chamber Assembly, Same Plinth Damage). Same Plinth Damage uses plinth_json / plinth_save (STEP 104 in setup.sql); Excel in the sample format plus REASON OF DAMAGE.
+
+Step 106 - LY Repair day by day (kitty_lyd, kitty_lyd_json/set; used by kitty_need_json and daywise_json) = STEP 105 in setup.sql. Reports tab: new icons LY Kitty and LY Repair.
+
+Step 107 - 1000 KVA added everywhere (STD_CAPS, LY Repair grid, kitty_need_json in STEP 105).
+
+Step 108 - Kitty tab: All workshops = total + one table per workshop. Reports: Kitty Summary (kitty_range_json, STEP 106 in setup.sql).
+
+Step 109 - Reports: LY Kitty renamed Kitty Comparison (read-only, last year from Kitty tab), styled like the Kitty tab; Kitty Summary styled the same.
+
+Step 110 - LY Repair moved from Reports to the top of the Repair tab (button next to Repair summary).
+
+Step 111 - Keeping time: R&R 3 years (oldest 12 months go in the 4th year), comparison history 10 years, M&R (rr_entry, test_reg) 5 years (STEP 107 in setup.sql, jobs tf-purge-rr / tf-purge-mr). Applied to Supabase project trakck.
+
+112. M&R > Material Management (new tab, 2 icons): Wire & Strip Consumption and Oil Recovery Sheet, month wise. Repairs of the month come from the Repair tab (mat_rep); opening of a month = closing of the previous month; STD (material std per capacity, oil std) editable per workshop; Summary From-To (All workshops for Admin); Excel download. Needs setup.sql STEP 108 in each Admin's own Supabase project. Files: index.html, sw.js, setup.sql.
+
+113. Material Management made Excel-like (grey grid, borderless cells, arrows / Enter / paste work like Excel). New icon "Oil Receive" (register: date, Fresh / Reclaim, from where, qty; Month entry + Summary From-To). Oil Recovery Sheet: Fresh / Reclaim Received come from Oil Receive; a Reclaim receipt issues qty +5% of B&C (dirty) oil; DTC count from the PRs (dtc table, by DTC date); oil recovered = DTC x Dirty std -> B&C Received; 3 oil STD (Fresh, Reclaim, Dirty). setup.sql STEP 109 (mat_recv, mat_dtc, mat_recv_list/save/del, new mat_get). Files: index.html, sw.js, setup.sql.
+
+114. Data sheet auto-save now clears the saved (5-minute) Summary / Comparison copy, so the Summary shows the new figures at once. Files: index.html, sw.js.
+
+115. Material Management: Wire & Strip - STORE BALANCE and Total Balance removed; "As per STD" is now one merged cell per capacity (all wires / strips of the capacity added); 250 KVA counts only Al (Cu not counted, also removed from the STD dialog). New icon "Oil Found Below STD" (PR no -> Vill, Substation, JE, Division, Capacity from the Data Sheet; oil found, reason, remark; Month entry + Summary). Oil Recovery Sheet: for those PRs (DTC done in the month) the oil found replaces the Dirty std. setup.sql STEP 110 (mat_low, mat_pr_lookup, mat_low_list/save/del/adj). Files: index.html, sw.js, setup.sql.
+
+116. Material Management: "Total transformer DTC (NOS)" of the Oil Recovery Sheet = PRs received in the month (PR date, capacity wise, same as Total PR of the M&R Summary); also used for the Oil Found Below STD adjustment. Note / Reason / Remark cells are wide and wrap (grow with the text). The broken icon text of "Oil Found Below STD" fixed. setup.sql STEP 109 / 110 functions mat_dtc and mat_low_adj changed (run setup.sql again). Files: index.html, sw.js, setup.sql.
+
+117. Oil Receive: the B&C (dirty) oil issued for a Reclaim receipt = reclaim qty / 0.95 (reclaim comes 5% less than the dirty oil; 10000 L reclaim = 10526.316 L dirty) instead of qty x 1.05. Changed in Oil Receive, Oil Recovery Sheet and the Summary. Files: index.html, sw.js (setup.sql only a comment, no need to run again).
+
+118. Wrap only where asked: Material Management - only Reason / Remark / Note cells wrap (the other columns stay one line, PR no column wider); Emergency tab - "JE/AE remark" is now a wide, wrapping, auto-growing box. Files: index.html, sw.js.
+
+119. Reports > "Add report" (Admin pastes the https link of a web app; it opens inside the Reports tab in a frame, with "Open in new tab" and Remove; all users of the division see it) - setup.sql STEP 111 (custom_report, rp_org, rp_list, rp_add, rp_del). Drivers: the separate "Drivers" tab is replaced by a "Drivers" icon button at the top of the Data Sheet (with a back button); a user who has Drivers but no Data Sheet still gets the Drivers tab. Files: index.html, sw.js, setup.sql.
+
+120. Reports > added web app: the frame now fills the window height. Repair tab: new PDF button (print window, choose "Save as PDF"), also in the Repair summary. Repair tab "All workshops" (Admin): each block (Repair / Assembly / Oven) shows Workshop wise first, then Firm wise, with a switch "Workshop + Firm wise"; Excel and PDF follow the chosen view. One workshop / other users: unchanged. Files: index.html, sw.js.
+
+121. Comparison table: fixed % column widths (screen + PDF fit one page, header aligned, Install column visible). Repair "All workshops": Workshop wise (REPAIR/ASSEMBLY/OVEN blocks with TOTAL) then Firm wise per workshop; Excel matches. sw.js tt-mr83.
+
+122. Material Management: Oil Receive has O&U Oil and Reclaimed (O&U) Oil (Reclaimed O&U adds to Reclaim oil and issues qty/0.97 of O&U oil; Reclaim still issues qty/0.95 of B&C). "Issue for reclaim" label. "All workshops" now in Monthly entry too (added-up, view only). New Insulating Material sheet (stock, auto Consumed = as per STD, editable, no auto use when stock is short, STD per capacity in STD dialog). setup.sql STEP 112 (mat_recv kinds, mat_ins, mat_get/mat_save/mat_recv_save) must be run. sw.js tt-mr84.
+
+123. Material Management: new "Material Requirement" icon (Wire, Strip, then Insulating in sheet order: LY PR of the same N days from the chosen date + damage % x STD - stock = actual requirement; admin All workshops). Insulating Material in the order of the Daily Stock Excel (gaskets after press board, ROD group...). Input cells fill the whole cell (the .mkt input max-width 110px was making half boxes). setup.sql STEP 113 mat_req_pr. sw.js tt-mr85.
+
+124. Kitty tab: the "LY repair" button (a copy of the Repair tab LY Repair) is now "LY Kitty" (Admin only, hidden from users): last year kitty day by day, capacity wise, saved in kitty_lyk. The typed "LAST YEAR KITTY ON date" block inside "Kitty compared with last year" is removed (the comparison reads the LY Kitty). setup.sql STEP 114 kitty_lykd_json / kitty_lykd_set. sw.js tt-mr86.
+
+125. v58: SE Workshop (view only). Admin tab: "Share with SE Workshop" (tick reports, code, stop). SE login (role 'se'): Admin tab adds divisions (TFSE1 text), Summary/Comparative combine all divisions. setup.sql STEP 115 needed in every project (+ directory project). sw tt-mr87.
+
+126. v59: SE Workshop views in the Excel format: Summary / M&R Summary / Kitty / Scrap = Division rows + TOTAL, then "WORKSHOP WISE - TAP TO OPEN"; Capacity tables = a column per division; Material Management = All divisions (total) or one division; Material Requirement = closing balance + actual requirement per division; Reports = PR Comparative, Daywise (division columns), Same Plinth. SE sees everything read only. setup.sql STEP 115 updated (list_json, struct_json, rr_json, mr_list_json, array arguments). sw tt-mr88.
+
+127. v60: Insulating material default STD = Excel MATERIAL_REQUIRMENT; Oil default STD (fresh / reclaim / dirty) as the screenshot; SE: Kitty, Repair and Oil Found Below STD hidden, Testing Register view/download only (share tick "Testing Register"); Data Sheet: HT PROTECTION + LT PROTECTION (Yes/No) after RETURN DATE (setup.sql STEP 116); Summary SIR card: "Fill SIR" button opens the inspection form. sw tt-mr89.
+
+128. v61: "Fill SIR" button link is now set by the Admin (Admin tab > SIR > "SIR form link" > Save form link; setup.sql STEP 117: sir_form table + sir_form_get/sir_form_set). No link saved = button hidden. No hardcoded URL in index.html.
+
+129. v62: Admin tab: "Share with SE" and "Divisions" now have their own chip (shown only when tapped, no longer on every section). Choose Home Screen: designs 03/04/05 removed; new "3D" look (3D icon tiles, glass cards, dark menu / phone icon row, M&R app grid) - only styling, no data change. Old choice t03-t05 falls back to Warm.
+
+130. v63: "Fill SIR" button moved from the Summary SIR card into every card of the SIR pending popup (right of Save); opens the Admin-saved SIR form link.
+
+131. v65: "PR Search" is a tab of the MAIN menu (after Reports; not in M&R, not for the SE Workshop) = the login-page PR / Complaint search, usable without logging out. Login page keeps its own search.
+
+132. v66: SIR inside the app. New main tab "SIR" = 3 icons: Fill SIR (form built from the Admin structure; photo and PDF go to the Admin Google Drive), SIR Summary (list, details, PDF, Excel; Admin can edit / delete) and Pending SIR (moved from the Summary screen). "Fill SIR" button of the SIR pending popup opens the form with the PR filled. Admin > "SIR form": Drive script link + folder ID + zone, signatures of EE/AE/JE per workshop (Admin only), copy of the old SIR sheet. setup.sql STEP 118 (sir_rec, sir_drive, sir_sig + RPCs). Drive side: site/sir-drive.gs (set up like drive-archive.gs). PDFs are made in the browser (no library). The Done / Pending counts use the records of the app plus the old Google Sheet (if linked).
+
+133. v67: "Fill SIR" in the pending popup now also fills Substation, Place, Date of damage (= PR date) and Circle + Division (matched to the Structure) from the Data Sheet row.
+
+134. v68: Admin > SIR form now shows the full set-up steps and a "Copy script code" button (the sir-drive.gs code is inside the app). SIR form on the phone: nothing wider than the screen, Submit button always visible above the bottom menu. Data Sheet opens faster: rows show at once, SIR / DTC / protection columns load together afterwards.
+
+135. v69: SIR records are kept 14 months only (setup.sql STEP 119: nightly purge + purge on every save; Drive files are not touched). Drive file name = place_substation_PRno. "Picture taken" removed from the SIR form / PDF / details. 3D theme on the phone: bottom dock with only two icons (R&R, M&R); tap one -> its tabs open as a menu -> choose a tab.
+
+136. v70: 3D phone: header is one thin row (the user-name line and M&R tag are hidden, the header scrolls away) and the bottom dock is slim (icon + name side by side), so the data screen gets almost the whole phone screen.
+
+137. v71: fix - the R&R / M&R dock and its menu showed as plain buttons in the non-3D themes; they are now hidden unless the 3D home screen is selected.
