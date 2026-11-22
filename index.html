@@ -2322,7 +2322,13 @@ body.se-on #mkit,body.se-on #mrep,body.se-on #tsq,body.se-on #mkbc,body.se-on #m
 .sirtile:hover{transform:translateY(-3px)}
 .sirtile .ti{width:78px;height:78px;border-radius:22px;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,var(--a),var(--b));box-shadow:inset 0 2px 0 rgba(255,255,255,.55),inset 0 -4px 0 rgba(0,0,0,.18),0 6px 0 rgba(0,0,0,.18),0 14px 18px -8px var(--b)}
 .sirtile .ti svg{width:38px;height:38px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 0 rgba(0,0,0,.3))}
-#t-sir .sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+#t-sir{overflow-x:clip;padding-bottom:110px}
+#t-sir .sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:12px}
+#t-sir input,#t-sir select,#t-sir textarea{max-width:100%;min-width:0}
+#t-sir .sdrop .s{word-break:break-word}
+.sfsteps{margin:0 0 6px 18px;padding:0;font-size:13px;line-height:1.5}.sfsteps li{margin-bottom:4px}.sfsteps code{background:#eef2fb;padding:0 4px;border-radius:4px}
+#t-sir .sbarx{position:sticky;bottom:0;z-index:6;padding:10px 0;background:linear-gradient(rgba(250,246,239,0),#faf6ef 35%)}
+@media (max-width:700px){#t-sir .sbarx{bottom:calc(66px + env(safe-area-inset-bottom,0px))}#t-sir .sbarx .btn{width:100%;padding:13px;font-size:16px}}
 #t-sir .sfd label{display:block;font-size:12px;font-weight:700;color:#4a5575;margin-bottom:3px}
 #t-sir .sfd small{color:#c53030}
 #t-sir .sfd input[type=text],#t-sir .sfd input[type=tel],#t-sir .sfd input[type=date],#t-sir .sfd select,#t-sir .sfd textarea{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #cfd6e4;border-radius:9px;font:inherit;background:#fff}
@@ -2341,7 +2347,7 @@ body.se-on #mkit,body.se-on #mrep,body.se-on #tsq,body.se-on #mkbc,body.se-on #m
 .sdone{text-align:center;padding:26px 14px}.sdone .stick{width:64px;height:64px;border-radius:50%;margin:0 auto 8px;background:#1f8a52;color:#fff;font-size:38px;line-height:64px}
 .splate{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;margin-bottom:8px}
 .splate div{background:#eef2fb;border-radius:9px;padding:6px 9px}.splate span{display:block;font-size:10.5px;color:#5b647f;text-transform:uppercase;letter-spacing:.3px}.splate b{font-size:13.5px;word-break:break-word}
-.slgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+.slgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(310px,100%),1fr));gap:12px}
 .srep .sids{font-size:12.5px;color:#4a5575;margin-bottom:8px}
 .sacts{gap:6px;flex-wrap:wrap}.sacts a.btn{text-decoration:none}
 .sdet{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;font-size:12px;margin-top:10px;border-top:1px solid #e2e8f0;padding-top:8px}.sdet span{color:#5b647f}
@@ -2692,7 +2698,16 @@ html.hs-3d .hcard{animation:h3s 8s ease-in-out infinite}
         <div id="wcshow"></div>
       </div>
       <div class="card acard hide" id="sirfcard"><h3>SIR form <span class="muted" style="font-weight:400">(Google Drive for photos and PDFs, signatures)</span></h3>
-        <div class="muted" style="font-size:12.5px;margin-bottom:8px">Photos and PDFs of the SIR are saved in <b>your Google Drive</b>; the app keeps only their links. Set it up once: open <b>sir-drive.gs</b> (given with the app), follow the steps written at its top, then paste the link and the folder ID here.</div>
+        <div class="muted" style="font-size:12.5px;margin-bottom:8px">Photos and PDFs of the SIR are saved in <b>your Google Drive</b>; the app keeps only their links. Set it up once with the steps below.</div>
+        <ol class="sfsteps">
+          <li>In <b>Google Drive</b> make a folder (for example "SIR Photos and PDFs"). Open it: the web address ends with <code>/folders/XXXXXXXX</code>. That <b>XXXXXXXX</b> is the <b>Folder ID</b>.</li>
+          <li>Press <b>Copy script code</b> below. Open <a href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> &gt; <b>New project</b>, delete the sample code, <b>paste</b> the copied code, press <b>Save</b>.</li>
+          <li>At the top choose the function <b>authorizeOnce</b> and press <b>Run</b>. Click Review permissions &gt; your account &gt; Advanced &gt; Go to (project) &gt; Allow.</li>
+          <li><b>Deploy &gt; New deployment</b> &gt; type <b>Web app</b> &gt; Execute as: <b>Me</b> &gt; Who has access: <b>Anyone</b> &gt; Deploy. Copy the <b>Web app link</b> (ends with /exec).</li>
+          <li>Paste that link and the Folder ID in the boxes below, press <b>Save</b>, then <b>Test</b>. It must say "Google Drive is connected".</li>
+        </ol>
+        <div class="bar" style="margin:6px 0 10px"><button class="btn sec" id="sfcopy" type="button">Copy script code</button><button class="btn sec sm" id="sfshow" type="button">Show the code</button></div>
+        <textarea id="sfcode" class="hide" readonly rows="12" style="width:100%;box-sizing:border-box;font:11.5px/1.4 monospace" spellcheck="false"></textarea>
         <div class="bar" style="align-items:flex-end"><div style="flex:2;min-width:240px"><label>Apps Script web app link</label><input type="text" id="sfdurl" placeholder="https://script.google.com/macros/s/.../exec" spellcheck="false" autocapitalize="off"></div><div style="flex:1;min-width:200px"><label>Drive folder ID</label><input type="text" id="sfdfold" placeholder="the text after /folders/" spellcheck="false" autocapitalize="off"></div><div style="min-width:140px"><label>Zone name (in the form)</label><input type="text" id="sfdzone" placeholder="AZAMGARH"></div></div>
         <div class="bar" style="margin-top:10px"><button class="btn" id="sfdsave" type="button">Save</button><button class="btn sec" id="sfdtest" type="button">Test</button></div>
         <h4 style="margin:16px 0 4px">Signatures (EE / AE / JE of each workshop)</h4><div class="muted" style="font-size:12.5px;margin-bottom:6px">Only the Admin can upload these. They come in the PDF automatically. Use a clear picture of the signature on white paper.</div>
@@ -3659,7 +3674,8 @@ function loadData(force) {
     DCAN = !!r.canEdit; DTOTAL = r.total; DLOADED = all ? 'ALL' : d;
     DROWS = r.rows.map(function (a) { return { o: a.slice(0, 20), k: [a[0], a[8]], c: a.slice(0, 20), dirty: false, bad: false, ver: 0, isNew: false }; });
     DSHOW = 400; dstat('');
-    return (typeof sirDataPrep === 'function' ? sirDataPrep(force) : Promise.resolve()).then(function () { return dtcDataPrep(); }).then(function () { return protDataPrep(); }).then(function () { if (seq === DSEQ) drawData(); });
+    drawData();            // the rows show at once; the SIR / DTC / protection columns come a moment later (loaded together, not one after another)
+    return Promise.all([typeof sirDataPrep === 'function' ? sirDataPrep(force) : Promise.resolve(), dtcDataPrep(), protDataPrep()]).then(function () { if (seq === DSEQ) drawData(); });
   }).catch(function (e) { if (seq !== DSEQ) return; dstat(''); msg('dmsg', esc(e.message), 'err'); });
 }
 function fixRow(c) {     // the values the way they are sent: dates as DD.MM.YYYY, PR no without ".0"
@@ -9087,6 +9103,7 @@ function protFlush() {
 </script>
 <script id="sir-js">
 /* =====================  SIR inside the app (form, Summary, PDF, Drive, signatures)  ===================== */
+var SIR_GS = "/*\n TF-Tracker : SIR photos and PDFs in YOUR Google Drive  (Google Apps Script web app)\n The app sends each SIR photo and each SIR PDF to this script. The script saves the file in YOUR Drive folder\n and gives the link back. Only the link is kept in the app (Supabase), so the database does not fill up.\n\n SETUP (once, by the Admin):\n   1) Google Drive: make a folder (for example \"SIR Photos and PDFs\"). Open it. The web address ends with  /folders/XXXXXXXX  - that XXXXXXXX is the FOLDER ID.\n   2) script.google.com > New project > delete the sample code > paste this whole file > Save.\n   3) In the toolbar choose the function  authorizeOnce  and press Run. Click Review permissions > your account > Advanced > Go to ... > Allow.\n   4) Deploy > New deployment > type: Web app > Execute as: Me > Who has access: Anyone > Deploy.\n   5) Copy the \"Web app\" link (ends with /exec). Open it once in a browser tab: it must show  {\"ok\":true,\"msg\":\"TF-Tracker SIR Drive is running\"}.\n   6) In the app: Admin tab > SIR form > paste the link and the FOLDER ID > Save > Test.\n After you change this code, use Deploy > Manage deployments > Edit > Version: New version > Deploy (the link stays the same).\n\n Files are saved with \"anyone with the link can view\" so every employee can open the photo / PDF from the app.\n*/\nvar MAX_BYTES = 3 * 1024 * 1024;           // one file at most 3 MB\nvar OK_TYPES = { 'image/jpeg': 1, 'image/png': 1, 'application/pdf': 1 };\n\nfunction out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }\nfunction reply_(o, id) {                    // the app posts a hidden form and reads the answer through postMessage (no CORS problem)\n  var j = JSON.stringify(o).replace(/<\/g, '\\\\u003c'), i = JSON.stringify(String(id || '')).replace(/<\/g, '\\\\u003c');\n  return HtmlService.createHtmlOutput('<script>var r=' + j + ';r.id=' + i + ';window.top.postMessage(r,\"*\");<\/script>OK').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);\n}\nfunction authorizeOnce() {                  // run this ONCE in the editor so Google asks for your permission\n  DriveApp.getRootFolder();\n  return 'OK';\n}\nfunction doGet() { return out_({ ok: true, msg: 'TF-Tracker SIR Drive is running' }); }\n\nfunction idOf_(u) { var m = String(u || '').match(/[-\\w]{25,}/); return m ? m[0] : ''; }\nfunction folder_(id) { if (!/^[A-Za-z0-9_-]{10,100}$/.test(String(id || ''))) throw new Error('Wrong folder ID.'); return DriveApp.getFolderById(id); }\n\nfunction doPost(e) {\n  var id = '', out = function (o) { return id ? reply_(o, id) : out_(o); };\n  try {\n    var raw = (e && e.parameter && e.parameter.payload) || (e && e.postData && e.postData.contents), b = JSON.parse(raw);\n    id = (b && b.id) ? String(b.id) : '';\n    if (!b) return out({ ok: false, error: 'Empty request.' });\n    if (b.ping) { var f0 = folder_(b.folder); return out({ ok: true, ping: true, folder: f0.getName() }); }\n    var folder = folder_(b.folder);\n    if (b.action === 'put') {\n      var type = String(b.mime || '');\n      if (!OK_TYPES[type]) return out({ ok: false, error: 'Only JPG, PNG or PDF files are allowed.' });\n      var bytes = Utilities.base64Decode(String(b.b64 || ''));\n      if (!bytes.length || bytes.length > MAX_BYTES) return out({ ok: false, error: 'The file is empty or larger than 3 MB.' });\n      var name = String(b.name || 'file').replace(/[^\\w.\\-]+/g, '_').slice(0, 80);\n      var file = folder.createFile(Utilities.newBlob(bytes, type, name));\n      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);\n      return out({ ok: true, url: file.getUrl(), id: file.getId() });\n    }\n    if (b.action === 'get') {               // give the photo back (used when the Admin edits a SIR and the PDF is made again)\n      var fid = idOf_(b.url || b.fid), file2 = DriveApp.getFileById(fid), inside = false, ps = file2.getParents();\n      while (ps.hasNext()) { if (ps.next().getId() === folder.getId()) inside = true; }\n      if (!inside) return out({ ok: false, error: 'This file is not in your SIR folder.' });\n      var blob = file2.getBlob(), by = blob.getBytes();\n      if (by.length > 1024 * 1024) return out({ ok: false, error: 'The photo is too large to read back.' });\n      return out({ ok: true, mime: blob.getContentType(), b64: Utilities.base64Encode(by) });\n    }\n    return out({ ok: false, error: 'Unknown request.' });\n  } catch (err) {\n    return out({ ok: false, error: String(err && err.message || err) });\n  }\n}\n";
 var SIRD = { url: '', folder: '', zone: '' }, SIGS = {}, SIRL = { rows: [], n: 0, off: 0, q: '', busy: false }, SIRPRE = null, SIREDIT = null, SIRLAST = null;
 var SIR_YN = ['YES', 'NO'], SIR_SAT = ['SATISFACTORY', 'UN_SATISFACTORY'], SIR_CAPS = ['63 KVA', '100 KVA', '160 KVA', '250 KVA', '400 KVA', '630 KVA', '1000 KVA'];
 var SIR_S1 = [['dateOfDamage', 'Date of damage', 'date'], ['dateOfSIR', 'Date of SIR', 'date'], ['zone', 'Zone', 'text'], ['circle', 'Circle', 'circle'], ['divisionName', 'Division name', 'division'], ['substationName', 'Substation name', 'text'], ['placeOfDT', 'Place / location of DT', 'text'], ['capacityOfDT', 'Capacity of DT', 'sel', SIR_CAPS]];
@@ -9286,7 +9303,7 @@ function sirFillView(pre, rec) {
   h += '<div class="card"><h3>Load &amp; site condition</h3><div class="sgrid">' + SIR_S4.map(sirField).join('') + '</div></div>';
   h += '<div class="card"><h3>Photograph <small style="color:#c53030;font-weight:600">' + (rec ? '(choose only to change it)' : '(required)') + '</small></h3><div id="sirphw"><label class="sdrop"><input type="file" id="sirph" accept="image/*"><span class="t">Choose or take a photo</span><span class="s">Gallery or camera. The photo is made small automatically.</span></label><div class="smsg">A photo is required.</div><img id="sirprev" alt="" style="display:none"><div id="sirpinfo" class="muted"></div></div>' +
     '<div class="sfd" style="margin-top:12px"><label>Any other remark</label><textarea id="sf_remark" rows="3" placeholder="Cause of damage, issues observed..."></textarea></div></div>';
-  h += '<div id="sirsmsg"></div><div class="bar"><button class="btn" id="sirsub" type="submit">' + (rec ? 'Save changes' : 'Submit report') + '</button></div></form><div id="sirdone"></div>';
+  h += '<div id="sirsmsg"></div><div class="bar sbarx"><button class="btn" id="sirsub" type="submit">' + (rec ? 'Save changes' : 'Submit report') + '</button></div></form><div id="sirdone"></div>';
   $('sirv').innerHTML = h;
   sirCfgDrive().then(function () { if (!sirDriveOk()) $('sirdrvmsg').innerHTML = '<div class="msg err">The Admin has not set the Google Drive link yet (Admin tab &gt; SIR form), so photos and PDFs cannot be saved. You can fill the form after that.</div>'; });
   sirSigLoad();
@@ -9484,6 +9501,15 @@ document.addEventListener('change', function (e) {
   }; fr.readAsDataURL(f.files[0]); f.value = '';
 });
 document.addEventListener('click', function (e) {
+  var cb = e.target && e.target.closest ? e.target.closest('#sfcopy,#sfshow') : null;
+  if (cb) {
+    var ta = $('sfcode'); ta.value = SIR_GS;
+    if (cb.id === 'sfshow') { ta.classList.toggle('hide'); cb.textContent = ta.classList.contains('hide') ? 'Show the code' : 'Hide the code'; return; }
+    var ok = function () { msg('sfmsg', 'Script code copied. Now paste it in script.google.com (step 2).', 'info'); };
+    var fb = function () { ta.classList.remove('hide'); ta.focus(); ta.select(); try { document.execCommand('copy') ? ok() : msg('sfmsg', 'Press Ctrl+C (or long-press &gt; Copy) on the selected code.', 'info'); } catch (x) { msg('sfmsg', 'Select the code and copy it.', 'err'); } };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(SIR_GS).then(ok, fb); else fb();
+    return;
+  }
   var b = e.target && e.target.closest ? e.target.closest('#sfdsave,#sfdtest,#sfimp,[data-sd]') : null; if (!b) return;
   if (b.dataset.sd) { var p = b.dataset.sd.split('|'); rpc('sir_sig_set', { p_ws: p[0], p_role: p[1], p_img: '' }).then(function () { if (SIGS[p[0]]) delete SIGS[p[0]][p[1]]; sirSigDraw(); }).catch(function (er) { msg('sfmsg', esc(er.message), 'err'); }); return; }
   if (b.id === 'sfdsave') {
