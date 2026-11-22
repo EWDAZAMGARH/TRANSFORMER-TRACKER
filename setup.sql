@@ -4839,6 +4839,7 @@ begin
   if w = '' or not (w = any (coalesce(public.my_workshops(), '{}'))) then raise exception 'Choose one of your workshops.'; end if;
   select org_division into dv from public.workshops where name = w;
   dd := p_d - 'ws' - 'photoUrl' - 'pdfUrl' - 'id';
+  perform public.sir_purge();
   insert into public.sir_rec(org_division, ws, by_login, by_name, sir_date, dmg_date, pr_no, uniq_no, d)
   values (dv, w, c.login_id, coalesce(c.display, c.login_id),
           nullif(dd->>'dateOfSIR', '')::date, nullif(dd->>'dateOfDamage', '')::date,
@@ -4907,6 +4908,7 @@ begin
     w := btrim(coalesce(x->>'ws', ''));
     if not exists (select 1 from public.workshops where name = w and org_division = c.org_division) then continue; end if;
     dd := x - 'ws' - 'photoUrl' - 'pdfUrl' - 'src' - 'at';
+    if coalesce(nullif(dd->>'dateOfSIR', '')::date, nullif(x->>'at', '')::timestamptz::date, current_date) < (current_date - interval '14 months')::date then continue; end if;
     insert into public.sir_rec(org_division, ws, by_login, by_name, at, sir_date, dmg_date, pr_no, uniq_no, d, photo_url, pdf_url, src_key)
     values (c.org_division, w, c.login_id, 'Imported', coalesce(nullif(x->>'at', '')::timestamptz, now()),
             nullif(dd->>'dateOfSIR', '')::date, nullif(dd->>'dateOfDamage', '')::date,
@@ -4924,4 +4926,28 @@ revoke all on function public.sir_div_of_me(), public.sir_drive_get(), public.si
 grant execute on function public.sir_div_of_me(), public.sir_drive_get(), public.sir_drive_set(text, text, text), public.sir_sig_get(), public.sir_sig_set(text, text, text),
   public.sir_save(jsonb), public.sir_update(bigint, jsonb), public.sir_set_urls(bigint, text, text), public.sir_del(bigint),
   public.sir_list_json(text, date, date, text, int, int), public.sir_prs(), public.sir_import(jsonb) to authenticated;
+notify pgrst, 'reload schema';
+
+-- ================================================================================================================
+-- STEP 119 : SIR records are kept for 14 MONTHS only.  Older rows are deleted automatically (every night, and also each time a SIR is saved).
+--   Only the database row (and its Drive link) is removed.  The photo / PDF files stay in the Admin's Google Drive folder.
+create or replace function public.sir_purge() returns int
+language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  delete from public.sir_rec where coalesce(sir_date, at::date) < (current_date - interval '14 months')::date;
+  get diagnostics n = row_count;
+  return n;
+end $$;
+revoke all on function public.sir_purge() from public, anon, authenticated;
+
+do $$
+begin
+  create extension if not exists pg_cron;
+  begin perform cron.unschedule('tf-purge-sir'); exception when others then null; end;
+  perform cron.schedule('tf-purge-sir', '30 20 * * *', 'select public.sir_purge()');    -- every night 02:00 India time
+exception when others then
+  raise notice 'pg_cron is not available: the nightly SIR purge was NOT scheduled (%). The purge still runs every time a SIR is saved.', sqlerrm;
+end $$;
+select public.sir_purge();
 notify pgrst, 'reload schema';

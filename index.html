@@ -2441,7 +2441,23 @@ html.hs-3d .i3{width:48px;height:48px;border-radius:17px}
 html.hs-3d .i3 svg{width:25px;height:25px}
 html.hs-3d nav button.on .i3{transform:translateY(-3px) scale(1.1);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),0 0 0 3px rgba(255,255,255,.55),0 14px 18px -6px var(--b)}
 html.hs-3d body main{padding-top:14px}
+html.hs-3d body nav,html.hs-3d body nav:not(#mrnav){display:none!important}
+html.hs-3d body .top{padding-bottom:10px}
+html.hs-3d body main{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+html.hs-3d #t-sir .sbarx{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+html.hs-3d body:not(.on-home) #h3dock{display:flex}
+html.hs-3d body:not(.on-home) #h3dock~#mrg{z-index:320}
 }
+html.hs-3d #h3dock{display:none;position:fixed;left:0;right:0;bottom:0;z-index:250;justify-content:center;gap:22px;padding:10px 18px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(15,26,71,.88),rgba(12,20,56,.97));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:26px 26px 0 0;box-shadow:0 -12px 30px -12px rgba(20,30,100,.7)}
+html.hs-3d #h3dock button{flex:0 1 150px;display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;color:#c9d3ff;font-weight:800;font-size:12.5px;line-height:1.1;letter-spacing:.4px;padding:0;cursor:pointer}
+html.hs-3d #h3dock .i3{width:54px;height:54px;border-radius:19px;transition:transform .18s,box-shadow .18s}
+html.hs-3d #h3dock .i3 svg{width:28px;height:28px}
+html.hs-3d #h3dock button.on{color:#fff}
+html.hs-3d #h3dock button.on .i3{transform:translateY(-4px) scale(1.08);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),0 0 0 3px rgba(255,255,255,.6),0 14px 18px -6px var(--b)}
+html.hs-3d #h3dock button:active .i3{transform:translateY(2px)}
+html.hs-3d #h3dock .rr{--a:#6f9bff;--b:#2b44ad}
+html.hs-3d #h3dock .mr{--a:#ffb067;--b:#d9531e}
+@media(min-width:701px){html.hs-3d #h3dock{display:none!important}}
 @media(min-width:901px){
 html.hs-3d body .top{background:linear-gradient(180deg,#0f1a47,#26418f 75%,#4a3fc0)!important;border:0!important;border-radius:0 32px 32px 0;box-shadow:20px 0 40px -20px rgba(20,30,100,.6)}
 html.hs-3d body header h1{color:#fff!important}
@@ -9108,10 +9124,10 @@ var SIRD = { url: '', folder: '', zone: '' }, SIGS = {}, SIRL = { rows: [], n: 0
 var SIR_YN = ['YES', 'NO'], SIR_SAT = ['SATISFACTORY', 'UN_SATISFACTORY'], SIR_CAPS = ['63 KVA', '100 KVA', '160 KVA', '250 KVA', '400 KVA', '630 KVA', '1000 KVA'];
 var SIR_S1 = [['dateOfDamage', 'Date of damage', 'date'], ['dateOfSIR', 'Date of SIR', 'date'], ['zone', 'Zone', 'text'], ['circle', 'Circle', 'circle'], ['divisionName', 'Division name', 'division'], ['substationName', 'Substation name', 'text'], ['placeOfDT', 'Place / location of DT', 'text'], ['capacityOfDT', 'Capacity of DT', 'sel', SIR_CAPS]];
 var SIR_S2 = [['jeName', 'Name of JE (Distribution)', 'text'], ['jeMobile', 'JE mobile no.', 'tel'], ['dataId', 'Data ID', 'text'], ['uniqueNo', 'Unique No.', 'text'], ['prNo', 'PR No.', 'text']];
-var SIR_S3 = [['htProtection', 'HT protection', 'seg', SIR_YN], ['ltProtection', 'LT protection', 'seg', SIR_YN], ['bodyEarthing', 'Body earthing', 'seg', SIR_YN], ['neutralEarthing', 'Neutral earthing', 'seg', SIR_YN], ['onsiteMaint', 'On-site maintenance required', 'seg', SIR_YN], ['pictureTaken', 'Picture taken', 'seg', SIR_YN], ['oilLevel', 'Oil level', 'seg', SIR_YN], ['repeatedDamage', 'Repeated damage', 'seg', SIR_YN]];
+var SIR_S3 = [['htProtection', 'HT protection', 'seg', SIR_YN], ['ltProtection', 'LT protection', 'seg', SIR_YN], ['bodyEarthing', 'Body earthing', 'seg', SIR_YN], ['neutralEarthing', 'Neutral earthing', 'seg', SIR_YN], ['onsiteMaint', 'On-site maintenance required', 'seg', SIR_YN], ['oilLevel', 'Oil level', 'seg', SIR_YN], ['repeatedDamage', 'Repeated damage', 'seg', SIR_YN]];
 var SIR_S4 = [['connectedLoad', 'Connected load (KVA)', 'text'], ['noOfConnections', 'No. of connections connected (qty)', 'text'], ['ltCableCondition', 'LT cable condition', 'seg', SIR_SAT], ['plinthCondition', 'Plinth / DP condition', 'seg', SIR_SAT], ['fencingCondition', 'Fencing condition', 'seg', SIR_SAT]];
 var SIR_ALL = SIR_S1.concat(SIR_S2, SIR_S3, SIR_S4), SIR_OPT = { dataId: 1, connectedLoad: 1, noOfConnections: 1, prNo: 1, jeName: 1, jeMobile: 1 };
-var SIR_LAB = [['dateOfDamage', 'Date of damage'], ['dateOfSIR', 'Date of SIR'], ['zone', 'Zone'], ['circle', 'Circle'], ['divisionName', 'Division'], ['substationName', 'Substation'], ['placeOfDT', 'Place / location of DT'], ['capacityOfDT', 'Capacity of DT'], ['jeName', 'Name of JE'], ['jeMobile', 'JE mobile'], ['dataId', 'Data ID'], ['uniqueNo', 'Unique No.'], ['prNo', 'PR No.'], ['htProtection', 'HT protection'], ['ltProtection', 'LT protection'], ['bodyEarthing', 'Body earthing'], ['neutralEarthing', 'Neutral earthing'], ['onsiteMaint', 'On-site maintenance required'], ['pictureTaken', 'Picture taken'], ['oilLevel', 'Oil level'], ['repeatedDamage', 'Repeated damage'], ['connectedLoad', 'Connected load (KVA)'], ['noOfConnections', 'No. of connections'], ['ltCableCondition', 'LT cable condition'], ['plinthCondition', 'Plinth / DP condition'], ['fencingCondition', 'Fencing condition'], ['remark', 'Remark']];
+var SIR_LAB = [['dateOfDamage', 'Date of damage'], ['dateOfSIR', 'Date of SIR'], ['zone', 'Zone'], ['circle', 'Circle'], ['divisionName', 'Division'], ['substationName', 'Substation'], ['placeOfDT', 'Place / location of DT'], ['capacityOfDT', 'Capacity of DT'], ['jeName', 'Name of JE'], ['jeMobile', 'JE mobile'], ['dataId', 'Data ID'], ['uniqueNo', 'Unique No.'], ['prNo', 'PR No.'], ['htProtection', 'HT protection'], ['ltProtection', 'LT protection'], ['bodyEarthing', 'Body earthing'], ['neutralEarthing', 'Neutral earthing'], ['onsiteMaint', 'On-site maintenance required'], ['oilLevel', 'Oil level'], ['repeatedDamage', 'Repeated damage'], ['connectedLoad', 'Connected load (KVA)'], ['noOfConnections', 'No. of connections'], ['ltCableCondition', 'LT cable condition'], ['plinthCondition', 'Plinth / DP condition'], ['fencingCondition', 'Fencing condition'], ['remark', 'Remark']];
 function sirIso(d) { return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()); }
 function sirDmy(s) { var m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '/' + m[2] + '/' + m[1] : (s || ''); }
 function sirFileId(u) { var m = String(u || '').match(/[-\w]{25,}/); return m ? m[0] : ''; }
@@ -9213,7 +9229,7 @@ function sirPdfBlob(d, ws, photo, sig) {      // photo: {bytes,w,h} | null ; sig
   function sec(t) { box(X, W, t); y += RH; }
   function r3(l, h, v) { box(X, C1, l); box(X + C1, C2, h, { center: 1, s: 7 }); box(X + C1 + C2, C3, v); y += RH; }
   sec('Technical Inspection');
-  [['HT PROTECTION', 'htProtection'], ['LT PROTECTION', 'ltProtection'], ['BODY EARTHING', 'bodyEarthing'], ['NEUTRAL EARTHING', 'neutralEarthing'], ['ON SITE MAINTENANCE REQUIRED', 'onsiteMaint'], ['PICTURE TAKEN', 'pictureTaken'], ['OIL LEVEL', 'oilLevel'], ['REPEATED DAMAGE', 'repeatedDamage']]
+  [['HT PROTECTION', 'htProtection'], ['LT PROTECTION', 'ltProtection'], ['BODY EARTHING', 'bodyEarthing'], ['NEUTRAL EARTHING', 'neutralEarthing'], ['ON SITE MAINTENANCE REQUIRED', 'onsiteMaint'], ['OIL LEVEL', 'oilLevel'], ['REPEATED DAMAGE', 'repeatedDamage']]
     .forEach(function (a) { r3(a[0], a[1] === 'repeatedDamage' ? 'YES/NO (Remark)' : 'YES/NO', d[a[1]]); });
   sec('Load & Connection Details'); r3('CONNECTED LOAD', '(KVA)', d.connectedLoad); r3('NUMBER OF CONNECTIONS CONNECTED', 'QTY', d.noOfConnections);
   sec('Site Condition'); r3('LT CABLE CONDITION', 'SAT/UNSAT', cond(d.ltCableCondition)); r3('PLINTH / DP CONDITION', 'SAT/UNSAT', cond(d.plinthCondition)); r3('FENCING CONDITION', 'SAT/UNSAT', cond(d.fencingCondition));
@@ -9236,7 +9252,8 @@ function sirSigImgs(ws) {
 }
 function sirBlob64(b) { return new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { res(String(fr.result).split(',')[1]); }; fr.readAsDataURL(b); }); }
 function sirSaveBlob(b, name) { var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
-function sirPdfName(d) { return 'SIR_' + String(d.uniqueNo && d.uniqueNo !== 'NA' ? d.uniqueNo : (d.prNo || d.placeOfDT || 'report')).replace(/[^\w-]+/g, '_') + '.pdf'; }
+function sirBase(d) { return [d.placeOfDT, d.substationName, d.prNo].map(function (x) { return String(x || '').trim().replace(/[^\w-]+/g, '_').replace(/^_+|_+$/g, ''); }).filter(Boolean).join('_').slice(0, 90) || 'SIR'; }
+function sirPdfName(d) { return sirBase(d) + '.pdf'; }
 function sirMakePdf(d, ws, photoDataUrl) {     // -> Promise<Blob>
   return Promise.all([sirSigLoad().then(function () { return sirSigImgs(ws); }), photoDataUrl ? sirJpeg(photoDataUrl, 1280).catch(function () { return null; }) : Promise.resolve(null)]).then(function (r) { return sirPdfBlob(d, ws, r[1], r[0]); });
 }
@@ -9369,7 +9386,7 @@ function sirSubmit(rec) {
   });
 }
 function sirUploads(S, rec) {           // photo -> Drive, PDF -> Drive, links -> app.  Returns {photoUrl, pdfUrl, blob}
-  var out = { blob: null }, name = (S.d.uniqueNo || S.d.prNo || 'SIR').replace(/[^\w-]+/g, '_') + '_' + Date.now();
+  var out = { blob: null }, name = sirBase(S.d);
   function photo() {
     if (SIRPH) return sirDrivePut(name + '_photo.jpg', 'image/jpeg', SIRPH.split(',')[1]).then(function (u) { out.photoUrl = u; return SIRPH; });
     if (rec && rec.photoUrl) { out.photoUrl = rec.photoUrl; return sirDriveGet(rec.photoUrl).catch(function () { return null; }); }
@@ -9602,6 +9619,41 @@ var _admLoadSir = admLoad; admLoad = function () { var p = _admLoadSir.apply(thi
     }
     o.classList.add('on'); o.scrollTop = 0;
   }
+  /* phone: only two icons at the bottom (R&R and M&R). Tap one -> its tabs open as a menu -> choose a tab */
+  var CT = { tsum: ['#6f9bff', '#2b44ad'], tdata: ['#3ddbc4', '#0f766e'], tdrv: ['#ffc15e', '#e8772e'], tcmp: ['#b39bff', '#6d28d9'], temg: ['#ff8a8a', '#c2200f'], tadm: ['#8fa0cc', '#2f3d6b'], tprs: ['#5fd0ff', '#0b6fa8'], tsir: ['#ffb067', '#d9531e'] };
+  function mrOn() { return typeof MR !== 'undefined' && MR.on; }
+  function dockMark() { var d = document.getElementById('h3dock'); if (!d) return; var m = mrOn(); d.querySelector('.rr').classList.toggle('on', !m); d.querySelector('.mr').classList.toggle('on', m); }
+  function dockItems(g) {
+    var out = [];
+    if (g === 'mr') MRG.forEach(function (m) { if (m[0] === 'mrr') return; var b = document.getElementById(m[0]); if (b && getComputedStyle(b).display !== 'none') out.push({ id: m[0], t: m[1].replace(/&amp;/g, '&'), c: COL[m[0]] }); });
+    else [].forEach.call(document.querySelectorAll('nav:not(#mrnav) button[id]'), function (b) { if (b.id === 'tmr' || getComputedStyle(b).display === 'none') return; out.push({ id: b.id, t: b.textContent.trim(), c: CT[b.id] || ['#8fa0cc', '#2f3d6b'] }); });
+    return out;
+  }
+  function dockMenu(g) {
+    var o = document.getElementById('mrg'); if (o) o.remove();
+    var it = dockItems(g);
+    o = document.createElement('div'); o.id = 'mrg';
+    o.innerHTML = '<div class="mrgt"><button type="button" class="mrgb" data-k="back" aria-label="Close">&#8592;</button><b>' + (g === 'mr' ? 'M&amp;R' : 'R&amp;R') + '</b></div><div class="mrgg">' + it.map(function (m, i) { return '<button type="button" class="mrgi" data-k="' + m.id + '" style="--a:' + m.c[0] + ';--b:' + m.c[1] + ';animation-delay:' + (i * 40) + 'ms"><span class="i3"><svg viewBox="0 0 24 24">' + (G[m.id] || G.tsum) + '</svg></span><em>' + m.t.replace(/&/g, '&amp;') + '</em></button>'; }).join('') + '</div>';
+    document.body.appendChild(o);
+    o.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) { o.classList.remove('on'); return; }
+      o.classList.remove('on'); var k = b.dataset.k; if (k === 'back') return;
+      if (g === 'mr') { if (typeof mrEnter === 'function') mrEnter(k); }
+      else { if (mrOn() && typeof mrLeave === 'function') mrLeave(); var t = document.getElementById(k); if (t) t.click(); }
+      setTimeout(dockMark, 30);
+    });
+    o.classList.add('on'); o.scrollTop = 0;
+  }
+  function dock() {
+    if (document.getElementById('h3dock')) return;
+    var d = document.createElement('div'); d.id = 'h3dock';
+    d.innerHTML = '<button type="button" class="rr" data-g="rr"><span class="i3"><svg viewBox="0 0 24 24">' + G.tsum + '</svg></span>R&amp;R</button><button type="button" class="mr" data-g="mr"><span class="i3"><svg viewBox="0 0 24 24">' + G.tmr + '</svg></span>M&amp;R</button>';
+    document.body.appendChild(d);
+    d.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) dockMenu(b.dataset.g); });
+    new MutationObserver(dockMark).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    dockMark();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dock); else dock();
   window.addEventListener('click', function (e) { if (!H.classList.contains('hs-3d')) return; var b = e.target.closest && e.target.closest('nav button'); if (b && (b.id === 'tmr' || b.id === 'mrall')) { e.stopImmediatePropagation(); e.preventDefault(); grid(); } }, true);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
