@@ -2184,6 +2184,12 @@ revoke all on public.kitty_base, public.kitty_day from public, anon, authenticat
 create or replace function public.mr_ok() returns boolean language sql stable security definer set search_path = public as $$
   select coalesce((select p.active and (p.role in ('admin', 'creator') or 'mr' = any (coalesce(p.tabs, '{}'))) from public.profiles p where p.user_id = auth.uid()), false)
 $$;
+-- READ-ONLY reports (Kitty, Kitty Summary, Kitty Comparison, Chamber Assembly): every active Admin / User / SE of the division may read them (own workshops only). Editing still needs the M&R tab.
+create or replace function public.mr_read_ok() returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select p.active and (p.role in ('admin', 'creator', 'je', 'se') or 'mr' = any (coalesce(p.tabs, '{}'))) from public.profiles p where p.user_id = auth.uid()), false)
+$$;
+revoke all on function public.mr_read_ok() from public, anon;
+grant execute on function public.mr_read_ok() to authenticated;
 -- may the caller change the M&R figures of this workshop?  (an M&R user: his workshops; an Admin: the workshops of his division; the App Creator: no)
 create or replace function public.mr_edit_ok(p_ws text) returns boolean language sql stable security definer set search_path = public as $$
   select coalesce((select p.active and p_ws = any (public.my_workshops())
@@ -2272,7 +2278,7 @@ create or replace function public.kitty_json(p_ws text, p_day date) returns json
 language plpgsql stable security definer set search_path = public as $$
 declare r jsonb; base_day date;
 begin
-  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not public.mr_read_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   if not (p_ws = any (public.my_workshops())) then raise exception 'This workshop is not yours.'; end if;
   select max(day) into base_day from public.kitty_base where workshop = p_ws and day <= p_day;
   if base_day is null then
@@ -2480,7 +2486,7 @@ create or replace function public.kitty_cmp_json(p_day date) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare w text; names jsonb := '[]'; nob jsonb := '[]'; vals jsonb := '{}'; k jsonb; e jsonb; res jsonb := '[]'; cp int;
 begin
-  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not public.mr_read_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   for w in select unnest(public.my_workshops()) order by 1 loop
     names := names || to_jsonb(w);
     k := public.kitty_json(w, p_day);
@@ -2621,7 +2627,7 @@ create or replace function public.ch_report_json(p_day date) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare w text; k jsonb; bd date; out jsonb := '[]'; rj jsonb; nob text[] := '{}'; nok text[] := '{}';
 begin
-  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not public.mr_read_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   for w in select unnest(public.my_workshops()) loop
     k := public.kitty_json(w, p_day);
     if (k->>'base') is null then nok := nok || w; end if;
@@ -3113,7 +3119,7 @@ language plpgsql stable security definer set search_path = public as $$
 declare ly date := (p_day - interval '1 year')::date; w text; a jsonb; b jsonb; auto boolean; rows jsonb; outj jsonb := '[]'::jsonb;
         caps int[] := array[10, 16, 25, 63, 100, 160, 250, 400, 630, 1000];
 begin
-  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not public.mr_read_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   foreach w in array public.my_workshops() loop
     a := public.kitty_json(w, p_day);
     if (a->>'base') is null then continue; end if;
@@ -3242,7 +3248,7 @@ language plpgsql stable security definer set search_path = public as $$
 declare ly date := (p_day - interval '1 year')::date; w text; a jsonb; b jsonb; auto boolean; src date; rws jsonb; outj jsonb := '[]'::jsonb;
         caps int[] := array[10, 16, 25, 63, 100, 160, 250, 400, 630, 1000];
 begin
-  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not public.mr_read_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   foreach w in array public.my_workshops() loop
     a := public.kitty_json(w, p_day);
     if (a->>'base') is null then continue; end if;
@@ -3996,7 +4002,7 @@ create or replace function public.kitty_range_json(p_from date, p_to date, p_ws 
 language plpgsql stable security definer set search_path = public as $$
 declare w text; a jsonb; b jsonb; rws jsonb; outj jsonb := '[]'::jsonb; nob jsonb := '[]'::jsonb; caps int[] := array[10, 16, 25, 63, 100, 160, 250, 400, 630, 1000]; lst text[];
 begin
-  if not public.mr_ok() then raise exception 'No access to the M&R dashboard.'; end if;
+  if not public.mr_read_ok() then raise exception 'No access to the M&R dashboard.'; end if;
   if p_from is null or p_to is null or p_from > p_to then raise exception 'Choose the From and To dates (From must not be after To).'; end if;
   if p_to - p_from > 400 then raise exception 'Choose a period of up to 13 months.'; end if;
   if coalesce(p_ws, '') <> '' and not (p_ws = any (public.my_workshops())) then raise exception 'This workshop is not yours.'; end if;

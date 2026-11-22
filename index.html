@@ -2456,9 +2456,9 @@ html.hs-3d body:not(.on-home) #h3dock{display:flex}
 html.hs-3d body:not(.on-home) #h3dock~#mrg{z-index:320}
 }
 html.hs-3d #h3dock{display:none;position:fixed;left:0;right:0;bottom:0;z-index:250;justify-content:center;gap:14px;padding:6px 14px calc(6px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(15,26,71,.88),rgba(12,20,56,.97));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:18px 18px 0 0;box-shadow:0 -8px 22px -10px rgba(20,30,100,.7)}
-html.hs-3d #h3dock button{flex:1 1 0;max-width:170px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:9px;border-radius:14px;border:0;background:none;color:#c9d3ff;font-weight:800;font-size:15px;line-height:1.1;letter-spacing:.4px;padding:0;cursor:pointer}
-html.hs-3d #h3dock .i3{width:38px;height:38px;border-radius:13px;transition:transform .18s,box-shadow .18s}
-html.hs-3d #h3dock .i3 svg{width:21px;height:21px}
+html.hs-3d #h3dock button{flex:1 1 0;max-width:170px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:9px;border-radius:14px;border:0;background:none;color:#c9d3ff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:700;font-size:13px;line-height:1.1;letter-spacing:.4px;padding:0;cursor:pointer}
+html.hs-3d #h3dock .i3{width:32px;height:32px;border-radius:11px;transition:transform .18s,box-shadow .18s}
+html.hs-3d #h3dock .i3 svg{width:18px;height:18px}
 html.hs-3d #h3dock button.on{color:#fff}
 html.hs-3d #h3dock button.on{background:rgba(255,255,255,.12)}
 html.hs-3d #h3dock button.on .i3{transform:scale(1.06);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),0 0 0 3px rgba(255,255,255,.6),0 14px 18px -6px var(--b)}
@@ -3121,12 +3121,20 @@ function friendly(e) {
   if (c === '42501' || /permission denied|row-level security/i.test(m)) return 'You do not have access to this.';
   return m || 'Something went wrong.';
 }
-function rpc(fn, args) {
+function rpc(fn, args, again) {
   return SB.rpc(fn, args).then(function (r) {
-    if (r.error) { var m = friendly(r.error); if (m === 'SESSION') { doLogout(true); throw new Error('Your session has expired. Please log in again.'); } throw new Error(m); }
+    if (r.error) {
+      var m = friendly(r.error);
+      /* the phone was asleep / the app was in the background: the old token is refreshed first, then the call is tried once more */
+      if (!again && ME && (m === 'SESSION' || m === 'You do not have access to this.')) {
+        return SB.auth.refreshSession().then(function (x) { if (x && x.error) { if (m === 'SESSION') { doLogout(true); throw new Error('Your session has expired. Please log in again.'); } throw new Error(m); } return rpc(fn, args, true); }, function () { throw new Error(m === 'SESSION' ? 'Your session has expired. Please log in again.' : m); });
+      }
+      if (m === 'SESSION') { doLogout(true); throw new Error('Your session has expired. Please log in again.'); } throw new Error(m);
+    }
     return r.data;
   }, function (e) { throw new Error(friendly(e)); });
 }
+document.addEventListener('visibilitychange', function () { if (!document.hidden && typeof SB !== 'undefined' && SB && ME) { try { SB.auth.getSession(); } catch (e) {} } });
 
 /* ---------- login / logout ---------- */
 function idMail(id) { var v = String(id || '').trim().toLowerCase(); if (v.indexOf('@') > 0) return v; return v + (ttConn().own ? '@tf.uppcl' : '@tf.puvvnl'); }   // a full e-mail (the project owner) is used as it is   // own-workshop projects use @tf.uppcl; the default project keeps @tf.puvvnl
@@ -3392,16 +3400,16 @@ function capAll(s) {
       var row = idx.map(function (i) { return g.m[cp][i]; }), sum = row.reduce(function (a, b) { return a + b; }, 0);
       if (sum) any = true;
       row.forEach(function (v, i) { tot[gi][i] += v; });
-      cells += row.map(function (v, i) { return tdx([i === 0 ? 'gs' : '', heat(v, mxG[gi], g.c === 'g1' ? 'hA' : 'hG')], g.avg ? (v / s.days).toFixed(2) : N(v, S({ metric: g.metric, ws: cols[i], caps: [cp] }), g.name + ' - ' + cols[i] + ' - ' + capLbl(cp) + ' KVA')); }).join('') +
-        (multi ? tdx(['sub'], '<b>' + (g.avg ? (sum / s.days).toFixed(2) : N(sum, S({ metric: g.metric, caps: [cp] }), g.name + ' - ' + capLbl(cp) + ' KVA')) + '</b>') : '');
+      cells += row.map(function (v, i) { return tdx([i === 0 ? 'gs' : '', heat(v, mxG[gi], g.c === 'g1' ? 'hA' : 'hG')], g.avg ? Math.round(v / s.days) : N(v, S({ metric: g.metric, ws: cols[i], caps: [cp] }), g.name + ' - ' + cols[i] + ' - ' + capLbl(cp) + ' KVA')); }).join('') +
+        (multi ? tdx(['sub'], '<b>' + (g.avg ? Math.round(sum / s.days) : N(sum, S({ metric: g.metric, caps: [cp] }), g.name + ' - ' + capLbl(cp) + ' KVA')) + '</b>') : '');
     });
     if (!any && !(cp && [10, 16, 25, 63, 100, 160, 250, 400, 630, 1000].indexOf(cp) >= 0)) { G.forEach(function (g, gi) { idx.forEach(function (i, k) { tot[gi][k] -= g.m[cp][i]; }); }); return; }
     h += '<tr><td class="l"><b>' + capLbl(cp) + '</b></td>' + cells + '</tr>';
   });
   h += '<tr class="t"><td class="l">TOTAL</td>' + G.map(function (g, gi) {
     var gt = tot[gi].reduce(function (a, b) { return a + b; }, 0);
-    return tot[gi].map(function (v, i) { return '<td>' + (g.avg ? (v / s.days).toFixed(2) : N(v, S({ metric: g.metric, ws: cols[i] }), g.name + ' - ' + cols[i])) + '</td>'; }).join('') +
-      (multi ? '<td>' + (g.avg ? (gt / s.days).toFixed(2) : N(gt, S({ metric: g.metric }), g.name)) + '</td>' : '');
+    return tot[gi].map(function (v, i) { return '<td>' + (g.avg ? Math.round(v / s.days) : N(v, S({ metric: g.metric, ws: cols[i] }), g.name + ' - ' + cols[i])) + '</td>'; }).join('') +
+      (multi ? '<td>' + (g.avg ? Math.round(gt / s.days) : N(gt, S({ metric: g.metric }), g.name)) + '</td>' : '');
   }).join('') + '</tr></table></div></div>';
   return h;
 }
@@ -4651,14 +4659,14 @@ function dwBuild() {
 }
 function dwSum(a) { return a.reduce(function (x, y) { return x + y; }, 0); }
 function dwTable(B, k, title) {
-  var n = B.ws.length, K = B.k[k], h = '<div class="dwcol"><h4>' + title + '</h4><table class="dwt"><thead><tr><th class="dwy" colspan="' + (n + 2) + '">' + esc(B.lyT) + '</th><th class="dwy" colspan="' + (n + 3) + '">' + esc(B.cyT) + '</th></tr><tr><th></th>' +
-    B.ws.map(function (w) { return '<th>' + esc(dwNm(w)) + '</th>'; }).join('') + '<th>TOTAL</th><th></th>' + B.ws.map(function (w) { return '<th>' + esc(dwNm(w)) + '</th>'; }).join('') + '<th>TOTAL</th><th>DIFF.</th></tr></thead><tbody>';
+  var n = B.ws.length, tt = n > 1 ? 1 : 0, K = B.k[k], h = '<div class="dwcol"><h4>' + title + '</h4><table class="dwt"><thead><tr><th class="dwy" colspan="' + (n + 1 + tt) + '">' + esc(B.lyT) + '</th><th class="dwy" colspan="' + (n + 2 + tt) + '">' + esc(B.cyT) + '</th></tr><tr><th></th>' +
+    B.ws.map(function (w) { return '<th>' + esc(dwNm(w)) + '</th>'; }).join('') + (tt ? '<th>TOTAL</th>' : '') + '<th></th>' + B.ws.map(function (w) { return '<th>' + esc(dwNm(w)) + '</th>'; }).join('') + (tt ? '<th>TOTAL</th>' : '') + '<th>DIFF.</th></tr></thead><tbody>';
   K.rows.forEach(function (r) {
     var a = dwSum(r.p), b = dwSum(r.c), df = b - a;
-    h += '<tr><td class="dwd">' + r.ld + '</td>' + r.p.map(function (v) { return '<td>' + v + '</td>'; }).join('') + '<td class="dwtt">' + a + '</td><td class="dwd">' + r.cd + '</td>' + r.c.map(function (v) { return '<td>' + v + '</td>'; }).join('') + '<td class="dwtt">' + b + '</td><td class="dwdf' + (df < 0 ? ' neg' : '') + '">' + df + '</td></tr>';
+    h += '<tr><td class="dwd">' + r.ld + '</td>' + r.p.map(function (v) { return '<td>' + v + '</td>'; }).join('') + (tt ? '<td class="dwtt">' + a + '</td>' : '') + '<td class="dwd">' + r.cd + '</td>' + r.c.map(function (v) { return '<td>' + v + '</td>'; }).join('') + (tt ? '<td class="dwtt">' + b + '</td>' : '') + '<td class="dwdf' + (df < 0 ? ' neg' : '') + '">' + df + '</td></tr>';
   });
   var A = dwSum(K.tp), Bt = dwSum(K.tc);
-  h += '<tr class="dwT"><td>TOTAL</td>' + K.tp.map(function (v) { return '<td>' + v + '</td>'; }).join('') + '<td>' + A + '</td><td>TOTAL</td>' + K.tc.map(function (v) { return '<td>' + v + '</td>'; }).join('') + '<td>' + Bt + '</td><td>' + (Bt - A) + '</td></tr></tbody></table></div>';
+  h += '<tr class="dwT"><td>TOTAL</td>' + K.tp.map(function (v) { return '<td>' + v + '</td>'; }).join('') + (tt ? '<td>' + A + '</td>' : '') + '<td>TOTAL</td>' + K.tc.map(function (v) { return '<td>' + v + '</td>'; }).join('') + (tt ? '<td>' + Bt + '</td>' : '') + '<td>' + (Bt - A) + '</td></tr></tbody></table></div>';
   return h;
 }
 function dwDraw() {
@@ -7275,7 +7283,7 @@ function rpShow(k) {
 var RPC = { rows: [], admin: false };
 function rpDrawChips() {
   var mr = typeof mrAccess === 'function' && mrAccess(), h = '';
-  var se = ME && ME.role === 'se'; RP_DEFS.forEach(function (d) { if (d.mr && !mr) return; if (se && ['cmp', 'dw', 'pl'].indexOf(d.k) < 0) return; h += '<button type="button" class="achip" data-rp="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + esc(d.t) + '</b><small>' + esc(d.s) + '</small></span></button>'; });
+  var se = ME && ME.role === 'se'; RP_DEFS.forEach(function (d) { if (se && ['cmp', 'dw', 'pl'].indexOf(d.k) < 0) return; h += '<button type="button" class="achip" data-rp="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + esc(d.t) + '</b><small>' + esc(d.s) + '</small></span></button>'; });
   (se ? [] : RPC.rows).forEach(function (r) { h += '<button type="button" class="achip" data-rpweb="' + r[0] + '"><span class="ic" style="--c:#e0f2fe">\u{1F310}</span><span><b>' + esc(r[1]) + '</b><small>Added web app</small></span></button>'; });
   if (RPC.admin) h += '<button type="button" class="achip" data-rpadd="1"><span class="ic" style="--c:#e4f6e8">+</span><span><b>Add report</b><small>Paste the link of your web app</small></span></button>';
   $('rpchips').innerHTML = h;
@@ -8688,20 +8696,20 @@ function sirDraw(s, allPrs, sh, fromS, till) {
   SIRPEND = PL;
   function pk(v, w, c) { var k = (w || '*') + '|' + (c || '*'); if (!v) return z(0); var sp0 = { sirk: k, t: 'SIR pending - ' + (w || 'all workshops') + (c ? ' - ' + c + ' kVA' : ' - 100 kVA & above') + ' (PR ' + fromS + ' to ' + till + ')' }; if (w) sp0.ws = w; if (c) sp0.caps = [c]; return LK(v, sp0, sp0.t); }
   function z(v) { return v ? v : '<span class="z">0</span>'; }
-  var h = '<div class="wrap tbl11d capt"><table><thead><tr><th class="l" rowspan="2">CAPACITY (KVA)</th><th class="g1" colspan="' + (nW + 1) + '">PR RAISED</th><th class="g2" colspan="' + (nW + 1) + '">SIR DONE</th><th class="g1" colspan="' + (nW + 1) + '">SIR PENDING</th></tr><tr>';
-  for (var g = 0; g < 3; g++) { W.forEach(function (w) { h += '<th>' + esc(w) + '</th>'; }); h += '<th>TOTAL</th>'; }
+  var h = '<div class="wrap tbl11d capt"><table><thead><tr><th class="l" rowspan="2">CAPACITY (KVA)</th><th class="g1" colspan="' + (nW + (nW > 1 ? 1 : 0)) + '">PR RAISED</th><th class="g2" colspan="' + (nW + (nW > 1 ? 1 : 0)) + '">SIR DONE</th><th class="g1" colspan="' + (nW + (nW > 1 ? 1 : 0)) + '">SIR PENDING</th></tr><tr>';
+  for (var g = 0; g < 3; g++) { W.forEach(function (w) { h += '<th>' + esc(w) + '</th>'; }); if (nW > 1) h += '<th>TOTAL</th>'; }
   h += '</tr></thead><tbody>';
   var T = [W.map(function () { return 0; }), W.map(function () { return 0; }), W.map(function () { return 0; })];
   cs.forEach(function (c) {
     var row = '<td class="l"><b>' + c + '</b></td>', tot = [0, 0, 0];
     for (var g = 0; g < 3; g++) {
       W.forEach(function (w, i) { var v = g === 0 ? A[c][w] : g === 1 ? D[c][w] : A[c][w] - D[c][w]; tot[g] += v; T[g][i] += v; row += '<td' + (i === 0 ? ' class="gs"' : '') + '>' + (g === 2 ? pk(v, w, c) : z(v)) + '</td>'; });
-      row += '<td class="sub"><b>' + (g === 2 ? pk(tot[g], '', c) : z(tot[g])) + '</b></td>';
+      if (nW > 1) row += '<td class="sub"><b>' + (g === 2 ? pk(tot[g], '', c) : z(tot[g])) + '</b></td>';
     }
     if (tot[0]) h += '<tr>' + row + '</tr>';
   });
   var tr = '<td class="l">TOTAL</td>', all = [0, 0, 0];
-  for (var g2 = 0; g2 < 3; g2++) { T[g2].forEach(function (v, i) { all[g2] += v; tr += '<td>' + (g2 === 2 ? pk(v, W[i], 0) : z(v)) + '</td>'; }); tr += '<td>' + (g2 === 2 ? pk(all[g2], '', 0) : z(all[g2])) + '</td>'; }
+  for (var g2 = 0; g2 < 3; g2++) { T[g2].forEach(function (v, i) { all[g2] += v; tr += '<td>' + (g2 === 2 ? pk(v, W[i], 0) : z(v)) + '</td>'; }); if (nW > 1) tr += '<td>' + (g2 === 2 ? pk(all[g2], '', 0) : z(all[g2])) + '</td>'; }
   h += '<tr class="t">' + tr + '</tr></tbody></table></div>';
   var pct = all[0] ? Math.round(all[1] * 100 / all[0]) : 0;
   h = '<div class="muted" style="margin-bottom:6px">PR raised ' + esc(fromS) + ' to ' + esc(till) + ': <b>' + all[0] + '</b> &middot; SIR done: <b>' + all[1] + '</b> (' + pct + '%) &middot; SIR pending: <b>' + (all[2] ? pk(all[2], '', 0) : 0) + '</b> <span class="muted">(click a pending number to see the PRs)</span></div>' + h;
@@ -9669,5 +9677,20 @@ var _admLoadSir = admLoad; admLoad = function () { var p = _admLoadSir.apply(thi
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
 </script>
+<style id="fit-css">
+/* phone: every table in the same size as the top one, so all columns are seen without sideways scrolling */
+@media(max-width:700px){
+  #mrout .k-cap table{table-layout:fixed;width:100%}
+  #mrout .k-cap td{font-size:11px!important;font-weight:700!important;padding:4px 0!important;white-space:nowrap}
+  #mrout .k-cap th{font-size:8px!important;padding:3px 0!important;line-height:1.15}
+  #mrout .k-cap td.l,#mrout .k-cap th.l{width:13%;font-size:10px!important}
+  #mrout .k-cap a.n{padding:0!important;min-width:0!important;font-size:inherit!important}
+  #mkout .wrap{overflow:visible}
+  #mkout table.mkt:not(.xg){table-layout:fixed;width:100%;min-width:0}
+  #mkout table.mkt:not(.xg) thead th{font-size:8.5px!important;padding:5px 1px!important;line-height:1.15;word-break:normal}
+  #mkout table.mkt:not(.xg) tbody td{font-size:13px!important;padding:0 1px!important;height:34px}
+  #mkout table.mkt:not(.xg) tr.t td{font-size:13px!important}
+}
+</style>
 </body>
 </html>
