@@ -9653,14 +9653,17 @@ var _admLoadSir = admLoad; admLoad = function () { var p = _admLoadSir.apply(thi
     o.classList.add('on'); o.scrollTop = 0;
   }
   function dock() {
-    if (document.getElementById('h3dock')) return;
+    var ex = document.getElementById('h3dock');
+    if (!H.classList.contains('hs-3d')) { if (ex) ex.remove(); var m0 = document.getElementById('mrg'); if (m0) m0.remove(); return; }   // other themes: no dock at all
+    if (ex) return;
     var d = document.createElement('div'); d.id = 'h3dock';
     d.innerHTML = '<button type="button" class="rr" data-g="rr"><span class="i3"><svg viewBox="0 0 24 24">' + G.tsum + '</svg></span>R&amp;R</button><button type="button" class="mr" data-g="mr"><span class="i3"><svg viewBox="0 0 24 24">' + G.tmr + '</svg></span>M&amp;R</button>';
     document.body.appendChild(d);
     d.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) dockMenu(b.dataset.g); });
-    new MutationObserver(dockMark).observe(document.body, { attributes: true, attributeFilter: ['class'] });
     dockMark();
   }
+  new MutationObserver(function () { dock(); dockMark(); }).observe(H, { attributes: true, attributeFilter: ['class'] });
+  document.addEventListener('DOMContentLoaded', function () { new MutationObserver(dockMark).observe(document.body, { attributes: true, attributeFilter: ['class'] }); });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dock); else dock();
   window.addEventListener('click', function (e) { if (!H.classList.contains('hs-3d')) return; var b = e.target.closest && e.target.closest('nav button'); if (b && (b.id === 'tmr' || b.id === 'mrall')) { e.stopImmediatePropagation(); e.preventDefault(); grid(); } }, true);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
