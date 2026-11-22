@@ -4752,4 +4752,176 @@ begin
 end $$;
 revoke all on function public.sir_form_get(), public.sir_form_set(text) from public, anon;
 grant execute on function public.sir_form_get(), public.sir_form_set(text) to authenticated;
+
+-- ################ STEP 118 : SIR (Site Inspection Report) INSIDE the app ################
+-- The SIR records (text only, about 1 KB each) live here. The PHOTOS and the PDFs live in the Admin's Google Drive;
+-- only their links are saved here. Signatures (small pictures) are saved here too, uploaded by the Admin only.
+create table if not exists public.sir_rec (
+  id bigserial primary key,
+  org_division text not null,
+  ws text not null,
+  by_login text, by_name text,
+  at timestamptz not null default now(),
+  sir_date date, dmg_date date,
+  pr_no text, uniq_no text,
+  d jsonb not null default '{}'::jsonb,
+  photo_url text, pdf_url text,
+  src_key text
+);
+create index if not exists sir_rec_ws_date on public.sir_rec (ws, sir_date desc);
+create index if not exists sir_rec_pr on public.sir_rec (pr_no);
+create unique index if not exists sir_rec_src on public.sir_rec (org_division, src_key) where src_key is not null;
+alter table public.sir_rec enable row level security;
+revoke all on public.sir_rec from public, anon, authenticated;
+
+create table if not exists public.sir_drive (
+  org_division text primary key,
+  url text, folder text, zone text,
+  by_login text, at timestamptz not null default now()
+);
+alter table public.sir_drive enable row level security;
+revoke all on public.sir_drive from public, anon, authenticated;
+
+create table if not exists public.sir_sig (
+  ws text not null, role text not null check (role in ('EE','AE','JE')),
+  org_division text not null, img text not null, at timestamptz not null default now(),
+  primary key (ws, role)
+);
+alter table public.sir_sig enable row level security;
+revoke all on public.sir_sig from public, anon, authenticated;
+
+create or replace function public.sir_div_of_me() returns text language sql stable security definer set search_path = public as $$
+  select coalesce((select p.org_division from public.profiles p where p.user_id = auth.uid() and p.active and p.role = 'admin'),
+                  (select w.org_division from public.workshops w where w.name = any (coalesce(public.my_workshops(), '{}')) order by w.name limit 1)) $$;
+
+create or replace function public.sir_drive_get() returns jsonb language sql stable security definer set search_path = public as $$
+  select coalesce((select jsonb_build_object('url', coalesce(s.url, ''), 'folder', coalesce(s.folder, ''), 'zone', coalesce(s.zone, ''))
+                     from public.sir_drive s where s.org_division = public.sir_div_of_me()), '{}'::jsonb) $$;
+
+create or replace function public.sir_drive_set(p_url text, p_folder text, p_zone text) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); u text := btrim(coalesce(p_url, '')); f text := btrim(coalesce(p_folder, '')); z text := btrim(coalesce(p_zone, ''));
+begin
+  if c.user_id is null or c.role <> 'admin' or c.org_division is null then raise exception 'Only the Admin can set this.'; end if;
+  if u <> '' and u !~ '^https://script\.google\.com/' then raise exception 'The link must be the Apps Script web app link (starts with https://script.google.com/).'; end if;
+  if f <> '' and f !~ '^[A-Za-z0-9_-]{10,100}$' then raise exception 'The Drive folder ID has wrong letters. Copy only the ID after /folders/ .'; end if;
+  if length(z) > 40 then raise exception 'Zone name is too long.'; end if;
+  insert into public.sir_drive(org_division, url, folder, zone, by_login, at) values (c.org_division, nullif(u, ''), nullif(f, ''), nullif(z, ''), c.login_id, now())
+    on conflict (org_division) do update set url = excluded.url, folder = excluded.folder, zone = excluded.zone, by_login = excluded.by_login, at = now();
+  return true;
+end $$;
+
+create or replace function public.sir_sig_get() returns jsonb language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_object_agg(x.ws, x.m), '{}'::jsonb) from (
+    select s.ws, jsonb_object_agg(s.role, s.img) m from public.sir_sig s
+     where s.ws = any (coalesce(public.my_workshops(), '{}')) group by s.ws) x $$;
+
+create or replace function public.sir_sig_set(p_ws text, p_role text, p_img text) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); dv text;
+begin
+  if c.user_id is null or c.role <> 'admin' then raise exception 'Only the Admin can upload signatures.'; end if;
+  select w.org_division into dv from public.workshops w where w.name = p_ws and w.org_division = c.org_division;
+  if dv is null then raise exception 'This workshop is not yours.'; end if;
+  if p_role not in ('EE','AE','JE') then raise exception 'Wrong role.'; end if;
+  if coalesce(p_img, '') = '' then delete from public.sir_sig where ws = p_ws and role = p_role; return true; end if;
+  if p_img !~ '^data:image/(jpeg|png);base64,' or length(p_img) > 70000 then raise exception 'The signature picture is missing or too large.'; end if;
+  insert into public.sir_sig(ws, role, org_division, img, at) values (p_ws, p_role, dv, p_img, now())
+    on conflict (ws, role) do update set img = excluded.img, at = now();
+  return true;
+end $$;
+
+create or replace function public.sir_save(p_d jsonb) returns bigint
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); w text := btrim(coalesce(p_d->>'ws', '')); dv text; nid bigint; dd jsonb;
+begin
+  if c.user_id is null or c.role not in ('admin', 'je') then raise exception 'You cannot fill a SIR.'; end if;
+  if w = '' or not (w = any (coalesce(public.my_workshops(), '{}'))) then raise exception 'Choose one of your workshops.'; end if;
+  select org_division into dv from public.workshops where name = w;
+  dd := p_d - 'ws' - 'photoUrl' - 'pdfUrl' - 'id';
+  insert into public.sir_rec(org_division, ws, by_login, by_name, sir_date, dmg_date, pr_no, uniq_no, d)
+  values (dv, w, c.login_id, coalesce(c.display, c.login_id),
+          nullif(dd->>'dateOfSIR', '')::date, nullif(dd->>'dateOfDamage', '')::date,
+          nullif(btrim(coalesce(dd->>'prNo', '')), ''), nullif(btrim(coalesce(dd->>'uniqueNo', '')), ''), dd)
+  returning id into nid;
+  return nid;
+end $$;
+
+create or replace function public.sir_update(p_id bigint, p_d jsonb) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); r public.sir_rec; dd jsonb;
+begin
+  select * into r from public.sir_rec where id = p_id;
+  if r.id is null or c.user_id is null or c.role <> 'admin' or r.org_division is distinct from c.org_division then raise exception 'Only the Admin can edit a SIR.'; end if;
+  dd := p_d - 'ws' - 'photoUrl' - 'pdfUrl' - 'id';
+  update public.sir_rec set d = dd, sir_date = nullif(dd->>'dateOfSIR', '')::date, dmg_date = nullif(dd->>'dateOfDamage', '')::date,
+         pr_no = nullif(btrim(coalesce(dd->>'prNo', '')), ''), uniq_no = nullif(btrim(coalesce(dd->>'uniqueNo', '')), '') where id = p_id;
+  return true;
+end $$;
+
+create or replace function public.sir_set_urls(p_id bigint, p_photo text, p_pdf text) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); r public.sir_rec;
+begin
+  select * into r from public.sir_rec where id = p_id;
+  if r.id is null or c.user_id is null or not (r.ws = any (coalesce(public.my_workshops(), '{}'))) or (c.role <> 'admin' and r.by_login is distinct from c.login_id) then raise exception 'Not allowed.'; end if;
+  if (p_photo is not null and p_photo <> '' and p_photo !~ '^https://') or (p_pdf is not null and p_pdf <> '' and p_pdf !~ '^https://') or length(coalesce(p_photo, '')) > 600 or length(coalesce(p_pdf, '')) > 600 then raise exception 'Wrong link.'; end if;
+  update public.sir_rec set photo_url = coalesce(nullif(p_photo, ''), photo_url), pdf_url = coalesce(nullif(p_pdf, ''), pdf_url) where id = p_id;
+  return true;
+end $$;
+
+create or replace function public.sir_del(p_id bigint) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); r public.sir_rec;
+begin
+  select * into r from public.sir_rec where id = p_id;
+  if r.id is null or c.user_id is null or c.role <> 'admin' or r.org_division is distinct from c.org_division then raise exception 'Only the Admin can delete a SIR.'; end if;
+  delete from public.sir_rec where id = p_id; return true;
+end $$;
+
+create or replace function public.sir_list_json(p_ws text default null, p_from date default null, p_to date default null, p_q text default null, p_limit int default 25, p_off int default 0)
+returns jsonb language sql stable security definer set search_path = public as $$
+  with s as (
+    select r.* from public.sir_rec r
+     where r.ws = any (coalesce(public.my_workshops(), '{}'))
+       and (p_ws is null or p_ws = '' or r.ws = p_ws)
+       and (p_from is null or coalesce(r.sir_date, r.at::date) >= p_from)
+       and (p_to is null or coalesce(r.sir_date, r.at::date) <= p_to)
+       and (coalesce(btrim(p_q), '') = '' or r.d::text ilike '%' || btrim(p_q) || '%' or r.ws ilike '%' || btrim(p_q) || '%')
+  )
+  select jsonb_build_object('n', (select count(*) from s),
+    'rows', coalesce((select jsonb_agg(x.j) from (
+       select s.d || jsonb_build_object('id', s.id, 'ws', s.ws, 'by', s.by_name, 'at', s.at, 'photoUrl', coalesce(s.photo_url, ''), 'pdfUrl', coalesce(s.pdf_url, '')) j
+         from s order by coalesce(s.sir_date, s.at::date) desc, s.id desc limit least(greatest(p_limit, 1), 2000) offset greatest(p_off, 0)) x), '[]'::jsonb)) $$;
+
+create or replace function public.sir_prs() returns text[] language sql stable security definer set search_path = public as $$
+  select coalesce(array_agg(distinct r.pr_no), '{}'::text[]) from public.sir_rec r
+   where r.pr_no is not null and r.ws = any (coalesce(public.my_workshops(), '{}')) $$;
+
+create or replace function public.sir_import(p_rows jsonb) returns int
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); x jsonb; n int := 0; w text; dd jsonb; k int;
+begin
+  if c.user_id is null or c.role <> 'admin' then raise exception 'Only the Admin can import.'; end if;
+  for x in select * from jsonb_array_elements(coalesce(p_rows, '[]'::jsonb)) loop
+    w := btrim(coalesce(x->>'ws', ''));
+    if not exists (select 1 from public.workshops where name = w and org_division = c.org_division) then continue; end if;
+    dd := x - 'ws' - 'photoUrl' - 'pdfUrl' - 'src' - 'at';
+    insert into public.sir_rec(org_division, ws, by_login, by_name, at, sir_date, dmg_date, pr_no, uniq_no, d, photo_url, pdf_url, src_key)
+    values (c.org_division, w, c.login_id, 'Imported', coalesce(nullif(x->>'at', '')::timestamptz, now()),
+            nullif(dd->>'dateOfSIR', '')::date, nullif(dd->>'dateOfDamage', '')::date,
+            nullif(btrim(coalesce(dd->>'prNo', '')), ''), nullif(btrim(coalesce(dd->>'uniqueNo', '')), ''), dd,
+            nullif(x->>'photoUrl', ''), nullif(x->>'pdfUrl', ''), nullif(x->>'src', ''))
+    on conflict do nothing;
+    get diagnostics k = row_count; n := n + k;
+  end loop;
+  return n;
+end $$;
+
+revoke all on function public.sir_div_of_me(), public.sir_drive_get(), public.sir_drive_set(text, text, text), public.sir_sig_get(), public.sir_sig_set(text, text, text),
+  public.sir_save(jsonb), public.sir_update(bigint, jsonb), public.sir_set_urls(bigint, text, text), public.sir_del(bigint),
+  public.sir_list_json(text, date, date, text, int, int), public.sir_prs(), public.sir_import(jsonb) from public, anon;
+grant execute on function public.sir_div_of_me(), public.sir_drive_get(), public.sir_drive_set(text, text, text), public.sir_sig_get(), public.sir_sig_set(text, text, text),
+  public.sir_save(jsonb), public.sir_update(bigint, jsonb), public.sir_set_urls(bigint, text, text), public.sir_del(bigint),
+  public.sir_list_json(text, date, date, text, int, int), public.sir_prs(), public.sir_import(jsonb) to authenticated;
 notify pgrst, 'reload schema';
