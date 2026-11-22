@@ -2442,18 +2442,26 @@ html.hs-3d .i3 svg{width:25px;height:25px}
 html.hs-3d nav button.on .i3{transform:translateY(-3px) scale(1.1);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),0 0 0 3px rgba(255,255,255,.55),0 14px 18px -6px var(--b)}
 html.hs-3d body main{padding-top:14px}
 html.hs-3d body nav,html.hs-3d body nav:not(#mrnav){display:none!important}
-html.hs-3d body .top{padding-bottom:10px}
-html.hs-3d body main{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
-html.hs-3d #t-sir .sbarx{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+html.hs-3d body .top{position:static!important;padding-bottom:0;border-radius:0 0 18px 18px}
+html.hs-3d body header{display:flex!important;flex-wrap:nowrap!important;align-items:center;gap:5px!important;padding:6px 10px!important}
+html.hs-3d body header h1{font-size:14px!important;min-width:0!important;flex:1 1 auto!important;white-space:nowrap;gap:5px!important}
+html.hs-3d body header .hemb{width:24px!important;height:24px!important}
+html.hs-3d body header #who{display:none!important}
+html.hs-3d body header .btn.g{padding:5px 8px!important;font-size:11px!important;min-height:0!important;flex:0 0 auto;white-space:nowrap}
+html.hs-3d body #mrtag{display:none!important}
+html.hs-3d body header h1{overflow:hidden;text-overflow:ellipsis}
+html.hs-3d body main{padding-top:8px!important;padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
+html.hs-3d #t-sir .sbarx{bottom:calc(60px + env(safe-area-inset-bottom,0px))}
 html.hs-3d body:not(.on-home) #h3dock{display:flex}
 html.hs-3d body:not(.on-home) #h3dock~#mrg{z-index:320}
 }
-html.hs-3d #h3dock{display:none;position:fixed;left:0;right:0;bottom:0;z-index:250;justify-content:center;gap:22px;padding:10px 18px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(15,26,71,.88),rgba(12,20,56,.97));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:26px 26px 0 0;box-shadow:0 -12px 30px -12px rgba(20,30,100,.7)}
-html.hs-3d #h3dock button{flex:0 1 150px;display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;color:#c9d3ff;font-weight:800;font-size:12.5px;line-height:1.1;letter-spacing:.4px;padding:0;cursor:pointer}
-html.hs-3d #h3dock .i3{width:54px;height:54px;border-radius:19px;transition:transform .18s,box-shadow .18s}
-html.hs-3d #h3dock .i3 svg{width:28px;height:28px}
+html.hs-3d #h3dock{display:none;position:fixed;left:0;right:0;bottom:0;z-index:250;justify-content:center;gap:14px;padding:6px 14px calc(6px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(15,26,71,.88),rgba(12,20,56,.97));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:18px 18px 0 0;box-shadow:0 -8px 22px -10px rgba(20,30,100,.7)}
+html.hs-3d #h3dock button{flex:1 1 0;max-width:170px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:9px;border-radius:14px;border:0;background:none;color:#c9d3ff;font-weight:800;font-size:15px;line-height:1.1;letter-spacing:.4px;padding:0;cursor:pointer}
+html.hs-3d #h3dock .i3{width:38px;height:38px;border-radius:13px;transition:transform .18s,box-shadow .18s}
+html.hs-3d #h3dock .i3 svg{width:21px;height:21px}
 html.hs-3d #h3dock button.on{color:#fff}
-html.hs-3d #h3dock button.on .i3{transform:translateY(-4px) scale(1.08);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),0 0 0 3px rgba(255,255,255,.6),0 14px 18px -6px var(--b)}
+html.hs-3d #h3dock button.on{background:rgba(255,255,255,.12)}
+html.hs-3d #h3dock button.on .i3{transform:scale(1.06);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),0 0 0 3px rgba(255,255,255,.6),0 14px 18px -6px var(--b)}
 html.hs-3d #h3dock button:active .i3{transform:translateY(2px)}
 html.hs-3d #h3dock .rr{--a:#6f9bff;--b:#2b44ad}
 html.hs-3d #h3dock .mr{--a:#ffb067;--b:#d9531e}
