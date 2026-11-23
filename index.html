@@ -9509,7 +9509,11 @@ document.addEventListener('click', function (e) {
   var b = e.target.closest && e.target.closest('.srep [data-a]'); if (!b) return;
   var art = b.closest('.srep'), d = SIRL.rows[+art.dataset.i], a = b.dataset.a; if (!d) return;
   if (a === 'det') { var x = art.querySelector('.sdet'); x.classList.toggle('hide'); var im = x.querySelector('img[data-src]'); if (im && !x.classList.contains('hide')) { im.src = im.dataset.src; im.removeAttribute('data-src'); } }
-  else if (a === 'pdf') { b.disabled = true; sirMakePdf(d, d.ws, null).then(function (bl) { sirSaveBlob(bl, sirPdfName(d)); b.disabled = false; }); }
+  else if (a === 'pdf') {          // the photo is read back from the Admin's Drive so the PDF carries it
+    b.disabled = true; var ob = b.textContent; b.textContent = 'Please wait...';
+    (d.photoUrl ? sirCfgDrive().then(function () { return sirDriveGet(d.photoUrl); }).catch(function () { return null; }) : Promise.resolve(null)).then(function (pd) { return sirMakePdf(d, d.ws, pd); })
+      .then(function (bl) { sirSaveBlob(bl, sirPdfName(d)); }).catch(function (er) { alert(er.message || 'PDF could not be made.'); }).then(function () { b.disabled = false; b.textContent = ob; });
+  }
   else if (a === 'edit') sirFillView(null, d);
   else if (a === 'del') { if (confirm('Delete this SIR report?\nPR ' + (d.prNo || '-') + ' / ' + (d.placeOfDT || '') + '\n(The photo and the PDF stay in your Google Drive.)')) rpc('sir_del', { p_id: d.id }).then(function () { sirListLoad(false); }).catch(function (er) { alert(er.message); }); }
 });
