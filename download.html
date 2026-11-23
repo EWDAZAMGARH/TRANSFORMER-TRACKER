@@ -38,7 +38,8 @@ a.back{color:var(--mut);font-size:13px}
     <div class="c">
       <h2>Windows computer or laptop</h2>
       <p>TF-Tracker.exe &middot; no installation, no admin password.</p>
-      <a class="b" href="https://github.com/ewdazamgarh/TRANSFORMER-TRACKER/releases/latest/download/TF-Tracker.exe">Download for Windows (.exe)</a>
+      <a class="b" target="_blank" rel="noopener" href="https://github.com/ewdazamgarh/TRANSFORMER-TRACKER/releases/latest/download/TF-Tracker.exe">Download for Windows (.exe)</a>
+      <p class="n"><a target="_blank" rel="noopener" href="https://github.com/ewdazamgarh/TRANSFORMER-TRACKER/releases/latest">Button not working? Open the download page and pick the file</a></p>
       <ol>
         <li>Download the file and double-click it.</li>
         <li>If Windows says <b>"Windows protected your PC"</b>: click <b>More info</b>, then <b>Run anyway</b>. This comes only once, because the app is not paid-signed.</li>
@@ -48,7 +49,8 @@ a.back{color:var(--mut);font-size:13px}
     <div class="c">
       <h2>Android phone</h2>
       <p>TF-Tracker.apk</p>
-      <a class="b" href="https://github.com/ewdazamgarh/TRANSFORMER-TRACKER/releases/latest/download/TF-Tracker.apk">Download for Android (.apk)</a>
+      <a class="b" target="_blank" rel="noopener" href="https://github.com/ewdazamgarh/TRANSFORMER-TRACKER/releases/latest/download/TF-Tracker.apk">Download for Android (.apk)</a>
+      <p class="n"><a target="_blank" rel="noopener" href="https://github.com/ewdazamgarh/TRANSFORMER-TRACKER/releases/latest">Button not working? Open the download page and pick the file</a></p>
       <ol>
         <li>Download and open the file.</li>
         <li>If the phone asks, allow <b>Install unknown apps</b> for your browser. If Play Protect warns, choose <b>Install anyway</b>.</li>
@@ -68,5 +70,24 @@ a.back{color:var(--mut);font-size:13px}
   <p class="n">New to this? On the login page tap <b>"First time on this phone or computer? Enter your workshop code"</b> and type the code given by your Admin. The app always shows the newest version of the site, so you do not need to download it again after an update.<br>The download buttons work after the Admin has built the apps once (GitHub &gt; Actions &gt; Build apps).</p>
   <p class="n"><a class="back" href="./">&larr; Back to TF-Tracker</a></p>
 </div>
+<script>
+/* "latest/download" only looks inside the newest release. If the .exe and the .apk were uploaded to different releases,
+   find the newest release that really holds each file and point the button there. */
+(function () {
+  var R = 'ewdazamgarh/TRANSFORMER-TRACKER';
+  try {
+    fetch('https://api.github.com/repos/' + R + '/releases?per_page=30').then(function (r) { return r.ok ? r.json() : []; }).then(function (list) {
+      [].forEach.call(document.querySelectorAll('a.b[href*="/releases/latest/download/"]'), function (a) {
+        var f = a.getAttribute('href').split('/').pop(), url = '';
+        (list || []).some(function (rel) {
+          if (rel.draft) return false;
+          return (rel.assets || []).some(function (x) { if (x.name === f) { url = x.browser_download_url; return true; } });
+        });
+        if (url) a.href = url;
+      });
+    }).catch(function () { });
+  } catch (e) { }
+})();
+</script>
 </body>
 </html>
