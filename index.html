@@ -3658,7 +3658,7 @@ function drawData() {
     var r = DROWS[ri];
     h += '<tr data-r="' + ri + '" class="' + (r.dirty ? 'dirty ' : '') + (r.bad ? 'bad ' : '') + (r.sel ? 'sel' : '') + '"><td class="ix rn" title="Click to select this row (Shift = range)">' + (n + 1) + '</td>' + DCOL.map(function (c) {
       var i = c[0], lk = rowLocked(r, i), kind = c[2] || '';
-      return '<td class="gc' + (lk ? ' lk' : '') + (i === 20 ? (r.c[20] === 'DONE' ? ' sirD' : r.c[20] ? ' sirP' : '') : (i === 21 || i === 22 ? ' dtc' : '')) + '"><input type="text" data-i="' + i + '" value="' + esc(r.c[i]) + '"' + (lk ? ' readonly tabindex="-1"' : '') + (kind === 'date' ? ' inputmode="numeric" maxlength="10" placeholder="DD.MM.YYYY"' : kind === 'mob' ? ' inputmode="numeric"' : kind === 'ws' ? ' list="wsdl"' : kind === 'yn' ? ' list="ynl" maxlength="3" placeholder="Yes / No"' : i === 12 ? ' list="frdl"' : i === 14 ? ' list="drdl"' : '') + (i === 8 || i === 9 ? ' class="b"' : '') + '></td>';
+      return '<td class="gc' + (lk ? ' lk' : '') + (i === 20 ? (r.c[20] === 'DONE' ? ' sirD' : r.c[20] ? ' sirP' : '') : (i === 21 || i === 22 ? ' dtc' : '')) + '"><input type="text" data-i="' + i + '" value="' + esc(r.c[i]) + '"' + (lk ? ' readonly tabindex="-1"' : '') + (kind === 'date' ? ' inputmode="numeric" maxlength="10" placeholder="DD.MM.YYYY"' : kind === 'mob' ? ' inputmode="numeric"' : kind === 'ws' ? ' list="wsdl"' : kind === 'yn' ? ' list="ynl" maxlength="3" placeholder="Yes / No"' : i === 12 ? ' list="frdl"' : i === 14 ? ' list="drdl"' : '') + (i === 8 || i === 9 ? ' class="b"' : '') + '>' + (i === 20 && r.c[20] === 'PENDING' && r.k && typeof sirCanFill === 'function' && sirCanFill() ? '<button type="button" class="sirgo2" data-ri="' + ri + '" title="Fill SIR for this PR" tabindex="-1">&#9998;</button>' : '') + '</td>';
     }).join('') + '<td class="ix">' + (canWrite() ? '<button class="rx" title="Delete this row">&#10005;</button>' : '') + '</td></tr>';
   });
   $('dt').innerHTML = h + '</tbody>';
@@ -3814,8 +3814,7 @@ var DMULTI = [], DMSEL = [], DMY = 0, DMM = 0;
 function dmClear(quiet) { DMULTI = []; DMSEL = []; $('dmsel').classList.add('hide'); $('dmpop').classList.add('hide'); $('dmulti').classList.remove('on'); }
 function dmInfo() {
   var e = $('dmsel'); if (DMULTI.length < 2) { e.classList.add('hide'); $('dmulti').classList.remove('on'); return; }
-  e.innerHTML = DMULTI.length + ' dates: ' + DMULTI.map(function (x) { return x.slice(0, 5); }).join(', ') + ' &nbsp;<a href="#" id="dmx">single date</a>'; e.classList.remove('hide'); $('dmulti').classList.add('on');
-  $('dmx').onclick = function (ev) { ev.preventDefault(); var f = DMULTI[0]; dmClear(); $('dd').value = f; loadData(); };
+  e.innerHTML = DMULTI.length + ' dates: ' + DMULTI.map(function (x) { return x.slice(0, 5); }).join(', '); e.classList.remove('hide'); $('dmulti').classList.add('on');
 }
 function dmDraw() {
   var P = $('dmpop'), first = new Date(DMY, DMM, 1), n = new Date(DMY, DMM + 1, 0).getDate(), lead = (first.getDay() + 6) % 7, MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], h = '';
@@ -9531,6 +9530,13 @@ function sirPendView() {
   $('sirre').onclick = function () { sirRun(s, true); };
   sirRun(s, false);
 }
+/* tiny pencil next to PENDING in the Data Sheet SIR column: opens the SIR form with this PR filled in */
+document.addEventListener('click', function (e) {
+  var b = e.target && e.target.closest ? e.target.closest('.sirgo2') : null; if (!b) return;
+  var r = (DROWS[+b.dataset.ri] || {}).c; if (!r) return;
+  if (!sirCanFill()) { alert('Your login cannot fill a SIR.'); return; }
+  sirOpen('fill', { ws: r[0], division: r[1], substationName: r[2], placeOfDT: r[4], dateOfDamage: sirIsoAny(r[9]), prNo: r[8], capacityOfDT: r[5] ? (String(parseInt(r[5], 10)) + ' KVA') : '', jeName: r[10], jeMobile: r[11] });
+});
 /* "Fill SIR" button inside every card of the SIR pending popup: opens the form with the PR number filled */
 document.addEventListener('click', function (e) {
   var b = e.target && e.target.closest ? e.target.closest('.sirfb') : null; if (!b) return;
@@ -9717,6 +9723,9 @@ var _admLoadSir = admLoad; admLoad = function () { var p = _admLoadSir.apply(thi
 })();
 </script>
 <style id="dm-css">
+td.sirP{position:relative}td.sirP input{padding-right:20px}
+.sirgo2{position:absolute;right:2px;top:50%;transform:translateY(-50%);width:17px;height:17px;padding:0;border:0;border-radius:5px;background:#fde7da;color:#d9531e;font-size:11px;line-height:17px;cursor:pointer}
+.sirgo2:hover{background:#d9531e;color:#fff}
 .dmw{position:relative;display:inline-block}
 #dmulti.on{background:var(--pri,#d9531e);color:#fff}
 #dmpop{position:absolute;left:0;top:100%;margin-top:6px;z-index:60;width:272px;max-width:92vw;background:#fff;color:#222;border:1px solid #d9d4cb;border-radius:14px;box-shadow:0 14px 34px -10px rgba(0,0,0,.35);padding:10px}
