@@ -9200,7 +9200,7 @@ function sirGPost(url, body) {
       end(res, ev.data);
     }
     window.addEventListener('message', on);
-    to = setTimeout(function () { end(rej, new Error('The Google Drive script did not answer (timeout). Check the link and your internet.')); }, 90000);
+    to = setTimeout(function () { end(rej, new Error('The Google Drive script did not answer (timeout, 60 s). Check the link, the deployment and your internet.')); }, 60000);
     document.body.appendChild(fr); document.body.appendChild(fm); fm.submit();
   });
 }
@@ -9439,19 +9439,23 @@ function sirSubmit(rec) {
     if (SIRLAST && SIRLAST.id) { sirDoneShow(SIRLAST, { err: er.message }); } else msg('sirsmsg', 'Report was NOT saved. ' + esc(er.message || 'Check your internet.'), 'err');
   });
 }
-function sirUploads(S, rec) {           // photo -> Drive, PDF -> Drive, links -> app.  Returns {photoUrl, pdfUrl, blob}
-  var out = { blob: null }, name = sirBase(S.d);
-  function photo() {
-    if (SIRPH) return sirDrivePut(name + '_photo.jpg', 'image/jpeg', SIRPH.split(',')[1]).then(function (u) { out.photoUrl = u; return SIRPH; });
-    if (rec && rec.photoUrl) { out.photoUrl = rec.photoUrl; return sirDriveGet(rec.photoUrl).catch(function () { return null; }); }
-    return Promise.resolve(null);
-  }
-  return photo().then(function (pd) {
+function sirProg(t) { var b = $('sirsub'); if (b && b.disabled) b.innerHTML = '<span class="sp"></span>' + t; var m = $('sirsmsg'); if (m && m.textContent) m.innerHTML = '<div class="msg info"><span class="sp"></span>' + t + '</div>'; }
+function sirUploads(S, rec) {           // photo -> Drive and PDF -> Drive at the same time, links -> app.  Returns {photoUrl, pdfUrl, blob}
+  var out = { blob: null }, name = sirBase(S.d), pdata = null;
+  sirProg('Reading the photo...');
+  var getP = SIRPH ? Promise.resolve(SIRPH) : (rec && rec.photoUrl ? (out.photoUrl = rec.photoUrl, sirDriveGet(rec.photoUrl).catch(function () { return null; })) : Promise.resolve(null));
+  var photoUp = getP.then(function (pd) {
+    pdata = pd;
+    if (SIRPH) { sirProg('Uploading the photo to Google Drive...'); return sirDrivePut(name + '_photo.jpg', 'image/jpeg', SIRPH.split(',')[1]).then(function (u) { out.photoUrl = u; }); }
+  });
+  var pdfUp = getP.then(function (pd) {
+    sirProg('Making the PDF...');
     return sirMakePdf(S.d, S.ws, pd);
   }).then(function (blob) {
-    out.blob = blob; S.blob = blob;
+    out.blob = blob; S.blob = blob; sirProg('Uploading the PDF to Google Drive...');
     return sirBlob64(blob).then(function (b64) { return sirDrivePut(name + '.pdf', 'application/pdf', b64); });
-  }).then(function (u) { out.pdfUrl = u; return rpc('sir_set_urls', { p_id: S.id, p_photo: out.photoUrl || '', p_pdf: out.pdfUrl }); }).then(function () { return out; });
+  }).then(function (u) { out.pdfUrl = u; });
+  return Promise.all([photoUp, pdfUp]).then(function () { sirProg('Saving the links...'); return rpc('sir_set_urls', { p_id: S.id, p_photo: out.photoUrl || '', p_pdf: out.pdfUrl }); }).then(function () { return out; });
 }
 function sirDoneShow(S, r) {
   var ok = r && !r.err;
@@ -9499,7 +9503,7 @@ function sirListDraw() {
     return '<article class="card srep" data-i="' + i + '">' + sirPlate(d) +
       '<div class="sids">' + esc(d.ws || '') + ' &nbsp; ' + esc(d.circle || '') + '<br>PR: ' + esc(d.prNo || '-') + ' &nbsp; Unique: ' + esc(d.uniqueNo || '-') + '</div>' +
       '<div class="bar sacts"><button class="btn sec sm" data-a="det" type="button">Details</button>' + (d.pdfUrl ? '<a class="btn sm" target="_blank" rel="noopener" href="' + esc(d.pdfUrl) + '">PDF</a>' : '<button class="btn sm" data-a="pdf" type="button">PDF</button>') +
-      (adm ? '<button class="btn sec sm" data-a="edit" type="button">Edit</button><button class="btn sec sm" data-a="del" type="button" style="color:#b91c1c">Delete</button>' : '') + '</div>' +
+      (adm && d.photoUrl ? '<button class="btn sec sm" data-a="repdf" type="button">Remake PDF</button>' : '') + (adm ? '<button class="btn sec sm" data-a="edit" type="button">Edit</button><button class="btn sec sm" data-a="del" type="button" style="color:#b91c1c">Delete</button>' : '') + '</div>' +
       '<div class="sdet hide">' + SIR_LAB.slice(2).map(function (l) { return '<div><span>' + l[1] + ':</span> ' + esc(d[l[0]] || '-') + '</div>'; }).join('') + '<div><span>Filled by:</span> ' + esc(d.by || '-') + '</div>' +
       (pid ? '<div style="grid-column:1/-1"><a target="_blank" rel="noopener" href="' + esc(d.photoUrl) + '"><img class="sth" alt="Site photo" data-src="https://drive.google.com/thumbnail?id=' + pid + '&sz=w500"></a></div>' : '') + '</div></article>';
   }).join('') + '</div>' + (R.length < SIRL.n ? '<div style="text-align:center;margin-top:12px"><button class="btn sec" id="slmore" type="button">Load more (' + (SIRL.n - R.length) + ' left)</button></div>' : '');
@@ -9513,6 +9517,15 @@ document.addEventListener('click', function (e) {
     b.disabled = true; var ob = b.textContent; b.textContent = 'Please wait...';
     (d.photoUrl ? sirCfgDrive().then(function () { return sirDriveGet(d.photoUrl); }).catch(function () { return null; }) : Promise.resolve(null)).then(function (pd) { return sirMakePdf(d, d.ws, pd); })
       .then(function (bl) { sirSaveBlob(bl, sirPdfName(d)); }).catch(function (er) { alert(er.message || 'PDF could not be made.'); }).then(function () { b.disabled = false; b.textContent = ob; });
+  }
+  else if (a === 'repdf') {         // Admin: make the PDF again WITH the photo (read from Drive) and replace the stored PDF link
+    b.disabled = true; var ot = b.textContent; b.textContent = 'Please wait...';
+    sirCfgDrive().then(function () { return sirDriveGet(d.photoUrl); })
+      .then(function (pd) { return sirMakePdf(d, d.ws, pd); })
+      .then(function (bl) { return sirBlob64(bl).then(function (b64) { return sirDrivePut(sirBase(d) + '.pdf', 'application/pdf', b64); }); })
+      .then(function (u) { return rpc('sir_set_urls', { p_id: d.id, p_photo: d.photoUrl, p_pdf: u }).then(function () { d.pdfUrl = u; window.open(u, '_blank', 'noopener'); sirListLoad(false); }); })
+      .catch(function (er) { alert('The new PDF was not made: ' + (er.message || 'error') + '\nThe old PDF is unchanged.'); })
+      .then(function () { b.disabled = false; b.textContent = ot; });
   }
   else if (a === 'edit') sirFillView(null, d);
   else if (a === 'del') { if (confirm('Delete this SIR report?\nPR ' + (d.prNo || '-') + ' / ' + (d.placeOfDT || '') + '\n(The photo and the PDF stay in your Google Drive.)')) rpc('sir_del', { p_id: d.id }).then(function () { sirListLoad(false); }).catch(function (er) { alert(er.message); }); }
