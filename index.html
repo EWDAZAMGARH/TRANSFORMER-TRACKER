@@ -9188,7 +9188,16 @@ function sirFileId(u) { var m = String(u || '').match(/[-\w]{25,}/); return m ? 
 function sirCanFill() { return !!ME && (ME.role === 'admin' || ME.role === 'je') && (ME.role === 'admin' || ME.edit); }
 
 /* ---- Google Drive (the Admin's Apps Script): one hidden form + postMessage, the same way as the M&R archive ---- */
+function sirGFetch(url, body) {         /* first way: a normal request (Google answers with open CORS headers); gives a real error when something is wrong */
+  var ac = window.AbortController ? new AbortController() : null, to = setTimeout(function () { if (ac) ac.abort(); }, 60000);
+  return fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), redirect: 'follow', credentials: 'omit', signal: ac ? ac.signal : undefined })
+    .then(function (r) { clearTimeout(to); return r.text(); })
+    .then(function (t) { var j; try { j = JSON.parse(t); } catch (e) { var er = new Error('NOJSON'); er.nojson = 1; throw er; } return j; }, function (e) { clearTimeout(to); if (e && e.name === 'AbortError') { var er = new Error('The Google Drive script did not answer (timeout, 60 s). Check the link, the deployment and your internet.'); er.final = 1; throw er; } throw e; });
+}
 function sirGPost(url, body) {
+  return sirGFetch(url, body).catch(function (e) { if (e && e.final) throw e; return sirGFrame(url, body); });   // if the normal request is blocked on this computer, the older hidden-form way is tried
+}
+function sirGFrame(url, body) {
   var id = 's' + Date.now() + Math.random().toString(36).slice(2, 8); body.id = id;
   return new Promise(function (res, rej) {
     var fr = document.createElement('iframe'), fm = document.createElement('form'), inp = document.createElement('input'), done = false, to;
