@@ -5090,3 +5090,39 @@ begin
 end $$;
 
 notify pgrst, 'reload schema';
+
+
+-- ================================================================================================================
+-- STEP 121 : SIR list - an "AppSurvey" tick on every report.  The user ticks it after the report is loaded on AppSurvey.
+--   Admin and JE can tick / untick the reports of their own workshops.  Nothing else changes.
+alter table public.sir_rec add column if not exists app_sv boolean not null default false;
+alter table public.sir_rec add column if not exists app_sv_by text;
+alter table public.sir_rec add column if not exists app_sv_at timestamptz;
+
+create or replace function public.sir_list_json(p_ws text default null, p_from date default null, p_to date default null, p_q text default null, p_limit int default 25, p_off int default 0)
+returns jsonb language sql stable security definer set search_path = public as $$
+  with s as (
+    select r.* from public.sir_rec r
+     where r.ws = any (coalesce(public.my_workshops(), '{}'))
+       and (p_ws is null or p_ws = '' or r.ws = p_ws)
+       and (p_from is null or coalesce(r.sir_date, r.at::date) >= p_from)
+       and (p_to is null or coalesce(r.sir_date, r.at::date) <= p_to)
+       and (coalesce(btrim(p_q), '') = '' or r.d::text ilike '%' || btrim(p_q) || '%' or r.ws ilike '%' || btrim(p_q) || '%')
+  )
+  select jsonb_build_object('n', (select count(*) from s),
+    'rows', coalesce((select jsonb_agg(x.j) from (
+       select s.d || jsonb_build_object('id', s.id, 'ws', s.ws, 'by', s.by_name, 'at', s.at, 'photoUrl', coalesce(s.photo_url, ''), 'pdfUrl', coalesce(s.pdf_url, ''), 'appSv', s.app_sv, 'appSvBy', s.app_sv_by, 'appSvAt', s.app_sv_at) j
+         from s order by coalesce(s.sir_date, s.at::date) desc, s.id desc limit least(greatest(p_limit, 1), 2000) offset greatest(p_off, 0)) x), '[]'::jsonb)) $$;
+
+create or replace function public.sir_mark_app(p_id bigint, p_on boolean) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); r public.sir_rec;
+begin
+  select * into r from public.sir_rec where id = p_id;
+  if r.id is null or c.user_id is null or c.role not in ('admin', 'je') or not (r.ws = any (coalesce(public.my_workshops(), '{}'))) then raise exception 'Not allowed.'; end if;
+  update public.sir_rec set app_sv = coalesce(p_on, false), app_sv_by = case when coalesce(p_on, false) then c.login_id end, app_sv_at = case when coalesce(p_on, false) then now() end where id = p_id;
+  return coalesce(p_on, false);
+end $$;
+revoke all on function public.sir_mark_app(bigint, boolean) from public, anon;
+grant execute on function public.sir_mark_app(bigint, boolean) to authenticated;
+notify pgrst, 'reload schema';

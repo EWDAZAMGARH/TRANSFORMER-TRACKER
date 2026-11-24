@@ -9512,7 +9512,8 @@ function sirListDraw() {
     return '<article class="card srep" data-i="' + i + '">' + sirPlate(d) +
       '<div class="sids">' + esc(d.ws || '') + ' &nbsp; ' + esc(d.circle || '') + '<br>PR: ' + esc(d.prNo || '-') + ' &nbsp; Unique: ' + esc(d.uniqueNo || '-') + '</div>' +
       '<div class="bar sacts"><button class="btn sec sm" data-a="det" type="button">Details</button>' + (d.pdfUrl ? '<a class="btn sm" target="_blank" rel="noopener" href="' + esc(d.pdfUrl) + '">PDF</a>' : '<button class="btn sm" data-a="pdf" type="button">PDF</button>') +
-      (adm && d.photoUrl ? '<button class="btn sec sm" data-a="repdf" type="button">Remake PDF</button>' : '') + (adm ? '<button class="btn sec sm" data-a="edit" type="button">Edit</button><button class="btn sec sm" data-a="del" type="button" style="color:#b91c1c">Delete</button>' : '') + '</div>' +
+      (adm && d.photoUrl ? '<button class="btn sec sm" data-a="repdf" type="button">Remake PDF</button>' : '') + (adm ? '<button class="btn sec sm" data-a="edit" type="button">Edit</button><button class="btn sec sm" data-a="del" type="button" style="color:#b91c1c">Delete</button>' : '') +
+      '<label class="sapp" title="' + (d.appSv ? 'Loaded on AppSurvey' + (d.appSvBy ? ' by ' + esc(d.appSvBy) : '') : 'Tick after this report is loaded on AppSurvey') + '"><input type="checkbox" data-a="app"' + (d.appSv ? ' checked' : '') + '> AppSurvey</label></div>' +
       '<div class="sdet hide">' + SIR_LAB.slice(2).map(function (l) { return '<div><span>' + l[1] + ':</span> ' + esc(d[l[0]] || '-') + '</div>'; }).join('') + '<div><span>Filled by:</span> ' + esc(d.by || '-') + '</div>' +
       (pid ? '<div style="grid-column:1/-1"><a target="_blank" rel="noopener" href="' + esc(d.photoUrl) + '"><img class="sth" alt="Site photo" data-src="https://drive.google.com/thumbnail?id=' + pid + '&sz=w500"></a></div>' : '') + '</div></article>';
   }).join('') + '</div>' + (R.length < SIRL.n ? '<div style="text-align:center;margin-top:12px"><button class="btn sec" id="slmore" type="button">Load more (' + (SIRL.n - R.length) + ' left)</button></div>' : '');
@@ -9537,6 +9538,7 @@ document.addEventListener('click', function (e) {
       .then(function () { b.disabled = false; b.textContent = ot; });
   }
   else if (a === 'edit') sirFillView(null, d);
+  else if (a === 'app') { var on = b.checked; b.disabled = true; rpc('sir_mark_app', { p_id: d.id, p_on: on }).then(function () { d.appSv = on; b.disabled = false; b.parentNode.title = on ? 'Loaded on AppSurvey' : 'Tick after this report is loaded on AppSurvey'; }).catch(function (er) { b.checked = !on; b.disabled = false; alert(/sir_mark_app|schema cache|does not exist/i.test(er.message) ? 'Run the new setup.sql (STEP 121) once.' : er.message); }); }
   else if (a === 'del') { if (confirm('Delete this SIR report?\nPR ' + (d.prNo || '-') + ' / ' + (d.placeOfDT || '') + '\n(The photo and the PDF stay in your Google Drive.)')) rpc('sir_del', { p_id: d.id }).then(function () { sirListLoad(false); }).catch(function (er) { alert(er.message); }); }
 });
 function sirListXl() {
@@ -9764,6 +9766,7 @@ td.sirP{position:relative}td.sirP input{padding-right:20px}
 #dmpop .dmf{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px}
 #dmsel{font-size:12px}
 </style>
+<style id="app-css">.sapp{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;padding:5px 10px;border-radius:12px;border:1.5px solid #9fb0e6;color:#1f3a93;background:#eef2ff;cursor:pointer;user-select:none}.sapp input{width:17px;height:17px;margin:0;accent-color:#16a34a;cursor:pointer}.sapp:has(input:checked){background:#dcfce7;border-color:#16a34a;color:#166534}</style>
 <style id="fit-css">
 /* phone: every table in the same size as the top one, so all columns are seen without sideways scrolling */
 @media(max-width:700px){
