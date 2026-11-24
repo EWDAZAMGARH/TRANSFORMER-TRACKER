@@ -4957,3 +4957,136 @@ exception when others then
 end $$;
 select public.sir_purge();
 notify pgrst, 'reload schema';
+
+
+-- ================================================================================================================
+-- STEP 120 : small fixes found in the review (nothing else changes)
+--   (1) SE share: the PR list behind the Summary no longer carries names / mobile numbers
+--   (2) Kitty REPAIR column also gets 1000 KVA (the repair-tab sync list was missing it)          <- touches M&R, as agreed
+--   (3) Renaming a workshop now renames it in ALL M&R tables too (Kitty, Repair, Scrap, Testing, Material, SIR, ...)
+--   (4) Comparison: a deleted-PR day is dropped only when THAT workshop has live PRs that day
+--   (5) SIR import: one bad row no longer stops the whole batch
+create or replace function public.se_call(p_code text, p_fn text, p_args jsonb default '{}'::jsonb) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare s public.se_share := public.se_chk(p_code); need text[] := public.se_perm_of(p_fn); ok boolean := false; k text; uid uuid; fo oid; names text[]; types oid[]; lst text := ''; i int; res jsonb;
+begin
+  if need is null then raise exception 'This report is not available.'; end if;
+  foreach k in array need loop if coalesce((s.perms->>k)::boolean, false) then ok := true; end if; end loop;
+  if not ok then raise exception 'This report is not shared.'; end if;
+  select user_id into uid from public.profiles where role = 'admin' and active order by user_id limit 1;
+  if uid is null then raise exception 'This project has no active Admin.'; end if;
+  select p.oid, p.proargnames, string_to_array(p.proargtypes::text, ' ')::oid[] into fo, names, types from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = p_fn limit 1;
+  if fo is null then raise exception 'This report is not available.'; end if;
+  for i in 1 .. coalesce(array_length(types, 1), 0) loop
+    if coalesce(p_args, '{}'::jsonb) ? names[i] then
+      lst := lst || case when lst = '' then '' else ', ' end || quote_ident(names[i]) || ' => ' ||
+             case when format_type(types[i], null) = 'jsonb' then '($1->' || quote_literal(names[i]) || ')' when format_type(types[i], null) like '%[]' then 'coalesce(array(select jsonb_array_elements_text($1->' || quote_literal(names[i]) || ')), array[]::text[])::' || format_type(types[i], null) else '($1->>' || quote_literal(names[i]) || ')::' || format_type(types[i], null) end;
+    end if;
+  end loop;
+  perform set_config('request.jwt.claim.sub', uid::text, true);
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', uid, 'role', 'authenticated')::text, true);
+  perform set_config('transaction_read_only', 'on', true);
+  execute 'select to_jsonb(public.' || quote_ident(p_fn) || '(' || lst || '))' into res using coalesce(p_args, '{}'::jsonb);
+  if p_fn = 'mat_get' and jsonb_typeof(res) = 'object' then          -- only the parts that are ticked
+    if not coalesce((s.perms->>'mat_ws')::boolean, false) and not coalesce((s.perms->>'mat_req')::boolean, false) then res := res - 'ws'; end if;
+    if not coalesce((s.perms->>'mat_oil')::boolean, false) then res := res - 'oil'; end if;
+    if not coalesce((s.perms->>'mat_ins')::boolean, false) and not coalesce((s.perms->>'mat_req')::boolean, false) then res := res - 'ins'; end if;
+    if not coalesce((s.perms->>'mat_rcv')::boolean, false) and not coalesce((s.perms->>'mat_oil')::boolean, false) then res := res - 'recv'; end if;
+  end if;
+  if p_fn = 'list_json' and jsonb_typeof(res->'rows') = 'array' then      -- the Summary list shows transformers only: no names / mobile numbers go to the SE
+    res := jsonb_set(res, '{rows}', coalesce((select jsonb_agg(case when jsonb_typeof(r) = 'array' and jsonb_array_length(r) > 15
+        then jsonb_set(jsonb_set(jsonb_set(jsonb_set(r, '{10}', '""'), '{11}', '""'), '{14}', '""'), '{15}', '""') else r end order by o) from jsonb_array_elements(res->'rows') with ordinality t(r, o)), '[]'::jsonb));
+  end if;
+  return res;
+end $$;
+
+create or replace function public.kitty_sync_repair(p_ws text, p_day date) returns void
+language sql security definer set search_path = public as $$
+  insert into public.kitty_day(workshop, day, cap, repair, by_login, at)
+  select p_ws, p_day, c, public.rr_cap_n(p_ws, p_day, c), 'repair-tab', now() from unnest(array[10, 16, 25, 63, 100, 160, 250, 400, 630, 1000]) c
+  on conflict (workshop, day, cap) do update set repair = excluded.repair
+$$;
+revoke all on function public.kitty_sync_repair(text, date) from public, anon, authenticated;
+
+create or replace function public.ws_rename(p_old text, p_new text) returns text
+language plpgsql security definer set search_path = public as
+$$
+declare c public.profiles := public.tf_caller(); n text := upper(regexp_replace(btrim(coalesce(p_new,'')), '\s+', ' ', 'g')); w public.workshops; t record;
+begin
+  if c.user_id is null or c.role not in ('admin','creator') then raise exception 'Only an Admin can rename a workshop.'; end if;
+  select * into w from public.workshops where name = p_old;
+  if w.name is null or (c.role = 'admin' and w.org_division is distinct from c.org_division) then raise exception 'Workshop not found in your division.'; end if;
+  if n !~ '^[A-Z0-9][A-Z0-9 ._&()/-]{1,29}$' then raise exception 'Workshop name: 2-30 characters (letters, numbers, space . - & ( ) /).'; end if;
+  if n = p_old then return n; end if;
+  if exists (select 1 from public.workshops where name = n) then raise exception 'The workshop % already exists.', n; end if;
+  update public.workshops set name = n where name = p_old;                 -- drivers follow by foreign key
+  update public.data set workshop = n where workshop = p_old;
+  update public.profiles set scope = array_replace(scope, p_old, n) where p_old = any(scope);
+  for t in select table_name, column_name from information_schema.columns
+            where table_schema = 'public' and data_type = 'text'
+              and ((column_name = 'workshop' and table_name not in ('workshops', 'data', 'drivers')) or (column_name = 'ws' and table_name in ('sir_rec', 'sir_drive', 'sir_sig')))
+              and table_name in (select tablename from pg_tables where schemaname = 'public') loop
+    execute format('update public.%I set %I = $1 where %I = $2', t.table_name, t.column_name, t.column_name) using n, p_old;
+  end loop;
+  return n;
+end $$;
+
+create or replace function public.compare_all(p_from date, p_to date)
+returns jsonb language plpgsql stable security definer set search_path = public as
+$$
+declare c public.profiles := public.tf_caller(); r jsonb;
+begin
+  if c.user_id is null or not c.active or c.role not in ('admin', 'je', 'discom', 'creator') then raise exception 'Not allowed.'; end if;
+  with w as (select p_from as f, p_to as t, (p_from - interval '1 year')::date as pf, (p_to - interval '1 year')::date as pt),
+  dd as (
+    select d.* from public.data d
+     where not d.dup
+       and (c.role in ('discom', 'creator') or c.org_division is null
+            or d.workshop in (select name from public.workshops where org_division = c.org_division))
+  ),
+  hh as (          -- deleted (old) PRs, counted per day; a day that has live PRs again IN THAT WORKSHOP is taken from the live data only
+    select h.* from public.cmp_hist h
+     where not exists (select 1 from public.data x where x.pr_date = h.d and x.workshop = h.workshop)
+       and (c.role in ('discom', 'creator') or c.org_division is null
+            or h.workshop in (select name from public.workshops where org_division = c.org_division))
+  ),
+  x as (
+    select 'c'::text as period, d.workshop, d.division, d.capacity, 1 as n from dd d, w where d.pr_date between w.f  and w.t
+    union all
+    select 'p',                 d.workshop, d.division, d.capacity, 1 from dd d, w where d.pr_date between w.pf and w.pt
+    union all
+    select 'c', h.workshop, h.division, h.capacity, h.n from hh h, w where h.d between w.f  and w.t
+    union all
+    select 'p', h.workshop, h.division, h.capacity, h.n from hh h, w where h.d between w.pf and w.pt
+  )
+  select coalesce(jsonb_agg(jsonb_build_array(period, workshop, dv, cap, n)), '[]'::jsonb) into r
+    from (select period, workshop, upper(btrim(regexp_replace(coalesce(division,''), '\s+', ' ', 'g'))) as dv, coalesce(capacity, 0) as cap, sum(n)::bigint as n
+            from x group by 1, 2, 3, 4 order by 1, 2, 3, 4) q;
+  return r;
+end $$;
+
+create or replace function public.sir_import(p_rows jsonb) returns int
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); x jsonb; n int := 0; w text; dd jsonb; k int;
+begin
+  if c.user_id is null or c.role <> 'admin' then raise exception 'Only the Admin can import.'; end if;
+  for x in select * from jsonb_array_elements(coalesce(p_rows, '[]'::jsonb)) loop
+    begin   -- one bad row (e.g. a wrong date) is skipped, the rest of the batch still goes in
+    w := btrim(coalesce(x->>'ws', ''));
+    if not exists (select 1 from public.workshops where name = w and org_division = c.org_division) then continue; end if;
+    dd := x - 'ws' - 'photoUrl' - 'pdfUrl' - 'src' - 'at';
+    if coalesce(nullif(dd->>'dateOfSIR', '')::date, nullif(x->>'at', '')::timestamptz::date, current_date) < (current_date - interval '14 months')::date then continue; end if;
+    insert into public.sir_rec(org_division, ws, by_login, by_name, at, sir_date, dmg_date, pr_no, uniq_no, d, photo_url, pdf_url, src_key)
+    values (c.org_division, w, c.login_id, 'Imported', coalesce(nullif(x->>'at', '')::timestamptz, now()),
+            nullif(dd->>'dateOfSIR', '')::date, nullif(dd->>'dateOfDamage', '')::date,
+            nullif(btrim(coalesce(dd->>'prNo', '')), ''), nullif(btrim(coalesce(dd->>'uniqueNo', '')), ''), dd,
+            nullif(x->>'photoUrl', ''), nullif(x->>'pdfUrl', ''), nullif(x->>'src', ''))
+    on conflict do nothing;
+    get diagnostics k = row_count; n := n + k;
+    exception when others then continue;
+    end;
+  end loop;
+  return n;
+end $$;
+
+notify pgrst, 'reload schema';

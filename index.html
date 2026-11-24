@@ -1043,7 +1043,7 @@ table.cmpt input.ci{width:92%!important;min-width:0}
 #sout .k-div.col .wrap{display:none}
 /* =====================  PHONE LOOK (width up to 700px): warm minimal, one-screen Summary, bottom icon bar  ===================== */
 @media(max-width:700px){
- body{background:#faf6ef;padding-bottom:64px}
+ body{background:#faf6ef;padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
  header{background:#fffdf8!important;color:#2a2118!important;box-shadow:none!important;border-bottom:1px solid #e8dccb;padding:8px 12px;gap:8px}
  header h1{font-size:16px;font-weight:800;color:#2a2118;min-width:0;letter-spacing:-.2px}
  header h1 .hemb{display:none}
