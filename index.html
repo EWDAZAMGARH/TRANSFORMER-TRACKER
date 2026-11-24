@@ -1824,6 +1824,7 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
  #emt td.lk,#emt td.est{background-image:none!important}
  #emt td.lk{background-color:#f3f4f6!important}
  #emt td[data-l="Status"]{min-width:210px}
+ #emt td[data-l="Added on"]{min-width:140px}
  #emt td[data-l="Refer by"],#emt td[data-l="Village"],#emt td[data-l="Other detail"]{min-width:150px}
  #emt td[data-l="Mobile / complaint no."]{min-width:150px}
  #emt td[data-l="Refer to workshop"],#emt td[data-l="Substation"],#emt td[data-l="Feeder"],#emt td[data-l="JE"],#emt td[data-l="Firm"],#emt td[data-l="Driver"]{min-width:150px}
@@ -5093,7 +5094,7 @@ document.addEventListener('click', function (e) { if (e.target.closest && e.targ
 setInterval(function () { if (ME && !document.hidden) { if (CURTAB === 'sum') emgSiren(); else if (CURTAB === 'emg') emgLoad(true); } }, 60000);
 
 /* ---------- the tab ---------- */
-var EMGH = ['Status', 'Refer by', 'Village', 'Mobile no.', 'Complaint no.', 'Other detail', 'Refer to workshop', 'JE/AE remark', 'PR NO', 'PR date', 'Division', 'Substation', 'Feeder', 'Place of damage', 'Capacity', 'Complain no. (Data Sheet)', 'JE', 'JE mobile', 'Firm', 'Issue date', 'Driver', 'Driver mobile', 'Replacement date', ''];
+var EMGH = ['Status', 'Added on', 'Refer by', 'Village', 'Mobile no.', 'Complaint no.', 'Other detail', 'Refer to workshop', 'JE/AE remark', 'PR NO', 'PR date', 'Division', 'Substation', 'Feeder', 'Place of damage', 'Capacity', 'Complain no. (Data Sheet)', 'JE', 'JE mobile', 'Firm', 'Issue date', 'Driver', 'Driver mobile', 'Replacement date', ''];
 function emgTel(m) { var d = String(m || '').replace(/\D/g, ''); return d.length === 10 ? d : ''; }
 function emgPerson(name, m) { var d = emgTel(m); return esc(name || '-') + (d ? ' <a class="ecall" href="tel:' + d + '">&#128222; ' + d + '</a>' : ''); }
 function emgStatus(r) {
@@ -5119,10 +5120,11 @@ function emgRender() {
   var h = rb + frm + '<div class="muted" style="font-size:12px;margin:6px 2px">' + (hist ? '<b>' + EMG.length + '</b> emergenc' + (EMG.length === 1 ? 'y' : 'ies') + ' solved (replaced) in this period' : EMG.length + ' emergency line' + (EMG.length === 1 ? '' : 's')) + ' &middot; <span id="emstat"></span></div>';
   if (!EMG.length) h += '<div class="card" style="text-align:center;color:#8a7e6e">' + (hist ? 'No solved emergency in this period.' : 'No emergency now.') + '</div>';
   else {
-    h += '<div class="gwrap"><table class="gt gt2 mt" id="emt"><thead><tr>' + EMGH.map(function (x, i) { return '<th class="' + (i >= 1 && i <= 6 ? 'ec' : i >= 9 && i <= 22 ? 'ea' : '') + '">' + x + '</th>'; }).join('') + '</tr></thead><tbody>';
+    h += '<div class="gwrap"><table class="gt gt2 mt" id="emt"><thead><tr>' + EMGH.map(function (x, i) { return '<th class="' + (i >= 1 && i <= 7 ? 'ec' : i >= 10 && i <= 23 ? 'ea' : '') + '">' + x + '</th>'; }).join('') + '</tr></thead><tbody>';
     EMG.forEach(function (r) {
       var s = emgState(r), none = '<td class="gc lk" data-l="';
       h += '<tr class="e' + s + '" data-id="' + r.id + '"><td class="rn est" data-l="Status">' + emgStatus(r) + '</td>' +
+        '<td class="gc lk" data-l="Added on">' + esc((r.created || '').replace(/^(\d\d)\.(\d\d)\.(\d{4})/, '$1/$2/$3')) + '</td>' +
         '<td class="gc lk" data-l="Refer by">' + esc(r.by) + '</td><td class="gc lk" data-l="Village">' + esc(r.village) + '</td><td class="gc lk" data-l="Mobile no.">' + esc(r.mobile) + '</td><td class="gc lk" data-l="Complaint no.">' + esc(r.complaint) + '</td><td class="gc lk" data-l="Other detail">' + esc(r.detail) + '</td><td class="gc lk" data-l="Refer to workshop">' + esc(r.ws) + '</td>' +
         emgCell(r, 'remark', r.remark, 'JE/AE remark') + emgCell(r, 'pr', r.pr, 'PR NO') +
         none + 'PR date">' + esc(r.pr_date) + '</td>' + none + 'Division">' + esc(r.division) + '</td>' + none + 'Substation">' + esc(r.substation) + '</td>' + none + 'Feeder">' + esc(r.feeder) + '</td>' +
@@ -9767,6 +9769,39 @@ td.sirP{position:relative}td.sirP input{padding-right:20px}
 #dmsel{font-size:12px}
 </style>
 <style id="app-css">.bar label.sapp,.sapp{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;text-transform:none;letter-spacing:0;margin:0;padding:5px 10px;border-radius:12px;border:1.5px solid #9fb0e6;color:#1f3a93;background:#eef2ff;cursor:pointer;user-select:none}.sapp input{width:17px;height:17px;margin:0;accent-color:#16a34a;cursor:pointer}.sapp:has(input:checked){background:#dcfce7;border-color:#16a34a;color:#166534}</style>
+<style id="dlpop-css">#dlpop{position:fixed;z-index:99999;background:#fff;border:1.5px solid #6b7fd7;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-height:240px;overflow:auto;min-width:160px;font:13px system-ui,Segoe UI,Arial,sans-serif;display:none}#dlpop div{padding:7px 11px;cursor:pointer;color:#1f2a44;white-space:nowrap}#dlpop div.on,#dlpop div:hover{background:#e3e9ff}</style>
+<script id="dlpop-js">
+/* Windows app (Electron) does not draw the browser's drop-down for <input list=...>; this small list does the same job there (nothing changes in a normal browser) */
+(function () {
+  if (!/Electron\//.test(navigator.userAgent)) return;
+  var pop = document.createElement('div'); pop.id = 'dlpop'; document.body.appendChild(pop), cur = null, idx = -1, opts = [];
+  function hide() { pop.style.display = 'none'; cur = null; idx = -1; }
+  function show(inp) {
+    var dl = document.getElementById(inp.getAttribute('list')); if (!dl || inp.readOnly) return hide();
+    var q = inp.value.trim().toLowerCase(), all = [].map.call(dl.options, function (o) { return o.value; });
+    opts = all.filter(function (v) { return v && (!q || v.toLowerCase().indexOf(q) >= 0) && v.toLowerCase() !== q; }).slice(0, 60);
+    if (!opts.length) return hide();
+    cur = inp; idx = -1; pop.innerHTML = opts.map(function (v, i) { return '<div data-i="' + i + '">' + v.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</div>'; }).join('');
+    var r = inp.getBoundingClientRect(); pop.style.display = 'block';
+    pop.style.minWidth = Math.max(160, r.width) + 'px'; pop.style.left = Math.min(r.left, innerWidth - pop.offsetWidth - 6) + 'px';
+    var below = r.bottom + 2, hh = pop.offsetHeight; pop.style.top = (below + hh > innerHeight && r.top - hh - 2 > 0 ? r.top - hh - 2 : below) + 'px';
+  }
+  function pick(v) { if (!cur) return; var i = cur; i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); hide(); i.focus(); }
+  function hl() { [].forEach.call(pop.children, function (c, i) { c.classList.toggle('on', i === idx); if (i === idx) c.scrollIntoView({ block: 'nearest' }); }); }
+  document.addEventListener('focusin', function (e) { var t = e.target; if (t.tagName === 'INPUT' && t.getAttribute('list')) show(t); else if (t !== pop) hide(); });
+  document.addEventListener('input', function (e) { var t = e.target; if (t.tagName === 'INPUT' && t.getAttribute('list')) show(t); });
+  document.addEventListener('click', function (e) { var t = e.target; if (t.tagName === 'INPUT' && t.getAttribute('list') && cur !== t) show(t); });
+  pop.addEventListener('mousedown', function (e) { e.preventDefault(); var d = e.target.closest('div[data-i]'); if (d) pick(opts[+d.dataset.i]); });
+  document.addEventListener('keydown', function (e) {
+    if (!cur || pop.style.display === 'none') return;
+    if (e.key === 'ArrowDown') { idx = Math.min(idx + 1, opts.length - 1); hl(); e.preventDefault(); e.stopPropagation(); }
+    else if (e.key === 'ArrowUp') { idx = Math.max(idx - 1, 0); hl(); e.preventDefault(); e.stopPropagation(); }
+    else if (e.key === 'Enter' && idx >= 0) { pick(opts[idx]); e.preventDefault(); e.stopPropagation(); }
+    else if (e.key === 'Escape' || e.key === 'Tab') hide();
+  }, true);
+  window.addEventListener('scroll', hide, true); window.addEventListener('resize', hide);
+})();
+</script>
 <style id="fit-css">
 /* phone: every table in the same size as the top one, so all columns are seen without sideways scrolling */
 @media(max-width:700px){
