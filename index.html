@@ -3657,7 +3657,7 @@ function drawData() {
   var h = '<thead><tr><th class="ix rn0" title="Select / unselect all rows shown">#</th>' + DCOL.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '<th class="ix"></th></tr></thead><tbody>';
   shown.forEach(function (ri, n) {
     var r = DROWS[ri];
-    h += '<tr data-r="' + ri + '" class="' + (r.dirty ? 'dirty ' : '') + (r.bad ? 'bad ' : '') + (r.sel ? 'sel' : '') + '"><td class="ix rn" title="Click to select this row (Shift = range)">' + (n + 1) + '</td>' + DCOL.map(function (c) {
+    h += '<tr data-r="' + ri + '" class="' + (r.dirty ? 'dirty ' : '') + (r.bad ? 'bad ' : '') + (r.sel ? 'sel' : '') + '"><td class="ix rn" title="' + (emgHit(r) ? 'EMERGENCY PR - click to select this row' : 'Click to select this row (Shift = range)') + '">' + (emgHit(r) ? '<b class="emgno"><i>EMG</i><u>EMERGENCY</u></b>' : (n + 1)) + '</td>' + DCOL.map(function (c) {
       var i = c[0], lk = rowLocked(r, i), kind = c[2] || '';
       return '<td class="gc' + (lk ? ' lk' : '') + (i === 20 ? (r.c[20] === 'DONE' ? ' sirD' : r.c[20] ? ' sirP' : '') : (i === 21 || i === 22 ? ' dtc' : '')) + '"><input type="text" data-i="' + i + '" value="' + esc(r.c[i]) + '"' + (lk ? ' readonly tabindex="-1"' : '') + (kind === 'date' ? ' inputmode="numeric" maxlength="10" placeholder="DD.MM.YYYY"' : kind === 'mob' ? ' inputmode="numeric"' : kind === 'ws' ? ' list="wsdl"' : kind === 'yn' ? ' list="ynl" maxlength="3" placeholder="Yes / No"' : i === 12 ? ' list="frdl"' : i === 14 ? ' list="drdl"' : '') + (i === 8 || i === 9 ? ' class="b"' : '') + '>' + (i === 20 && r.c[20] === 'PENDING' && r.k && typeof sirCanFill === 'function' && sirCanFill() ? '<button type="button" class="sirgo2" data-ri="' + ri + '" title="Fill SIR for this PR" tabindex="-1">&#9998;</button>' : '') + '</td>';
     }).join('') + '<td class="ix">' + (canWrite() ? '<button class="rx" title="Delete this row">&#10005;</button>' : '') + '</td></tr>';
@@ -3695,6 +3695,9 @@ $('ddel').onclick = function () {
   };
   if (!saved.length) run(null); else askDelete('Delete ' + saved.length + ' saved PR(s) of the Data Sheet', function () { var x = $('dxl'); if (x) x.click(); }, run);
 };
+var EMGPR = {};       // open emergencies: 'WORKSHOP|PR' -> true (the Data Sheet shows a red EMERGENCY mark on them)
+function emgPrep() { return rpc('emg_open_prs', {}).then(function (a) { var m = {}; (a || []).forEach(function (k) { m[k] = true; }); EMGPR = m; }).catch(function () { }); }
+function emgHit(r) { var c = r && r.c; return !!(c && c[8] && EMGPR[String(c[0] || '').toUpperCase() + '|' + String(c[8]).trim().toUpperCase()]); }
 function loadData(force) {
   var d = $('dd').value.trim(), all = $('dall').checked, multi = DMULTI.length > 1;
   if (!all && !multi && !validD(d)) { msg('dmsg', 'Enter the PR date in DD.MM.YYYY format.', 'err'); return Promise.resolve(); }
@@ -3711,7 +3714,7 @@ function loadData(force) {
     DROWS = r.rows.map(function (a) { return { o: a.slice(0, 20), k: [a[0], a[8]], c: a.slice(0, 20), dirty: false, bad: false, ver: 0, isNew: false }; });
     DSHOW = 400; dstat('');
     drawData();            // the rows show at once; the SIR / DTC / protection columns come a moment later (loaded together, not one after another)
-    return Promise.all([typeof sirDataPrep === 'function' ? sirDataPrep(force) : Promise.resolve(), dtcDataPrep(), protDataPrep()]).then(function () { if (seq === DSEQ) drawData(); });
+    return Promise.all([typeof sirDataPrep === 'function' ? sirDataPrep(force) : Promise.resolve(), dtcDataPrep(), protDataPrep(), emgPrep()]).then(function () { if (seq === DSEQ) drawData(); });
   }).catch(function (e) { if (seq !== DSEQ) return; dstat(''); msg('dmsg', esc(e.message), 'err'); });
 }
 function fixRow(c) {     // the values the way they are sent: dates as DD.MM.YYYY, PR no without ".0"
@@ -5120,21 +5123,24 @@ function emgRender() {
   var h = rb + frm + '<div class="muted" style="font-size:12px;margin:6px 2px">' + (hist ? '<b>' + EMG.length + '</b> emergenc' + (EMG.length === 1 ? 'y' : 'ies') + ' solved (replaced) in this period' : EMG.length + ' emergency line' + (EMG.length === 1 ? '' : 's')) + ' &middot; <span id="emstat"></span></div>';
   if (!EMG.length) h += '<div class="card" style="text-align:center;color:#8a7e6e">' + (hist ? 'No solved emergency in this period.' : 'No emergency now.') + '</div>';
   else {
-    h += '<div class="gwrap"><table class="gt gt2 mt" id="emt"><thead><tr>' + EMGH.map(function (x, i) { return '<th class="' + (i >= 1 && i <= 7 ? 'ec' : i >= 10 && i <= 23 ? 'ea' : '') + '">' + x + '</th>'; }).join('') + '</tr></thead><tbody>';
+    h += '<div class="egrid" id="emt">';
+    var fv = function (l, v, cls) { return '<div class="ef"><div class="el">' + l + '</div><div class="evl' + (cls ? ' ' + cls : '') + '">' + (v == null || v === '' ? '<span class="ene">-</span>' : v) + '</div></div>'; };
+    var tel = function (m) { return emgTel(m) ? '<a class="ecall" href="tel:' + emgTel(m) + '">&#128222; ' + emgTel(m) + '</a>' : ''; };
+    var ROLE = { admin: 'Admin', je: 'JE', discom: 'DISCOM', creator: 'Creator' };
     EMG.forEach(function (r) {
-      var s = emgState(r), none = '<td class="gc lk" data-l="';
-      h += '<tr class="e' + s + '" data-id="' + r.id + '"><td class="rn est" data-l="Status">' + emgStatus(r) + '</td>' +
-        '<td class="gc lk" data-l="Added on">' + esc((r.created || '').replace(/^(\d\d)\.(\d\d)\.(\d{4})/, '$1/$2/$3')) + '</td>' +
-        '<td class="gc lk" data-l="Refer by">' + esc(r.by) + '</td><td class="gc lk" data-l="Village">' + esc(r.village) + '</td><td class="gc lk" data-l="Mobile no.">' + esc(r.mobile) + '</td><td class="gc lk" data-l="Complaint no.">' + esc(r.complaint) + '</td><td class="gc lk" data-l="Other detail">' + esc(r.detail) + '</td><td class="gc lk" data-l="Refer to workshop">' + esc(r.ws) + '</td>' +
-        emgCell(r, 'remark', r.remark, 'JE/AE remark') + emgCell(r, 'pr', r.pr, 'PR NO') +
-        none + 'PR date">' + esc(r.pr_date) + '</td>' + none + 'Division">' + esc(r.division) + '</td>' + none + 'Substation">' + esc(r.substation) + '</td>' + none + 'Feeder">' + esc(r.feeder) + '</td>' +
-        none + 'Place of damage">' + esc(r.place) + '</td>' + none + 'Capacity">' + esc(r.cap) + '</td>' + none + 'Complain no. (Data Sheet)">' + esc(r.complain) + '</td>' +
-        none + 'JE">' + (r.found ? emgPerson(r.je, r.je_mob).split(' <a')[0] : '') + '</td>' + none + 'JE mobile">' + (emgTel(r.je_mob) ? '<a class="ecall" href="tel:' + emgTel(r.je_mob) + '">&#128222; ' + emgTel(r.je_mob) + '</a>' : '') + '</td>' +
-        none + 'Firm">' + esc(r.firm) + '</td>' + none + 'Issue date"><b>' + esc(r.issue) + '</b></td>' + none + 'Driver">' + esc(r.drv) + '</td>' +
-        none + 'Driver mobile">' + (emgTel(r.drv_mob) ? '<a class="ecall" href="tel:' + emgTel(r.drv_mob) + '">&#128222; ' + emgTel(r.drv_mob) + '</a>' : '') + '</td>' + none + 'Replacement date"><b>' + esc(r.repl) + '</b></td>' +
-        '<td class="ix">' + (r.can_del ? '<button class="rx" data-del="' + r.id + '" title="Delete this emergency">&#10005;</button>' : '') + '</td></tr>';
+      var s = emgState(r), ed = r.can_edit, ro = ed ? '' : ' readonly tabindex="-1"';
+      h += '<div class="ecard e' + s + '" data-id="' + r.id + '"><div class="etop"><span class="est">' + emgStatus(r) + '</span></div>' +
+        '<div class="eby">Added by <b>' + esc(r.addby || r.by || '-') + '</b>' + (r.addrole ? ' (' + (ROLE[r.addrole] || esc(r.addrole)) + ')' : '') + ' &middot; ' + esc((r.created || '').replace(/^(\d\d)\.(\d\d)\.(\d{4})/, '$1/$2/$3')) + '</div>' +
+        '<span class="ehd h1">Emergency details</span><div class="erow">' + fv('Refer by', esc(r.by)) + fv('Village', esc(r.village)) + fv('Mobile no.', tel(r.mobile) || esc(r.mobile)) +
+          fv('Complaint no.', esc(r.complaint)) + fv('Refer to workshop', esc(r.ws)) + fv('Other detail', esc(r.detail)) + '</div>' +
+        '<span class="ehd h3">Workshop to fill (JE / AE)</span><div class="erow"><div class="ef"><div class="el">PR no.</div><input class="ein2" type="text" data-f="pr" data-id="' + r.id + '" value="' + esc(r.pr || '') + '" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="type PR no."' + ro + '></div>' +
+          '<div class="ef w2"><div class="el">JE/AE remark</div><textarea rows="1" class="emta ein2" data-f="remark" data-id="' + r.id + '" placeholder="remark"' + ro + '>' + esc(r.remark || '') + '</textarea></div></div>' +
+        '<span class="ehd h2">From Data Sheet (comes after PR no.)</span><div class="erow">' + fv('PR date', esc(r.pr_date)) + fv('Division', esc(r.division)) + fv('Substation', esc(r.substation)) + fv('Feeder', esc(r.feeder)) +
+          fv('Place of damage', esc(r.place)) + fv('Capacity', esc(r.cap)) + fv('Complain no.', esc(r.complain)) + fv('JE', esc(r.found ? r.je : '')) + fv('JE mobile', r.found ? tel(r.je_mob) : '') +
+          fv('Firm', esc(r.firm)) + fv('Issue date', esc(r.issue), 'b') + fv('Driver', esc(r.drv)) + fv('Driver mobile', tel(r.drv_mob)) + fv('Replacement date', esc(r.repl), 'b') + '</div>' +
+        (r.can_del ? '<button class="rx" data-del="' + r.id + '" title="Delete this emergency" type="button">&#10005; Delete</button>' : '') + '</div>';
     });
-    h += '</tbody></table></div>';
+    h += '</div>';
   }
   var keep = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.id ? [document.activeElement.dataset.f, document.activeElement.dataset.id] : null;
   o.innerHTML = h;
@@ -5164,7 +5170,7 @@ document.addEventListener('input', function (e) {
   var i = e.target; if (!i.dataset || !i.dataset.id || !i.dataset.f || !i.closest('#emt')) return;
   var id = i.dataset.id; if (i.dataset.f === 'pr') { var sp = i.selectionStart; i.value = i.value.toUpperCase(); try { i.setSelectionRange(sp, sp); } catch (x) { } } clearTimeout(EMGSAVE[id]); emgMsg('Typing...');
   EMGSAVE[id] = setTimeout(function () {
-    var tr = i.closest('tr'), pr = tr.querySelector('input[data-f="pr"]').value, rm = tr.querySelector('[data-f="remark"]').value;
+    var tr = i.closest('.ecard'), pr = tr.querySelector('input[data-f="pr"]').value, rm = tr.querySelector('[data-f="remark"]').value;
     emgMsg('Saving...');
     rpc('emg_set', { p_id: +id, p_remark: rm, p_pr: pr }).then(function () { return emgFetch(); }).then(function () { emgRender(); emgMsg('Saved.'); }).catch(function (x) { emgMsg(x.message, 1); });
   }, 900);
@@ -9767,6 +9773,40 @@ td.sirP{position:relative}td.sirP input{padding-right:20px}
 #dmpop .dmg button.on{background:#d9531e;color:#fff;font-weight:700}
 #dmpop .dmf{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px}
 #dmsel{font-size:12px}
+</style>
+<style id="ecard-css">
+#emt.egrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:14px;margin-top:8px}
+@media (max-width:620px){#emt.egrid{grid-template-columns:1fr}}
+.ecard{background:#fff;border-radius:16px;padding:12px 14px 40px;box-shadow:0 2px 10px rgba(0,0,0,.09);border-left:6px solid #dc2626;position:relative;color:#1f2937}
+.ecard.eg{border-left-color:#16a34a}.ecard.eo{border-left-color:#9ca3af;opacity:.82}
+.ecard .etop{display:flex;align-items:center;font-weight:800;font-size:13px}.ecard .est{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.ecard .eby{font-size:12px;color:#6b7280;margin:3px 0 2px}
+.ecard .ehd{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin:9px 0 5px;padding:2px 8px;border-radius:6px;display:inline-block}
+.ecard .h1{background:#fed7aa;color:#7c2d12}.ecard .h2{background:#e5e7eb;color:#374151}.ecard .h3{background:#fef9c3;color:#713f12}
+.ecard .erow{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 12px}
+@media (max-width:620px){.ecard .erow{grid-template-columns:repeat(2,1fr)}}
+.ecard .el{font-size:10px;color:#7a7266;text-transform:uppercase;letter-spacing:.04em}
+.ecard .evl{font-weight:700;font-size:12.5px;word-break:break-word}.ecard .evl.b{font-weight:800}.ecard .ene{color:#c0b8a8;font-weight:400}
+.ecard .w2{grid-column:span 2}
+.ecard .ein2{width:100%;box-sizing:border-box;background:#fef9c3;border:0;border-radius:8px;padding:5px 8px;font:inherit;font-size:13px;color:#1f2937;min-height:28px;resize:none;overflow:hidden}
+.ecard .ein2[readonly]{background:#f3f4f6}
+.ecard .rx{position:absolute;right:12px;bottom:10px;border:0;background:#fee2e2;color:#b91c1c;border-radius:6px;cursor:pointer;padding:3px 9px;font-size:12px}
+html.hs-t .ecard{background:var(--cdbg,#fff);color:inherit}html.hs-t .ecard .ein2{color:inherit;background:rgba(250,204,21,.25)}html.hs-t .ecard .ein2[readonly]{background:rgba(128,128,128,.12)}
+</style>
+<style id="emgno-css">
+.emgno{display:inline-flex;flex-direction:column;align-items:center;line-height:1.05}
+.emgno i{font-style:normal;background:#dc2626;color:#fff;font-weight:800;font-size:9px;letter-spacing:.02em;padding:2px 4px;border-radius:5px;box-shadow:0 0 0 1px #fff inset}
+.emgno u{display:none;text-decoration:none}
+@media (max-width:760px){table.mt td.rn .emgno{flex-direction:row}table.mt td.rn .emgno i{display:none}table.mt td.rn .emgno u{display:inline-block;background:#dc2626;color:#fff;font-weight:800;font-size:11px;letter-spacing:.04em;padding:2px 9px;border-radius:6px}}
+</style>
+<style id="sel-css">
+/* Data Sheet: a selected line must be clearly visible */
+html body #dt tr.sel td{background-color:#bcd0ff!important;background-image:none!important;box-shadow:inset 0 2px 0 #2f54d4,inset 0 -2px 0 #2f54d4;color:#0b1b4d!important}
+html body #dt tr.sel td input,html body #dt tr.sel td select,html body #dt tr.sel td textarea{background:transparent!important;color:#0b1b4d!important}
+html body #dt tr.sel td.rn{background-color:#2f54d4!important;color:#fff!important;font-weight:800;box-shadow:none}
+html body #dt tr.sel td.rn::before{content:"\2714 ";font-size:11px}
+html body #dt tr.sel td.rn::after{content:none!important}
+@media (max-width:760px){html body #dt tr.sel{outline:3px solid #2f54d4;outline-offset:-2px;border-radius:10px}}
 </style>
 <style id="app-css">.bar label.sapp,.sapp{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;text-transform:none;letter-spacing:0;margin:0;padding:5px 10px;border-radius:12px;border:1.5px solid #9fb0e6;color:#1f3a93;background:#eef2ff;cursor:pointer;user-select:none}.sapp input{width:17px;height:17px;margin:0;accent-color:#16a34a;cursor:pointer}.sapp:has(input:checked){background:#dcfce7;border-color:#16a34a;color:#166534}</style>
 <style id="dlpop-css">#dlpop{position:fixed;z-index:99999;background:#fff;border:1.5px solid #6b7fd7;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-height:240px;overflow:auto;min-width:160px;font:13px system-ui,Segoe UI,Arial,sans-serif;display:none}#dlpop div{padding:7px 11px;cursor:pointer;color:#1f2a44;white-space:nowrap}#dlpop div.on,#dlpop div:hover{background:#e3e9ff}</style>

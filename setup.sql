@@ -5126,3 +5126,68 @@ end $$;
 revoke all on function public.sir_mark_app(bigint, boolean) from public, anon;
 grant execute on function public.sir_mark_app(bigint, boolean) to authenticated;
 notify pgrst, 'reload schema';
+
+
+-- ================================================================================================================
+-- STEP 122 : Emergency
+--   (1) every emergency line also tells WHO added it (login name + role)
+--   (2) emg_open_prs(): the PR numbers of the open emergencies of my workshops - the Data Sheet shows a red EMERGENCY mark for them
+create or replace function public.emg_json(p_from date default null, p_to date default null) returns jsonb language plpgsql stable security definer set search_path = public as
+$$
+declare
+  mine  text[]  := coalesce(public.my_workshops(), '{}');
+  ed    boolean := public.my_can_edit() and public.my_role() in ('admin', 'je');
+  adm   boolean := public.my_role() in ('admin', 'creator');
+  me    uuid    := auth.uid();
+  today date    := (now() at time zone 'Asia/Kolkata')::date;
+  hist  boolean := p_from is not null or p_to is not null;
+begin
+  if not public.emg_ok() then return '[]'::jsonb; end if;
+  return coalesce((
+    select jsonb_agg(x order by x->>'sort' desc) from (
+      select jsonb_build_object(
+        'sort', case when hist then to_char(d.repl_date, 'YYYYMMDD') || lpad(e.id::text, 10, '0') else to_char(e.created_at, 'YYYYMMDDHH24MISS') || lpad(e.id::text, 10, '0') end,
+        'id', e.id, 'by', e.refer_by, 'village', e.village, 'mobile', e.mobile, 'complaint', e.complaint, 'detail', e.detail, 'ws', e.workshop,
+        'remark', e.remark, 'pr', e.pr_no,
+        'addby', coalesce(nullif(btrim(ap.display), ''), ap.login_id), 'addrole', ap.role,
+        'created', to_char(e.created_at at time zone 'Asia/Kolkata', 'DD.MM.YYYY HH24:MI'),
+        'can_edit', ed and e.workshop = any (mine),
+        'can_del',  adm and e.workshop = any (mine),
+        'found', d.id is not null, 'dup', coalesce(d.dup, false),
+        'st', case when d.id is null or coalesce(d.dup, false) then 'R0'
+                   when d.repl_date is not null then 'D'
+                   when d.issue_date is not null then 'G'
+                   else 'R1' end,
+        'left', case when d.repl_date is not null then d.repl_date + 1 - today end,
+        'pr_date', to_char(d.pr_date, 'DD.MM.YYYY'), 'division', d.division, 'substation', d.substation, 'feeder', d.feeder,
+        'place', d.place_of_damage, 'cap', d.capacity, 'complain', d.complain_no,
+        'je', d.je_name, 'je_mob', d.je_mobile, 'firm', d.firm,
+        'issue', to_char(d.issue_date, 'DD.MM.YYYY'), 'drv', d.driver_name, 'drv_mob', d.driver_mobile,
+        'repl', to_char(d.repl_date, 'DD.MM.YYYY')
+      ) as x
+      from public.emergency e
+      left join public.profiles ap on ap.user_id = e.created_by
+      left join lateral (
+        select d0.* from public.data d0
+         where btrim(coalesce(e.pr_no, '')) <> '' and d0.workshop = e.workshop and upper(btrim(d0.pr_no)) = upper(btrim(e.pr_no))
+         limit 1) d on true
+      where (e.workshop = any (mine) or e.created_by = me)
+        and case when hist then d.repl_date is not null and not coalesce(d.dup, false)
+                            and d.repl_date >= coalesce(p_from, date '0001-01-01') and d.repl_date <= coalesce(p_to, date '9999-12-31')
+                 else not (d.repl_date is not null and d.repl_date + 1 <= today) end
+    ) s), '[]'::jsonb);
+end
+$$;
+
+create or replace function public.emg_open_prs() returns jsonb language sql stable security definer set search_path = public as
+$$
+  select coalesce(jsonb_agg(distinct upper(e.workshop) || '|' || upper(btrim(e.pr_no))), '[]'::jsonb)
+    from public.emergency e
+    left join public.data d on d.workshop = e.workshop and upper(btrim(d.pr_no)) = upper(btrim(e.pr_no))
+   where btrim(coalesce(e.pr_no, '')) <> ''
+     and (e.workshop = any (coalesce(public.my_workshops(), '{}')))
+     and not (d.repl_date is not null and d.repl_date + 1 <= (now() at time zone 'Asia/Kolkata')::date)
+$$;
+revoke all on function public.emg_open_prs() from public, anon;
+grant execute on function public.emg_open_prs() to authenticated;
+notify pgrst, 'reload schema';
