@@ -5180,7 +5180,9 @@ function emgLoad(quiet) {
   var o = $('emgout'); if (!o) return;
   if (!quiet) o.innerHTML = '<div class="muted" style="padding:14px">Loading...</div>';
   if (quiet && o.contains(document.activeElement) && document.activeElement.tagName === 'INPUT' && document.activeElement.dataset.id) return;   // do not disturb typing
-  emgFetch().then(emgRender).catch(function (e) { o.innerHTML = '<div class="card" style="color:#a31515">' + esc(/emg_json|emg_workshops/.test(e.message) ? 'Emergency is not switched on yet (the admin must run SQL step 33).' : e.message) + '</div>'; });
+  emgFetch().then(emgRender).catch(function (e) {
+    if (ME && ME.role === 'se' && window.SE && SE.list.some(function (x) { return x.perms && x.perms.emg_add; })) { EMG = []; EMGWS = []; emgRender(); emgMsg(e.message, 1); return; }   // the SE can still ADD
+    o.innerHTML = '<div class="card" style="color:#a31515">' + esc(/emg_json|emg_workshops/.test(e.message) ? 'Emergency is not switched on yet (the admin must run SQL step 33).' : e.message) + '</div>'; });
 }
 function seEmgWs() {                  // the workshops of the chosen division
   var dv = $('ef_dv'), w = $('ef_ws'); if (!dv || !w) return; var id = dv.value;
@@ -7371,7 +7373,7 @@ function rpShow(k) {
 var RPC = { rows: [], admin: false };
 function rpDrawChips() {
   var mr = typeof mrAccess === 'function' && mrAccess(), h = '';
-  var se = ME && ME.role === 'se'; RP_DEFS.forEach(function (d) { if (se && ['cmp', 'dw', 'pl'].indexOf(d.k) < 0) return; h += '<button type="button" class="achip" data-rp="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + esc(d.t) + '</b><small>' + esc(d.s) + '</small></span></button>'; });
+  var se = ME && ME.role === 'se'; RP_DEFS.forEach(function (d) { h += '<button type="button" class="achip" data-rp="' + d.k + '"><span class="ic" style="--c:' + d.c + '">' + d.i + '</span><span><b>' + esc(d.t) + '</b><small>' + esc(d.s) + '</small></span></button>'; });
   (se ? [] : RPC.rows).forEach(function (r) { h += '<button type="button" class="achip" data-rpweb="' + r[0] + '"><span class="ic" style="--c:#e0f2fe">\u{1F310}</span><span><b>' + esc(r[1]) + '</b><small>Added web app</small></span></button>'; });
   if (RPC.admin) h += '<button type="button" class="achip" data-rpadd="1"><span class="ic" style="--c:#e4f6e8">+</span><span><b>Add report</b><small>Paste the link of your web app</small></span></button>';
   $('rpchips').innerHTML = h;
@@ -8896,7 +8898,7 @@ var SE = { list: [], byId: {}, cl: {}, map: {}, warn: {} }, SEG = null, SE_NEW =
 var SE_PERMS = [['sum', 'R&R Summary (division wise, capacity wise, age wise)'], ['rrs', 'R&R Repair / Assembly / Oven daily report'], ['mrs', 'M&R Summary and Kitty'], ['scrap', 'Scrap'],
   ['mat_ws', 'Material Management: Wire & Strip consumption'], ['mat_oil', 'Material Management: Oil Recovery Sheet'], ['test', 'Testing Register (view and download only)'], ['mat_ins', 'Material Management: Insulating Material'], ['mat_rcv', 'Material Management: Oil Receive list'], ['mat_req', 'Material Management: Material Requirement'],
   ['sir', 'SIR Summary and Pending SIR (view only)'], ['data', 'Data Sheet (view and download only)'], ['emg', 'Emergency (view)'], ['emg_add', 'Emergency: also ADD a new emergency (SE chooses division, then workshop)'], ['cmp', 'Reports: PR Comparative'], ['day', 'Reports: Daywise & Division wise PR and Repair'], ['plinth', 'Reports: Same Plinth Damage']];
-var SE_FED = {}; 'summary_json dashboard_json rr_summary_json mr_summary_json mr_repair_json mr_pending_json data_json sir_prs_json sir_cfg_get sir_prs sir_rows_json sir_list_json emg_json emg_open_prs dtc_map_json prot_map_json kitty_range_json kitty_json kitty_cmp_json kitty_lyk_json kitty_need_json scrap_json scrap_range_json scrap_cap_json mat_get mat_rep mat_dtc mat_low_adj mat_low_list mat_recv_list mat_req_pr compare_all installed_all_json daywise_json plinth_json list_json struct_json rr_json mr_list_json test_std_json test_list_json test_report_json test_firms_json'.split(' ').forEach(function (f) { SE_FED[f] = 1; });
+var SE_FED = {}; 'summary_json dashboard_json rr_summary_json mr_summary_json mr_repair_json mr_pending_json data_json sir_prs_json sir_cfg_get sir_prs sir_rows_json sir_list_json emg_json emg_open_prs ch_report_json dtc_map_json prot_map_json kitty_range_json kitty_json kitty_cmp_json kitty_lyk_json kitty_need_json scrap_json scrap_range_json scrap_cap_json mat_get mat_rep mat_dtc mat_low_adj mat_low_list mat_recv_list mat_req_pr compare_all installed_all_json daywise_json plinth_json list_json struct_json rr_json mr_list_json test_std_json test_list_json test_report_json test_firms_json'.split(' ').forEach(function (f) { SE_FED[f] = 1; });
 var _rpcBase = rpc;
 rpc = function (fn, args) { if (ME && ME.role === 'se' && fn === 'emg_workshops') return Promise.resolve([]); return (ME && ME.role === 'se' && SE_FED[fn]) ? seFed(fn, args || {}) : _rpcBase(fn, args); };
 var _wsSelBase = wsSelect;
@@ -9987,5 +9989,127 @@ html body #dt tr.sel td.rn::after{content:none!important}
   #mkout table.mkt:not(.xg) tr.t td{font-size:13px!important}
 }
 </style>
+<script id="se-reports-js">
+/* =====================  SE WORKSHOP: Emergency ADD + every Reports-tab report  =====================
+   (1) the Emergency form is shown whenever one division ticked "Emergency: also ADD" (what each division shares is read again every time the
+       Emergency tab is opened, and the form stays even when the list of emergencies cannot be read);
+   (2) the Reports tab shows all reports to the SE: PR Comparative, Daywise, Kitty, Kitty Summary, Kitty Comparison, Chamber Assembly, Same Plinth.
+       Kitty Summary / Kitty Comparison / Chamber Assembly are DIVISION WISE, the workshops of every division are under "WORKSHOP WISE - tap to open". */
+(function () {
+  function isSE() { return !!ME && ME.role === 'se'; }
+  var st = document.createElement('style');
+  st.textContent = '.sewrapc .card{box-shadow:none;border:0;padding:0;margin:0 0 8px;background:transparent}.sewrapc .sebody{padding-top:6px}table.chm tr.setog td{background:#eef2ff;color:#3b5bdb;font-weight:800;text-align:left;padding:8px 12px}table.chm tr.dtot td{background:#f1f5f9;font-weight:800}';
+  document.head.appendChild(st);
+
+  /* ---------- (1) Emergency ---------- */
+  window.seRefreshPerms = function () {
+    if (!isSE() || !window.SE || !SE.list) return Promise.resolve();
+    return Promise.all(SE.list.map(function (x) {
+      var c = SE.cl[x.id]; if (!c) return null;
+      return c.rpc('se_info', { p_code: x.code }).then(function (r) { if (!r.error && r.data) x.perms = r.data.perms || {}; }).catch(function () { });
+    }));
+  };
+  var _emgLoadBase = emgLoad;
+  emgLoad = function (quiet) { if (!isSE() || quiet) return _emgLoadBase(quiet); return seRefreshPerms().then(function () { _emgLoadBase(quiet); }); };
+
+  /* ---------- helpers ---------- */
+  function divsOf(names) { var o = [], seen = {}; names.forEach(function (w) { var d = WSDIV[w] || ''; if (!seen[d]) { seen[d] = 1; o.push(d); } }); return o; }
+  function inDiv(list, d, key) { return list.filter(function (b) { return (WSDIV[key ? b[key] : b] || '') === d; }); }
+  function byNum(a, b) { return a - b; }
+
+  /* ---------- (2a) Kitty Summary (kitty_range_json: {ws:[{ws, rows:[[cap, opening, issue, repair, toOther, fromOther, net]]}], nobase}) ---------- */
+  function aggKs(list) {
+    return divsOf(list.map(function (b) { return b.ws; })).map(function (d) {
+      var m = {}; inDiv(list, d, 'ws').forEach(function (b) { (b.rows || []).forEach(function (x) { var r = m[x[0]] = m[x[0]] || [x[0], 0, 0, 0, 0, 0, 0]; for (var k = 1; k <= 6; k++) r[k] += +x[k] || 0; }); });
+      return { ws: d, rows: Object.keys(m).map(Number).sort(byNum).map(function (c) { return m[c]; }) };
+    });
+  }
+  function ksTotalBlock(A, nm) {
+    var m = {}; A.forEach(function (b) { b.rows.forEach(function (x) { var r = m[x[0]] = m[x[0]] || [x[0], 0, 0, 0, 0, 0, 0]; for (var k = 1; k <= 6; k++) r[k] += x[k]; }); });
+    return { ws: nm, rows: Object.keys(m).map(Number).sort(byNum).map(function (c) { return m[c]; }) };
+  }
+  var _ksInitBase = ksInit;
+  ksInit = function () {
+    if (!isSE()) return _ksInitBase();
+    if (!validD($('kst').value.trim())) $('kst').value = fmt(new Date());
+    if (!validD($('ksf').value.trim())) { var t = new Date(); $('ksf').value = fmt(new Date(t.getFullYear(), t.getMonth(), 1)); }
+    var s = $('ksw'), cur = s.value;
+    s.innerHTML = '<option value="">All divisions</option>' + seDivList().map(function (d) { return '<option value="DIV::' + esc(d) + '">' + esc(d) + ' (division)</option>'; }).join('') + '<optgroup label="Workshops">' + mrWs().map(function (w) { return '<option>' + esc(w) + '</option>'; }).join('') + '</optgroup>';
+    s.value = cur; ksLoad();
+  };
+  var _ksBlocksBase = ksBlocks;
+  ksBlocks = function () {                                   // Excel: all divisions, every division, then every workshop
+    if (!isSE()) return _ksBlocksBase();
+    var W = KSM.r.ws || [], A = aggKs(W), out = []; if (A.length > 1) out.push(ksTotalBlock(A, 'ALL DIVISIONS'));
+    return out.concat(A, W);
+  };
+  var _ksDrawBase = ksDraw;
+  ksDraw = function () {
+    if (!isSE()) return _ksDrawBase();
+    var W = KSM.r.ws || [], nb = KSM.r.nobase || [], h = '';
+    if (nb.length) h += '<div class="msg info" style="margin-bottom:8px">Kitty not started on ' + esc(KSM.f) + ' for: <b>' + nb.map(esc).join(', ') + '</b> (choose a later From date).</div>';
+    if (!W.length) { $('ksout').innerHTML = h + '<div class="card"><div class="msg info">No workshop has a started kitty on the From date.</div></div>'; return; }
+    var A = aggKs(W), top = '';
+    if (A.length > 1) top += ksTable(ksTotalBlock(A, 'ALL WORKSHOPS')).replace('>ALL WORKSHOPS<', '>ALL DIVISIONS<');
+    top += A.map(ksTable).join('');
+    var body = A.map(function (a) { return '<div class="sedn">' + esc(a.ws) + '</div>' + inDiv(W, a.ws, 'ws').map(ksTable).join(''); }).join('');
+    $('ksout').innerHTML = h + top + '<div class="card sewrapc"><div class="setog">WORKSHOP WISE</div><div class="sebody">' + body + '</div></div>';
+  };
+
+  /* ---------- (2b) Kitty Comparison (kitty_lyk_json: {ly, ws:[{ws, rows:[[cap, thisYear, lastYear]]}]}) ---------- */
+  var _rlkDrawBase = rlkDraw;
+  rlkDraw = function () {
+    if (!isSE()) return _rlkDrawBase();
+    var L = RLK, W0 = L.r.ws || []; if (!W0.length) return _rlkDrawBase();
+    var divs = divsOf(W0.map(function (w) { return w.ws; })), out = $('rlkout');
+    var agg = divs.map(function (d) {
+      var m = {}; inDiv(W0, d, 'ws').forEach(function (w) { (w.rows || []).forEach(function (x) { var r = m[x[0]] = m[x[0]] || [x[0], 0, 0]; r[1] += +x[1] || 0; r[2] += +x[2] || 0; }); });
+      return { ws: d, rows: Object.keys(m).map(Number).sort(byNum).map(function (c) { return m[c]; }) };
+    });
+    var top = '', body = '';
+    try {
+      L.r.ws = agg; _rlkDrawBase(); top = out.innerHTML;
+      body = divs.map(function (d) {
+        L.r.ws = inDiv(W0, d, 'ws'); _rlkDrawBase();
+        return '<div class="sedn">' + esc(d) + '</div>' + out.innerHTML.replace(/<div class="muted ins"[\s\S]*?<\/div>/, '').replace(/ id="rlkt"/g, ' data-w="1"');
+      }).join('');
+    } finally {
+      L.r.ws = W0;
+      L.ly = W0.map(function (w) { var m = {}; w.rows.forEach(function (x) { m[x[0]] = x[2]; }); return m; });
+      L.cy = W0.map(function (w) { var m = {}; w.rows.forEach(function (x) { m[x[0]] = x[1]; }); return m; });
+    }
+    out.innerHTML = top + (divs.length || 1 ? '<div class="card sewrapc"><div class="setog">WORKSHOP WISE</div><div class="sebody">' + body + '</div></div>' : '');
+  };
+
+  /* ---------- (2c) Chamber Assembly Report (ch_report_json: {rows:[[ws, cap, ?, unrepaired, availability, assembly, oven]], nokitty, nobase}) ---------- */
+  var _mrChmHtmlBase = mrChmHtml;
+  mrChmHtml = function (src, mainTab) {
+    if (!isSE()) return _mrChmHtmlBase(src, mainTab);
+    var D = mrChmData(src), n = CH_CAPS.length, divs = divsOf(D.ws), NC = n + 2, i;
+    function inD(d) { return D.ws.filter(function (w) { return (WSDIV[w] || '') === d; }); }
+    function vals(list, cols) { var t = CH_CAPS.map(function () { return 0; }); list.forEach(function (w) { CH_CAPS.forEach(function (c, k) { var x = D.V[w + '|' + c]; if (x) cols.forEach(function (col) { t[k] += +x[col] || 0; }); }); }); return t; }
+    function sum(a) { return a.reduce(function (p, q) { return p + q; }, 0); }
+    function row(name, v, cls) { return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td class="nm" style="font-weight:400">' + esc(name) + '</td>' + v.map(function (x) { return '<td class="' + (x < 0 ? 'neg' : '') + '">' + (x || '') + '</td>'; }).join('') + '<td class="g' + (sum(v) < 0 ? ' neg' : '') + '">' + sum(v) + '</td></tr>'; }
+    function trow(name, v, cls) { return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td class="g">' + name + '</td>' + v.map(function (x) { return '<td class="g' + (x < 0 ? ' neg' : '') + '">' + x + '</td>'; }).join('') + '<td class="g">' + sum(v) + '</td></tr>'; }
+    function head(title) { return '<tr><th class="nm" rowspan="2">Name of<br>Division</th><th colspan="' + n + '" class="ttl">' + title + '</th><th></th></tr><tr>' + CH_CAPS.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '<th class="g">Total</th></tr>'; }
+    function block(title, cols, tcls) {
+      var h = head(title);
+      divs.forEach(function (d) { h += row(d, vals(inD(d), cols)); });
+      h += trow('Total', vals(D.ws, cols), tcls);
+      divs.forEach(function (d, di) { inD(d).forEach(function (w) { h += row(w, vals([w], cols), 'sew'); }); h += row(d + ' TOTAL', vals(inD(d), cols), 'sew dtot'); });
+      return h + '<tr><td class="e" colspan="' + NC + '"></td></tr>';
+    }
+    var h = '<div class="card"><div class="wrap"><table class="chm"><tbody><tr><td colspan="' + (n + 1) + '" style="border-right:0"></td><td class="dt">' + esc(src.d) + '</td></tr>' +
+      '<tr class="setog"><td colspan="' + NC + '">WORKSHOP WISE</td></tr>';
+    CH_BLK.forEach(function (b) { h += block(b[0], [b[1]]); });
+    h += block('Total including Oven &amp; Assembly', [3, 4, 5], 'fin');
+    h += '</tbody></table></div>';
+    var note = []; if ((D.r.nokitty || []).length) note.push('Kitty not started on this date for: ' + D.r.nokitty.map(esc).join(', ') + ' (unrepaired and availability show 0).');
+    if ((D.r.nobase || []).length) note.push('Assembly / oven start figures are not set for: ' + D.r.nobase.map(esc).join(', ') + '.');
+    if (note.length) h += '<div class="muted" style="font-size:12px;margin-top:6px">' + note.join('<br>') + '</div>';
+    return h + '</div>';
+  };
+})();
+</script>
 </body>
 </html>

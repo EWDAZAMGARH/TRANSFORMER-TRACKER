@@ -5338,3 +5338,37 @@ end $$;
 revoke all on function public.se_emg_add(text, text, text, text, text, text, text) from public;
 grant execute on function public.se_emg_add(text, text, text, text, text, text, text) to anon, authenticated;
 notify pgrst, 'reload schema';
+
+
+-- STEP 124 : SE Workshop
+--   (1) Emergency: a division that ticked only "Emergency: also ADD" (without "Emergency (view)") now also lets the SE read the emergency list,
+--       so the SE sees the new emergency he added (before, the whole Emergency tab stayed empty and the ADD form did not come).
+--   (2) Reports tab: the Chamber Assembly Report (ch_report_json) can be shared with the SE (tick "M&R Summary and Kitty").
+--   Run once in the default project and in EVERY division's project.  Safe to run again.
+create or replace function public.se_perm_of(p_fn text) returns text[] language sql immutable as $$
+  select case p_fn
+    when 'summary_json' then array['sum'] when 'dashboard_json' then array['sum'] when 'test_std_json' then array['test'] when 'test_list_json' then array['test'] when 'test_report_json' then array['test'] when 'test_firms_json' then array['test'] when 'list_json' then array['sum'] when 'struct_json' then array['sum', 'cmp'] when 'rr_json' then array['rrs'] when 'mr_list_json' then array['mrs']
+    when 'rr_summary_json' then array['rrs']
+    when 'ch_report_json' then array['mrs'] when 'mr_summary_json' then array['mrs'] when 'mr_repair_json' then array['mrs'] when 'mr_pending_json' then array['mrs']
+    when 'kitty_range_json' then array['mrs'] when 'kitty_json' then array['mrs'] when 'kitty_cmp_json' then array['mrs'] when 'kitty_lyk_json' then array['mrs'] when 'kitty_need_json' then array['mrs']
+    when 'scrap_json' then array['scrap'] when 'scrap_range_json' then array['scrap'] when 'scrap_cap_json' then array['scrap']
+    when 'mat_get' then array['mat_ws', 'mat_oil', 'mat_ins', 'mat_rcv', 'mat_req']
+    when 'mat_rep' then array['mat_ws', 'mat_oil', 'mat_ins', 'mat_req']
+    when 'mat_dtc' then array['mat_oil'] when 'mat_low_adj' then array['mat_oil'] when 'mat_low_list' then array['mat_oil']
+    when 'mat_recv_list' then array['mat_rcv'] when 'mat_req_pr' then array['mat_req']
+    when 'sir_prs_json' then array['sir'] when 'sir_cfg_get' then array['sir'] when 'sir_prs' then array['sir'] when 'sir_rows_json' then array['sir'] when 'sir_list_json' then array['sir']
+    when 'data_json' then array['data'] when 'dtc_map_json' then array['data'] when 'prot_map_json' then array['data']
+    when 'emg_json' then array['emg', 'emg_add'] when 'emg_open_prs' then array['emg', 'data']
+    when 'compare_all' then array['cmp'] when 'installed_all_json' then array['cmp']
+    when 'daywise_json' then array['day'] when 'plinth_json' then array['plinth']
+    else null end $$;
+revoke all on function public.se_perm_of(text) from public, anon, authenticated;
+notify pgrst, 'reload schema';
+
+-- STEP 125 : SE Workshop login row (was the separate file SE_PROFILE.sql)
+--   Only does something in the project where the user se.workshop@puvvnl.in exists (Authentication > Users, Auto Confirm ticked).
+--   In every other project it changes nothing.  Safe to run again.
+insert into public.profiles(user_id, login_id, display, role, active, must_change)
+select id, 'se.workshop@puvvnl.in', 'SE Workshop', 'se', true, true from auth.users where email = 'se.workshop@puvvnl.in'
+on conflict (user_id) do update set role = 'se', active = true;
+notify pgrst, 'reload schema';
