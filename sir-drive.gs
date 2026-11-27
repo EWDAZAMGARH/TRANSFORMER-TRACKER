@@ -37,7 +37,12 @@ function doPost(e) {
     var raw = (e && e.parameter && e.parameter.payload) || (e && e.postData && e.postData.contents), b = JSON.parse(raw);
     id = (b && b.id) ? String(b.id) : '';
     if (!b) return out({ ok: false, error: 'Empty request.' });
-    if (b.ping) { var f0 = folder_(b.folder); return out({ ok: true, ping: true, folder: f0.getName() }); }
+    if (b.ping) {                          // the Test button: also proves that this Google account may WRITE in the folder
+      var f0 = folder_(b.folder);
+      try { var t0 = f0.createFile('tf-test.txt', 'ok'); t0.setTrashed(true); }
+      catch (e0) { return out({ ok: false, error: 'This Google account cannot add files in the folder "' + f0.getName() + '". Make the folder yours, or share it with this account as Editor. (' + String(e0 && e0.message || e0) + ')' }); }
+      return out({ ok: true, ping: true, folder: f0.getName() });
+    }
     var folder = folder_(b.folder);
     if (b.action === 'put') {
       var type = String(b.mime || '');
@@ -45,9 +50,13 @@ function doPost(e) {
       var bytes = Utilities.base64Decode(String(b.b64 || ''));
       if (!bytes.length || bytes.length > MAX_BYTES) return out({ ok: false, error: 'The file is empty or larger than 3 MB.' });
       var name = String(b.name || 'file').replace(/[^\w.\-]+/g, '_').slice(0, 80);
-      var file = folder.createFile(Utilities.newBlob(bytes, type, name));
-      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      return out({ ok: true, url: file.getUrl(), id: file.getId() });
+      var file;
+      try { file = folder.createFile(Utilities.newBlob(bytes, type, name)); }
+      catch (e1) { return out({ ok: false, error: 'This Google account cannot add files in the SIR folder. Make the folder yours, or share it with this account as Editor. (' + String(e1 && e1.message || e1) + ')' }); }
+      var shared = true;
+      try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); }
+      catch (e2) { shared = false; }      // the Google domain may block "anyone with the link": the file is still saved; share the FOLDER with your staff instead
+      return out({ ok: true, url: file.getUrl(), id: file.getId(), shared: shared });
     }
     if (b.action === 'get') {               // give the photo back (used when the Admin edits a SIR and the PDF is made again)
       var fid = idOf_(b.url || b.fid), file2 = DriveApp.getFileById(fid), inside = false, ps = file2.getParents();

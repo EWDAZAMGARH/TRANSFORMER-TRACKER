@@ -5136,8 +5136,13 @@ function emgAutoAll() { document.querySelectorAll('#emt textarea.emta').forEach(
 document.addEventListener('input', function (e) { var t = e.target; if (t && t.classList && t.classList.contains('emta')) emgAutoH(t); });
 function emgRender() {
   var o = $('emgout'); if (!o) return;
-  var frm = '';
-  if (EMGWS.length) frm = '<div class="emform"><div><label>Refer by</label><input id="ef_by" placeholder="who refers (name / office)"></div><div><label>Name of village</label><input id="ef_vil"></div>' +
+  var frm = '', seAdd = (ME && ME.role === 'se' && window.SE) ? SE.list.filter(function (x) { return x.perms && x.perms.emg_add; }) : [];
+  if (seAdd.length) frm = '<div class="emform"><div><label>Division</label><select id="ef_dv">' + seAdd.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.name || x.label || '') + '</option>'; }).join('') + '</select></div>' +
+    '<div><label>Refer to workshop</label><select id="ef_ws"></select></div>' +
+    '<div><label>Refer by</label><input id="ef_by" placeholder="who refers (name / office)"></div><div><label>Name of village</label><input id="ef_vil"></div>' +
+    '<div><label>Mobile no.</label><input id="ef_mob" inputmode="tel"></div><div><label>Complaint no.</label><input id="ef_cmp" autocapitalize="characters" autocomplete="off"></div><div><label>Other detail</label><input id="ef_det"></div>' +
+    '<button class="btn" id="ef_add" type="button">+ Add emergency</button></div>';
+  else if (EMGWS.length) frm = '<div class="emform"><div><label>Refer by</label><input id="ef_by" placeholder="who refers (name / office)"></div><div><label>Name of village</label><input id="ef_vil"></div>' +
     '<div><label>Mobile no.</label><input id="ef_mob" inputmode="tel"></div><div><label>Complaint no.</label><input id="ef_cmp" autocapitalize="characters" autocomplete="off"></div><div><label>Other detail</label><input id="ef_det"></div>' +
     '<div><label>Refer to workshop</label><select id="ef_ws">' + EMGWS.map(function (w) { return '<option>' + esc(w) + '</option>'; }).join('') + '</select></div><button class="btn" id="ef_add" type="button">+ Add emergency</button></div>';
   var hist = !!EMGR; if (hist) frm = '';
@@ -5152,7 +5157,7 @@ function emgRender() {
     EMG.forEach(function (r) {
       var s = emgState(r), ed = r.can_edit, ro = ed ? '' : ' readonly tabindex="-1"';
       h += '<div class="ecard e' + s + '" data-id="' + r.id + '"><div class="etop"><span class="est">' + emgStatus(r) + '</span></div>' +
-        '<div class="eby">Added by <b>' + esc(r.addby || r.by || '-') + '</b>' + (r.addrole ? ' (' + (ROLE[r.addrole] || esc(r.addrole)) + ')' : '') + ' &middot; ' + esc((r.created || '').replace(/^(\d\d)\.(\d\d)\.(\d{4})/, '$1/$2/$3')) + '</div>' +
+        '<div class="eby">Added by <b>' + esc(r.addby || r.by || '-') + '</b>' + (r.addrole && r.addrole !== 'se' ? ' (' + (ROLE[r.addrole] || esc(r.addrole)) + ')' : '') + ' &middot; ' + esc((r.created || '').replace(/^(\d\d)\.(\d\d)\.(\d{4})/, '$1/$2/$3')) + '</div>' +
         '<span class="ehd h1">Emergency details</span><div class="erow">' + fv('Refer by', esc(r.by)) + fv('Village', esc(r.village)) + fv('Mobile no.', tel(r.mobile) || esc(r.mobile)) +
           fv('Complaint no.', esc(r.complaint)) + fv('Refer to workshop', esc(r.ws)) + fv('Other detail', esc(r.detail)) + '</div>' +
         '<span class="ehd h3">Workshop to fill (JE / AE)</span><div class="erow"><div class="ef"><div class="el">PR no.</div><input class="ein2" type="text" data-f="pr" data-id="' + r.id + '" value="' + esc(r.pr || '') + '" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="type PR no."' + ro + '></div>' +
@@ -5166,6 +5171,7 @@ function emgRender() {
   }
   var keep = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.id ? [document.activeElement.dataset.f, document.activeElement.dataset.id] : null;
   o.innerHTML = h;
+  if ($('ef_dv')) seEmgWs();
   emgAutoAll();
   if (keep) { var k = o.querySelector('[data-f="' + keep[0] + '"][data-id="' + keep[1] + '"]'); if (k) { k.focus(); try { var ln = (k.value || '').length; k.setSelectionRange(ln, ln); } catch (x) { } } }
   emgBadge();
@@ -5176,9 +5182,23 @@ function emgLoad(quiet) {
   if (quiet && o.contains(document.activeElement) && document.activeElement.tagName === 'INPUT' && document.activeElement.dataset.id) return;   // do not disturb typing
   emgFetch().then(emgRender).catch(function (e) { o.innerHTML = '<div class="card" style="color:#a31515">' + esc(/emg_json|emg_workshops/.test(e.message) ? 'Emergency is not switched on yet (the admin must run SQL step 33).' : e.message) + '</div>'; });
 }
+function seEmgWs() {                  // the workshops of the chosen division
+  var dv = $('ef_dv'), w = $('ef_ws'); if (!dv || !w) return; var id = dv.value;
+  w.innerHTML = Object.keys(SE.map).filter(function (n) { return String(SE.map[n]) === String(id); }).sort().map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('');
+}
+document.addEventListener('change', function (e) { if (e.target && e.target.id === 'ef_dv') seEmgWs(); });
 function emgMsg(t, bad) { var s = $('emstat'); if (s) { s.textContent = t; s.style.color = bad ? '#a31515' : '#15803d'; } }
 document.addEventListener('click', function (e) {
   var t = e.target;
+  if (t && t.id === 'ef_add' && ME && ME.role === 'se') {          // SE Workshop: the division first, then the workshop of that division
+    var vs = function (i) { return $(i).value.trim(); }, dvid = $('ef_dv').value, wsn = $('ef_ws').value;
+    if (!wsn) { emgMsg('Choose the workshop.', 1); return; }
+    t.disabled = true; emgMsg('Adding...');
+    SE.cl[dvid].rpc('se_emg_add', { p_code: SE.byId[dvid].code, p_ws: wsn, p_by: vs('ef_by'), p_village: vs('ef_vil'), p_mob: vs('ef_mob'), p_complaint: vs('ef_cmp'), p_detail: vs('ef_det') }).then(function (x) {
+      if (x.error) throw new Error(friendly(x.error)); return emgFetch();
+    }).then(function () { emgRender(); emgMsg('Added.'); }).catch(function (x) { t.disabled = false; emgMsg(/se_emg_add|schema cache/i.test(x.message) ? 'The Admin of this division must run the new setup.sql (STEP 123) once.' : x.message, 1); });
+    return;
+  }
   if (t && t.id === 'ef_add') {
     var v = function (i) { return $(i).value.trim(); };
     t.disabled = true;
@@ -8875,7 +8895,7 @@ new MutationObserver(function () { setTimeout(homeFit, 30); }).observe(document.
 var SE = { list: [], byId: {}, cl: {}, map: {}, warn: {} }, SEG = null, SE_NEW = '';
 var SE_PERMS = [['sum', 'R&R Summary (division wise, capacity wise, age wise)'], ['rrs', 'R&R Repair / Assembly / Oven daily report'], ['mrs', 'M&R Summary and Kitty'], ['scrap', 'Scrap'],
   ['mat_ws', 'Material Management: Wire & Strip consumption'], ['mat_oil', 'Material Management: Oil Recovery Sheet'], ['test', 'Testing Register (view and download only)'], ['mat_ins', 'Material Management: Insulating Material'], ['mat_rcv', 'Material Management: Oil Receive list'], ['mat_req', 'Material Management: Material Requirement'],
-  ['sir', 'SIR Summary and Pending SIR (view only)'], ['data', 'Data Sheet (view and download only)'], ['emg', 'Emergency (view only)'], ['cmp', 'Reports: PR Comparative'], ['day', 'Reports: Daywise & Division wise PR and Repair'], ['plinth', 'Reports: Same Plinth Damage']];
+  ['sir', 'SIR Summary and Pending SIR (view only)'], ['data', 'Data Sheet (view and download only)'], ['emg', 'Emergency (view)'], ['emg_add', 'Emergency: also ADD a new emergency (SE chooses division, then workshop)'], ['cmp', 'Reports: PR Comparative'], ['day', 'Reports: Daywise & Division wise PR and Repair'], ['plinth', 'Reports: Same Plinth Damage']];
 var SE_FED = {}; 'summary_json dashboard_json rr_summary_json mr_summary_json mr_repair_json mr_pending_json data_json sir_prs_json sir_cfg_get sir_prs sir_rows_json sir_list_json emg_json emg_open_prs dtc_map_json prot_map_json kitty_range_json kitty_json kitty_cmp_json kitty_lyk_json kitty_need_json scrap_json scrap_range_json scrap_cap_json mat_get mat_rep mat_dtc mat_low_adj mat_low_list mat_recv_list mat_req_pr compare_all installed_all_json daywise_json plinth_json list_json struct_json rr_json mr_list_json test_std_json test_list_json test_report_json test_firms_json'.split(' ').forEach(function (f) { SE_FED[f] = 1; });
 var _rpcBase = rpc;
 rpc = function (fn, args) { if (ME && ME.role === 'se' && fn === 'emg_workshops') return Promise.resolve([]); return (ME && ME.role === 'se' && SE_FED[fn]) ? seFed(fn, args || {}) : _rpcBase(fn, args); };

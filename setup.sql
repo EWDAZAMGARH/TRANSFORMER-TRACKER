@@ -5191,3 +5191,150 @@ $$;
 revoke all on function public.emg_open_prs() from public, anon;
 grant execute on function public.emg_open_prs() to authenticated;
 notify pgrst, 'reload schema';
+
+
+-- ================================================================================================================
+-- STEP 123 : SE Workshop
+--   (1) the SE can be shown the DATA SHEET, EMERGENCY, SIR and the Testing Register  (the ticks in Admin > Share with SE now SAVE - before, the
+--       database silently dropped the "Data Sheet", "Emergency", "SIR" and "Testing" ticks)
+--   (2) new tick "Emergency: also ADD" - the SE chooses the division, then the workshop, and adds an emergency (shown as "Added by SE Workshop")
+--   Run once in the default project and in EVERY division's project.  Safe to run again.
+alter table public.emergency add column if not exists added_label text;
+
+create or replace function public.se_perm_of(p_fn text) returns text[] language sql immutable as $$
+  select case p_fn
+    when 'summary_json' then array['sum'] when 'dashboard_json' then array['sum'] when 'test_std_json' then array['test'] when 'test_list_json' then array['test'] when 'test_report_json' then array['test'] when 'test_firms_json' then array['test'] when 'list_json' then array['sum'] when 'struct_json' then array['sum', 'cmp'] when 'rr_json' then array['rrs'] when 'mr_list_json' then array['mrs']
+    when 'rr_summary_json' then array['rrs']
+    when 'mr_summary_json' then array['mrs'] when 'mr_repair_json' then array['mrs'] when 'mr_pending_json' then array['mrs']
+    when 'kitty_range_json' then array['mrs'] when 'kitty_json' then array['mrs'] when 'kitty_cmp_json' then array['mrs'] when 'kitty_lyk_json' then array['mrs'] when 'kitty_need_json' then array['mrs']
+    when 'scrap_json' then array['scrap'] when 'scrap_range_json' then array['scrap'] when 'scrap_cap_json' then array['scrap']
+    when 'mat_get' then array['mat_ws', 'mat_oil', 'mat_ins', 'mat_rcv', 'mat_req']
+    when 'mat_rep' then array['mat_ws', 'mat_oil', 'mat_ins', 'mat_req']
+    when 'mat_dtc' then array['mat_oil'] when 'mat_low_adj' then array['mat_oil'] when 'mat_low_list' then array['mat_oil']
+    when 'mat_recv_list' then array['mat_rcv'] when 'mat_req_pr' then array['mat_req']
+    when 'sir_prs_json' then array['sir'] when 'sir_cfg_get' then array['sir'] when 'sir_prs' then array['sir'] when 'sir_rows_json' then array['sir'] when 'sir_list_json' then array['sir']
+    when 'data_json' then array['data'] when 'dtc_map_json' then array['data'] when 'prot_map_json' then array['data']
+    when 'emg_json' then array['emg'] when 'emg_open_prs' then array['emg', 'data']
+    when 'compare_all' then array['cmp'] when 'installed_all_json' then array['cmp']
+    when 'daywise_json' then array['day'] when 'plinth_json' then array['plinth']
+    else null end $$;
+
+create or replace function public.se_share_set(p_perms jsonb, p_active boolean, p_new_code boolean default false, p_label text default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller(); code text; k text; pm jsonb := '{}'::jsonb;
+begin
+  if c.user_id is null or c.role <> 'admin' then raise exception 'Only an Admin can do this.'; end if;
+  foreach k in array array['sum', 'rrs', 'mrs', 'scrap', 'test', 'mat_ws', 'mat_oil', 'mat_ins', 'mat_rcv', 'mat_req', 'cmp', 'day', 'plinth', 'data', 'emg', 'emg_add', 'sir'] loop
+    pm := pm || jsonb_build_object(k, coalesce((p_perms->>k)::boolean, false));
+  end loop;
+  insert into public.se_share(id, perms, active, label) values (1, pm, false, nullif(btrim(coalesce(p_label, '')), ''))
+    on conflict (id) do update set perms = excluded.perms, label = coalesce(nullif(btrim(coalesce(p_label, '')), ''), public.se_share.label), at = now();
+  if coalesce(p_new_code, false) then
+    code := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+    update public.se_share set code_hash = encode(sha256(convert_to(code, 'utf8')), 'hex') where id = 1;
+  end if;
+  update public.se_share set active = coalesce(p_active, false) and code_hash is not null where id = 1;
+  return jsonb_build_object('code', code);
+end $$;
+
+create or replace function public.se_call(p_code text, p_fn text, p_args jsonb default '{}'::jsonb) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare s public.se_share := public.se_chk(p_code); need text[] := public.se_perm_of(p_fn); ok boolean := false; k text; uid uuid; fo oid; names text[]; types oid[]; lst text := ''; i int; res jsonb;
+begin
+  if need is null then raise exception 'This report is not available.'; end if;
+  foreach k in array need loop if coalesce((s.perms->>k)::boolean, false) then ok := true; end if; end loop;
+  if not ok then raise exception 'This report is not shared.'; end if;
+  select user_id into uid from public.profiles where role = 'admin' and active order by user_id limit 1;
+  if uid is null then raise exception 'This project has no active Admin.'; end if;
+  select p.oid, p.proargnames, string_to_array(p.proargtypes::text, ' ')::oid[] into fo, names, types from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = p_fn limit 1;
+  if fo is null then raise exception 'This report is not available.'; end if;
+  for i in 1 .. coalesce(array_length(types, 1), 0) loop
+    if coalesce(p_args, '{}'::jsonb) ? names[i] then
+      lst := lst || case when lst = '' then '' else ', ' end || quote_ident(names[i]) || ' => ' ||
+             case when format_type(types[i], null) = 'jsonb' then '($1->' || quote_literal(names[i]) || ')' when format_type(types[i], null) like '%[]' then 'case when jsonb_typeof($1->' || quote_literal(names[i]) || ') = ''array'' then coalesce(array(select jsonb_array_elements_text($1->' || quote_literal(names[i]) || ')), array[]::text[])::' || format_type(types[i], null) || ' else null::' || format_type(types[i], null) || ' end' else '($1->>' || quote_literal(names[i]) || ')::' || format_type(types[i], null) end;
+    end if;
+  end loop;
+  perform set_config('request.jwt.claim.sub', uid::text, true);
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', uid, 'role', 'authenticated')::text, true);
+  perform set_config('transaction_read_only', 'on', true);
+  execute 'select to_jsonb(public.' || quote_ident(p_fn) || '(' || lst || '))' into res using coalesce(p_args, '{}'::jsonb);
+  if p_fn = 'mat_get' and jsonb_typeof(res) = 'object' then          -- only the parts that are ticked
+    if not coalesce((s.perms->>'mat_ws')::boolean, false) and not coalesce((s.perms->>'mat_req')::boolean, false) then res := res - 'ws'; end if;
+    if not coalesce((s.perms->>'mat_oil')::boolean, false) then res := res - 'oil'; end if;
+    if not coalesce((s.perms->>'mat_ins')::boolean, false) and not coalesce((s.perms->>'mat_req')::boolean, false) then res := res - 'ins'; end if;
+    if not coalesce((s.perms->>'mat_rcv')::boolean, false) and not coalesce((s.perms->>'mat_oil')::boolean, false) then res := res - 'recv'; end if;
+  end if;
+  if p_fn = 'list_json' and jsonb_typeof(res->'rows') = 'array' then      -- the Summary list shows transformers only: no names / mobile numbers go to the SE
+    res := jsonb_set(res, '{rows}', coalesce((select jsonb_agg(case when jsonb_typeof(r) = 'array' and jsonb_array_length(r) > 15
+        then jsonb_set(jsonb_set(jsonb_set(jsonb_set(r, '{10}', '""'), '{11}', '""'), '{14}', '""'), '{15}', '""') else r end order by o) from jsonb_array_elements(res->'rows') with ordinality t(r, o)), '[]'::jsonb));
+  end if;
+  return res;
+end $$;
+
+
+create or replace function public.emg_json(p_from date default null, p_to date default null) returns jsonb language plpgsql stable security definer set search_path = public as
+$$
+declare
+  mine  text[]  := coalesce(public.my_workshops(), '{}');
+  ed    boolean := public.my_can_edit() and public.my_role() in ('admin', 'je');
+  adm   boolean := public.my_role() in ('admin', 'creator');
+  me    uuid    := auth.uid();
+  today date    := (now() at time zone 'Asia/Kolkata')::date;
+  hist  boolean := p_from is not null or p_to is not null;
+begin
+  if not public.emg_ok() then return '[]'::jsonb; end if;
+  return coalesce((
+    select jsonb_agg(x order by x->>'sort' desc) from (
+      select jsonb_build_object(
+        'sort', case when hist then to_char(d.repl_date, 'YYYYMMDD') || lpad(e.id::text, 10, '0') else to_char(e.created_at, 'YYYYMMDDHH24MISS') || lpad(e.id::text, 10, '0') end,
+        'id', e.id, 'by', e.refer_by, 'village', e.village, 'mobile', e.mobile, 'complaint', e.complaint, 'detail', e.detail, 'ws', e.workshop,
+        'remark', e.remark, 'pr', e.pr_no,
+        'addby', coalesce(nullif(e.added_label, ''), nullif(btrim(ap.display), ''), ap.login_id), 'addrole', case when coalesce(e.added_label, '') <> '' then 'se' else ap.role end,
+        'created', to_char(e.created_at at time zone 'Asia/Kolkata', 'DD.MM.YYYY HH24:MI'),
+        'can_edit', ed and e.workshop = any (mine),
+        'can_del',  adm and e.workshop = any (mine),
+        'found', d.id is not null, 'dup', coalesce(d.dup, false),
+        'st', case when d.id is null or coalesce(d.dup, false) then 'R0'
+                   when d.repl_date is not null then 'D'
+                   when d.issue_date is not null then 'G'
+                   else 'R1' end,
+        'left', case when d.repl_date is not null then d.repl_date + 1 - today end,
+        'pr_date', to_char(d.pr_date, 'DD.MM.YYYY'), 'division', d.division, 'substation', d.substation, 'feeder', d.feeder,
+        'place', d.place_of_damage, 'cap', d.capacity, 'complain', d.complain_no,
+        'je', d.je_name, 'je_mob', d.je_mobile, 'firm', d.firm,
+        'issue', to_char(d.issue_date, 'DD.MM.YYYY'), 'drv', d.driver_name, 'drv_mob', d.driver_mobile,
+        'repl', to_char(d.repl_date, 'DD.MM.YYYY')
+      ) as x
+      from public.emergency e
+      left join public.profiles ap on ap.user_id = e.created_by
+      left join lateral (
+        select d0.* from public.data d0
+         where btrim(coalesce(e.pr_no, '')) <> '' and d0.workshop = e.workshop and upper(btrim(d0.pr_no)) = upper(btrim(e.pr_no))
+         limit 1) d on true
+      where (e.workshop = any (mine) or e.created_by = me)
+        and case when hist then d.repl_date is not null and not coalesce(d.dup, false)
+                            and d.repl_date >= coalesce(p_from, date '0001-01-01') and d.repl_date <= coalesce(p_to, date '9999-12-31')
+                 else not (d.repl_date is not null and d.repl_date + 1 <= today) end
+    ) s), '[]'::jsonb);
+end
+$$;
+
+create or replace function public.se_emg_add(p_code text, p_ws text, p_by text, p_village text, p_mob text, p_complaint text, p_detail text) returns bigint
+language plpgsql security definer set search_path = public as $$
+declare s public.se_share := public.se_chk(p_code); nid bigint; lab text; uid uuid;
+begin
+  if not coalesce((s.perms->>'emg_add')::boolean, false) then raise exception 'Adding an emergency is not allowed in this share.'; end if;
+  if not exists (select 1 from public.workshops w where w.name = p_ws) then raise exception 'Choose the workshop this emergency is referred to.'; end if;
+  if btrim(coalesce(p_village, '')) = '' and btrim(coalesce(p_mob, '')) = '' and btrim(coalesce(p_complaint, '')) = '' and btrim(coalesce(p_detail, '')) = '' then
+    raise exception 'Write the village, the mobile no., the complaint no. or some detail.'; end if;
+  select user_id into uid from public.profiles where role = 'admin' and active order by user_id limit 1;
+  lab := 'SE Workshop' || case when btrim(coalesce(s.label, '')) <> '' then ' (' || btrim(s.label) || ')' else '' end;
+  insert into public.emergency (refer_by, village, mobile, complaint, detail, workshop, created_by, added_label)
+  values (left(btrim(coalesce(p_by, '')), 120), left(btrim(coalesce(p_village, '')), 120), left(btrim(coalesce(p_mob, '')), 60),
+          left(btrim(coalesce(p_complaint, '')), 60), left(btrim(coalesce(p_detail, '')), 400), p_ws, uid, left(lab, 80))
+  returning id into nid;
+  return nid;
+end $$;
+revoke all on function public.se_emg_add(text, text, text, text, text, text, text) from public;
+grant execute on function public.se_emg_add(text, text, text, text, text, text, text) to anon, authenticated;
+notify pgrst, 'reload schema';
