@@ -2319,6 +2319,16 @@ table tr.dtot.dtc1 td{background:#a7f3d0!important;color:#064e3b!important}
 table tr.dtot.dtc2 td{background:#fbcfe8!important;color:#831843!important}
 table tr.dtot.dtc3 td{background:#ddd6fe!important;color:#4c1d95!important}
 table tr.dtot td.muted,table tr.dtot td .z{color:inherit!important}
+/* grand TOTAL rows of the Kitty (top TOTAL and the TOTAL under WORKSHOP WISE) and of the SE Oil Receive tables */
+table tr.kgt td{background:#7dd3fc!important;color:#0c4a6e!important;font-weight:800!important;border-top:2px solid #0369a1!important;border-bottom:2px solid #0369a1!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#mmout table.mkt tr.dtot td{border-top:2px solid #475569!important;border-bottom:2px solid #475569!important;font-weight:800!important}
+#mmout table.mkt tr.dtot.dtc0 td{background:#fde68a!important;color:#78350f!important}
+#mmout table.mkt tr.dtot.dtc1 td{background:#a7f3d0!important;color:#064e3b!important}
+#mmout table.mkt tr.dtot.dtc2 td{background:#fbcfe8!important;color:#831843!important}
+#mmout table.mkt tr.dtot.dtc3 td{background:#ddd6fe!important;color:#4c1d95!important}
+#mmout table.mkt tr.kgt td{background:#7dd3fc!important;color:#0c4a6e!important;font-weight:800!important}
+#mmout table.mkt tr.setog td{background:#eef2ff!important;color:#3b5bdb!important;text-align:left!important}
+#mmout .card.seoil{padding:0;box-shadow:none;background:transparent;margin:0}
 @media print{.sew{display:table-row!important}.sebody{display:block!important}.setog{display:none!important}}
 .ps .sew{display:table-row!important}.ps .sebody{display:block!important}.ps .setog{display:none!important}
 body.se-on #mkit,body.se-on #mrep,body.se-on #tsq,body.se-on #mkbc,body.se-on #msbase,body.se-on #mssave,body.se-on #mkbase,body.se-on #mksave,body.se-on #chmbase,body.se-on #mmstd,body.se-on #mmreset,body.se-on #rpweb,body.se-on .ulnew{display:none!important}
@@ -6484,7 +6494,7 @@ function mmLoad() {
   }).catch(function (e) { if (seq === MM.seq) msg('mmmsg', /mat_|function/i.test(e.message || '') ? 'Run the new setup.sql in Supabase once (Material Management is not switched on in your database yet).' : esc(e.message), 'err'); });
 }
 function mmExcel() {
-  var ids = MM.kind === 'req' ? [['mmqc', 'LY PR'], ['mmq', 'Material Requirement']] : (MM.kind === 'wsc' || MM.kind === 'ins') ? [['mmg', MM.kind === 'ins' ? 'Insulating Material' : 'Wire & Strip'], ['mmr', 'Repaired Qty']] : MM.kind === 'oil' ? [['mmot', 'Oil std'], ['mmoo', 'Oil account'], ['mmoc', 'Oil recovery'], ['mmow', 'Closing wise']] : (MM.mode === 'sum' ? [['mmrm', 'Month wise'], ['mmrs', 'From wise'], ['mmrl', 'Register']] : [['mmrg', 'Oil Receive']]);
+  var ids = MM.kind === 'req' ? [['mmqc', 'LY PR'], ['mmq', 'Material Requirement']] : (MM.kind === 'wsc' || MM.kind === 'ins') ? [['mmg', MM.kind === 'ins' ? 'Insulating Material' : 'Wire & Strip'], ['mmr', 'Repaired Qty']] : MM.kind === 'oil' ? [['mmot', 'Oil std'], ['mmoo', 'Oil account'], ['mmoc', 'Oil recovery'], ['mmow', 'Closing wise']] : (MM.mode === 'sum' ? [['mmrd', 'Division wise'], ['mmrm', 'Month wise'], ['mmrs', 'From wise'], ['mmrl', 'Register']] : [['mmrg', 'Oil Receive']]);
   if (MM.kind === 'low') ids = MM.mode === 'sum' ? [['mmll', 'Oil found below STD']] : [['mmlg', 'Oil found below STD']];
   var sh = []; ids.forEach(function (x) { var t = $(x[0]); if (t) sh.push(mmSheet(t, x[1])); });
   if (!sh.length) return msg('mmmsg', 'Nothing to download yet.', 'err');
@@ -7121,7 +7131,7 @@ function mrSumKitDraw(K0, el0, p0) {
     var j = r.ws.indexOf(w) + 1, s2 = 0;
     h += '<tr><td class="l"' + wsAttr(w) + '>' + esc(w) + '</td>' + KCAPS.map(function (c, i) { var v = V[c] ? V[c][j] : null; if (v == null) return '<td class="muted">-</td>'; s2 += v; tot[i] += v; return '<td class="' + (v < 0 ? 'neg' : '') + '">' + v + '</td>'; }).join('') + '<td class="' + (s2 < 0 ? 'neg' : '') + '"><b>' + s2 + '</b></td></tr>'; gt += s2;
   });
-  h += '<tr class="t"><td class="l">TOTAL</td>' + tot.map(function (v) { return '<td class="' + (v < 0 ? 'neg' : '') + '"><b>' + v + '</b></td>'; }).join('') + '<td class="' + (gt < 0 ? 'neg' : '') + '"><b>' + gt + '</b></td></tr></tbody></table></div>';
+  h += '<tr class="t kgt"><td class="l">TOTAL</td>' + tot.map(function (v) { return '<td class="' + (v < 0 ? 'neg' : '') + '"><b>' + v + '</b></td>'; }).join('') + '<td class="' + (gt < 0 ? 'neg' : '') + '"><b>' + gt + '</b></td></tr></tbody></table></div>';
   if ((r.nobase || []).length) h += '<div class="muted" style="font-size:12px;margin-top:6px">Kitty not started on this date for: ' + esc(r.nobase.join(', ')) + '.</div>';
   EL.innerHTML = h; if (P === 'mrk') setTimeout(sumFit, 30);
 }
@@ -9027,7 +9037,7 @@ function seRows(table, withWs, label) {     // rows = workshops  ->  rows = divi
     var tg = document.createElement('tr'); tg.className = 'setog'; tg.innerHTML = '<td colspan="' + ncol + '">WORKSHOP WISE</td>'; nb.appendChild(tg);
     head.forEach(function (h) { var c = h.cloneNode(true); c.className = 'sew'; nb.appendChild(c); });
     divs.forEach(function (d, di) { inD(d).forEach(function (r) { var c = r.cloneNode(true); c.className = 'sew'; nb.appendChild(c); }); nb.appendChild(seDivRow(d + ' TOTAL', inD(d), anyW, 'sew dtot dtc' + (di % 4))); });
-    if (T) { var t2 = T.cloneNode(true); t2.className = 'sew t'; nb.appendChild(t2); }
+    if (T) { var t2 = T.cloneNode(true); t2.className = 'sew t' + (/\bkgt\b/.test(T.className) ? ' kgt' : ''); nb.appendChild(t2); }
   }
   while (tb.firstChild) tb.removeChild(tb.firstChild); tb.appendChild(nb); return true;
 }
@@ -9123,6 +9133,31 @@ var _mrSumKitDrawBase = mrSumKitDraw;
 mrSumKitDraw = function (K0, el0) {
   _mrSumKitDrawBase.apply(this, arguments); if (!seIsSE()) return;
   try { var el = el0 || $('mrkit'), t = el.querySelector('table'); if (t && seRows(t, true, 'KITTY')) { el.classList.add('card'); } } catch (e) { if (window.console) console.log('seKit', e); }
+};
+
+/* ---- SE: Oil Receive summary - DIVISION WISE, and WORKSHOP WISE under "tap to open" (same pattern as the Kitty) ---- */
+var _mmRcvSumBase = mmRcvSum;
+mmRcvSum = function () {
+  _mmRcvSumBase.apply(this, arguments); if (!seIsSE()) return;
+  try {
+    var KO = Object.keys(MM_RK), a = MM.from, b = MM.to, lab = mmMonthName(a) + (a === b ? '' : ' to ' + mmMonthName(b)), W = {}, names = MM.names.filter(function (w) { return WSDIV[w] !== undefined; });
+    names.forEach(function (w) { var o = { fresh: 0, reclaim: 0, ou: 0, reclaim_ou: 0 }; ((MM.per[w].list || {}).rows || []).forEach(function (r) { if (o[r[2]] !== undefined) o[r[2]] += +r[4]; }); W[w] = o; });
+    var divs = []; names.forEach(function (w) { if (divs.indexOf(WSDIV[w]) < 0) divs.push(WSDIV[w]); }); if (!divs.length) return;
+    function vals(o) { return KO.map(function (x) { return o[x]; }).concat([o.fresh + o.reclaim + o.ou + o.reclaim_ou, mmDirty(o.reclaim) + mmOu(o.reclaim_ou)]); }
+    function sum(list) { var o = { fresh: 0, reclaim: 0, ou: 0, reclaim_ou: 0 }; list.forEach(function (w) { KO.forEach(function (k) { o[k] += W[w][k]; }); }); return o; }
+    function row(name, o, cls) { return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td class="l">' + esc(name) + '</td>' + vals(o).map(function (x, i) { return mmCalcTd(i + 1, mmR3(x)); }).join('') + '</tr>'; }
+    var HD = ['Division'].concat(KO.map(function (x) { return MM_RK[x] + ' (L)'; })).concat(['Total (L)', 'Issue for reclaim (L)']), ncol = HD.length;
+    var hd = '<tr>' + HD.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join('') + '</tr>', hw = '<tr class="sew">' + HD.map(function (x, i) { return '<th>' + esc(i ? x : 'Workshop') + '</th>'; }).join('') + '</tr>';
+    var h = '<div class="card seoil"><div class="wrap"><table class="mkt mmt" id="mmrd" style="width:auto;min-width:420px"><thead><tr><th colspan="' + ncol + '" class="ttl">Oil received division wise - ' + esc(lab) + '</th></tr>' + hd + '</thead><tbody>';
+    divs.forEach(function (d) { h += row(d, sum(names.filter(function (w) { return WSDIV[w] === d; }))); });
+    if (divs.length > 1) h += row('Total', sum(names), 't kgt');
+    h += '<tr class="setog"><td colspan="' + ncol + '">WORKSHOP WISE</td></tr>' + hw;
+    divs.forEach(function (d, di) { var ws = names.filter(function (w) { return WSDIV[w] === d; }); ws.forEach(function (w) { h += row(w, W[w], 'sew'); }); h += row(d + ' TOTAL', sum(ws), 'sew dtot dtc' + (di % 4)); });
+    if (divs.length > 1) h += row('Total', sum(names), 'sew t kgt');
+    h += '</tbody></table></div></div><div style="height:12px"></div>';
+    var o = $('mmout'), nt = o.firstElementChild && o.firstElementChild.classList.contains('msg') ? o.firstElementChild : null;
+    if (nt) nt.insertAdjacentHTML('afterend', h); else o.insertAdjacentHTML('afterbegin', h);
+  } catch (e) { if (window.console) console.log('seOilRcv', e); }
 };
 
 /* ---- SE: Material Requirement, a column for every division (like the Excel) ---- */
