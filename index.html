@@ -2312,6 +2312,13 @@ nav button#tmr{margin-top:auto}
 .setog td:after,div.setog:after{content:' \25BE   TAP TO OPEN';font-weight:600;margin-left:10px;font-size:11.5px;opacity:.8}.card.seopen .setog td:after,.card.seopen div.setog:after{content:' \25B4   TAP TO CLOSE'}
 .card:not(.seopen) .sew,.card:not(.seopen) .sebody{display:none}
 .sedn{font-weight:800;margin:12px 0 4px;color:#1e3a8a}tr.dtot td{background:#f1f5f9;font-weight:800}
+/* SE: the TOTAL row of each division under WORKSHOP WISE (R&R Summary, M&R Summary, Kitty) - own colour per division, clearly different from the workshop rows and the grand TOTAL */
+table tr.dtot td{font-weight:800!important;border-top:2px solid #475569!important;border-bottom:2px solid #475569!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+table tr.dtot.dtc0 td{background:#fde68a!important;color:#78350f!important}
+table tr.dtot.dtc1 td{background:#a7f3d0!important;color:#064e3b!important}
+table tr.dtot.dtc2 td{background:#fbcfe8!important;color:#831843!important}
+table tr.dtot.dtc3 td{background:#ddd6fe!important;color:#4c1d95!important}
+table tr.dtot td.muted,table tr.dtot td .z{color:inherit!important}
 @media print{.sew{display:table-row!important}.sebody{display:block!important}.setog{display:none!important}}
 .ps .sew{display:table-row!important}.ps .sebody{display:block!important}.ps .setog{display:none!important}
 body.se-on #mkit,body.se-on #mrep,body.se-on #tsq,body.se-on #mkbc,body.se-on #msbase,body.se-on #mssave,body.se-on #mkbase,body.se-on #mksave,body.se-on #chmbase,body.se-on #mmstd,body.se-on #mmreset,body.se-on #rpweb,body.se-on .ulnew{display:none!important}
@@ -3059,7 +3066,7 @@ function tableToAoa(t) {
     rows[r] = rows[r] || []; occ[r] = occ[r] || [];
     var allTh = Array.prototype.every.call(tr.cells, function (c) { return c.tagName === 'TH'; });
     if (allTh && !hd) hdr = r + 1; else hd = true;
-    var bold = /\b(t|w|g|o)\b/.test(tr.className), c = 0;
+    var bold = /\b(t|w|g|o|dtot)\b/.test(tr.className), c = 0;
     Array.prototype.forEach.call(tr.cells, function (cell) {
       while (occ[r][c]) c++;
       var rs = cell.rowSpan || 1, cs = cell.colSpan || 1, tx = (cell.innerText || cell.textContent || '').replace(/\s+/g, ' ').trim();
@@ -8016,7 +8023,7 @@ function kitPrint(src, title, date) {
 function kitXlRows(tbl, headRows) {
   var rows = [];
   [].forEach.call(tbl.rows, function (tr, ri) {
-    var head = ri < headRows, tot = tr.classList.contains('t') || /^TOTAL$/i.test((tr.cells[0] || {}).textContent || '');
+    var head = ri < headRows, tot = tr.classList.contains('t') || tr.classList.contains('dtot') || /^TOTAL$/i.test((tr.cells[0] || {}).textContent || '');
     rows.push([].map.call(tr.cells, function (td, i) { var inp = td.querySelector('input'), v = (inp ? inp.value : td.textContent).trim(), num = v !== '' && !isNaN(+v) && (!head || i > 0);
       var n = num ? +v : v; return { v: n, s: head || tot ? 5 : (num && +v < 0 ? 9 : 4) }; }));
   });
@@ -8892,6 +8899,20 @@ function seMerge(list) {
   });
   return out;
 }
+/* kitty_cmp_json answers {ws:[names], rows:[[cap, v1, v2..]], nobase:[names]} PER DIVISION. The plain seMerge would stack the rows of the
+   divisions under each other (so a workshop got the figures of another division's workshop). Here the columns of the divisions are put side by side, capacity by capacity. */
+function seMergeKit(list) {
+  var ws = [], nob = [], caps = [], seen = {};
+  list.forEach(function (v) { (v.rows || []).forEach(function (r) { if (!seen[r[0]]) { seen[r[0]] = 1; caps.push(r[0]); } }); });
+  caps.sort(function (a, b) { return a - b; });
+  var rows = caps.map(function (c) { return [c]; });
+  list.forEach(function (v) {
+    var n = (v.ws || []).length; ws = ws.concat(v.ws || []); nob = nob.concat(v.nobase || []);
+    var by = {}; (v.rows || []).forEach(function (r) { by[r[0]] = r; });
+    caps.forEach(function (c, ci) { var r = by[c]; for (var i = 1; i <= n; i++) rows[ci].push(r && r[i] != null ? r[i] : null); });
+  });
+  return { ws: ws, rows: rows, nobase: nob };
+}
 function seFed(fn, args) {
   var w = args.p_ws; if (w && w !== '__ALL__') { if (SE.map[w]) return seCall(SE.map[w], fn, args); return Promise.reject(new Error('This workshop is not in your divisions.')); }
   var ids = Object.keys(SE.byId).filter(function (id) { return !SE.warn[SE.byId[id].name] || true; });
@@ -8900,7 +8921,7 @@ function seFed(fn, args) {
   return Promise.all(ids.map(function (id) { return seCall(id, fn, args).then(function (v) { return { v: v }; }).catch(function (e) { SE.warn[SE.byId[id].name] = e.message; return null; }); })).then(function (rs) {
     seWarnShow(); var ok = rs.filter(function (x) { return x && x.v !== undefined && x.v !== null; }).map(function (x) { return x.v; });
     if (!ok.length) throw new Error('No division has shared this report yet.');
-    return seMerge(ok);
+    return fn === 'kitty_cmp_json' ? seMergeKit(ok) : seMerge(ok);
   });
 }
 /* ---- Admin side: share with the SE ---- */
@@ -9005,7 +9026,7 @@ function seRows(table, withWs, label) {     // rows = workshops  ->  rows = divi
   if (withWs) {
     var tg = document.createElement('tr'); tg.className = 'setog'; tg.innerHTML = '<td colspan="' + ncol + '">WORKSHOP WISE</td>'; nb.appendChild(tg);
     head.forEach(function (h) { var c = h.cloneNode(true); c.className = 'sew'; nb.appendChild(c); });
-    divs.forEach(function (d) { inD(d).forEach(function (r) { var c = r.cloneNode(true); c.className = 'sew'; nb.appendChild(c); }); nb.appendChild(seDivRow(d + ' TOTAL', inD(d), anyW, 'sew dtot')); });
+    divs.forEach(function (d, di) { inD(d).forEach(function (r) { var c = r.cloneNode(true); c.className = 'sew'; nb.appendChild(c); }); nb.appendChild(seDivRow(d + ' TOTAL', inD(d), anyW, 'sew dtot dtc' + (di % 4))); });
     if (T) { var t2 = T.cloneNode(true); t2.className = 'sew t'; nb.appendChild(t2); }
   }
   while (tb.firstChild) tb.removeChild(tb.firstChild); tb.appendChild(nb); return true;
