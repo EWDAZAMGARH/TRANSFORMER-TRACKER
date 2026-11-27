@@ -8897,6 +8897,7 @@ function seWarnShow() {
 document.addEventListener('click', function (e) { if (e.target && e.target.id === 'sewx') { e.preventDefault(); $('sewarn').style.display = 'none'; } });
 function seCall(id, fn, args) {
   var x = SE.byId[id]; if (!x) return Promise.reject(new Error('Division not found.'));
+  if (fn === 'list_json') { var a2 = {}; Object.keys(args || {}).forEach(function (k) { if (args[k] !== null && args[k] !== undefined && args[k] !== '') a2[k] = args[k]; }); args = a2; }   // a null array ("cannot extract elements from a scalar") is simply left out: the function has its own defaults
   return SE.cl[id].rpc('se_call', { p_code: x.code, p_fn: fn, p_args: args || {} }).then(function (r) {
     if (r.error) throw new Error(friendly(r.error)); var d = r.data; if (d && typeof d === 'object' && !Array.isArray(d) && 'edit' in d) d.edit = false; return d;     // the SE only looks
   });
@@ -8923,15 +8924,22 @@ function seMergeKit(list) {
   });
   return { ws: ws, rows: rows, nobase: nob };
 }
+function seListMerge(list) {        // list_json answers {total, rows} per division: rows one after the other, totals added
+  var rows = [], tot = 0; list.forEach(function (v) { rows = rows.concat(v.rows || []); tot += +v.total || 0; });
+  return { total: Math.max(tot, rows.length), rows: rows };
+}
 function seFed(fn, args) {
-  var w = args.p_ws; if (w && w !== '__ALL__') { if (SE.map[w]) return seCall(SE.map[w], fn, args); return Promise.reject(new Error('This workshop is not in your divisions.')); }
-  var ids = Object.keys(SE.byId).filter(function (id) { return !SE.warn[SE.byId[id].name] || true; });
+  var w = args.p_ws, dvn = null;
+  if (w && /^DIV::/.test(w)) { dvn = w.slice(5); args = JSON.parse(JSON.stringify(args)); args.p_ws = null; w = null; }      // a division link: all workshops of that division's project
+  if (fn === 'list_json') { args = JSON.parse(JSON.stringify(args)); if ((args.p_offset || 0) > 0 && !w) return Promise.resolve({ total: 0, rows: [] }); if (!w) { args.p_limit = 2000; args.p_offset = 0; } }
+  if (w && w !== '__ALL__') { if (SE.map[w]) return seCall(SE.map[w], fn, args); return Promise.reject(new Error('This workshop is not in your divisions.')); }
+  var ids = Object.keys(SE.byId).filter(function (id) { return dvn === null || (SE.byId[id].name || SE.byId[id].label || '') === dvn; });
   if (!ids.length) return Promise.reject(new Error('No division added yet. Open the Admin tab and add a division.'));
   SE.warn = {}; var bad = [];
   return Promise.all(ids.map(function (id) { return seCall(id, fn, args).then(function (v) { return { v: v }; }).catch(function (e) { SE.warn[SE.byId[id].name] = e.message; return null; }); })).then(function (rs) {
     seWarnShow(); var ok = rs.filter(function (x) { return x && x.v !== undefined && x.v !== null; }).map(function (x) { return x.v; });
     if (!ok.length) throw new Error('No division has shared this report yet.');
-    return fn === 'kitty_cmp_json' ? seMergeKit(ok) : seMerge(ok);
+    return fn === 'kitty_cmp_json' ? seMergeKit(ok) : fn === 'list_json' ? seListMerge(ok) : seMerge(ok);
   });
 }
 /* ---- Admin side: share with the SE ---- */
@@ -9005,20 +9013,24 @@ function seDivList() { var o = [], seen = {}; mrWs().forEach(function (w) { var 
 function seDivWs(d) { return mrWs().filter(function (w) { return WSDIV[w] === d; }); }
 function seNum(t) { t = String(t == null ? '' : t).replace(/\s+/g, ' ').trim(); return /^-?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : null; }
 function seTxt(c) { return String(c.textContent || '').replace(/\s+/g, ' ').trim(); }
-function seSumCell(base, cells) {          // a copy of one cell holding the sum of the cells
+function seSumCell(base, cells, dv) {          // a copy of one cell holding the sum of the cells; dv = division name (its list opens on click), '*' = all divisions
   var c = base.cloneNode(true), tot = 0, dec = 0, n = 0, i;
   for (i = 0; i < cells.length; i++) { var t = seTxt(cells[i]), v = seNum(t); if (v === null) continue; n++; tot += v; if (/\.\d/.test(t)) dec = Math.max(dec, t.split('.')[1].length); }
   [].slice.call(c.attributes).forEach(function (a) { if (/^data-/.test(a.name)) c.removeAttribute(a.name); });
   c.className = String(c.className).replace(/\bpdk\b/g, '').trim();
   if (!n) { c.innerHTML = seTxt(cells[0]) === '' ? '' : esc(seTxt(cells[0])); return c; }
-  tot = Math.round(tot * 1000) / 1000; c.innerHTML = tot === 0 && !dec ? '<span class="z">0</span>' : (dec ? tot.toFixed(Math.min(dec, 2)) : String(tot)); return c;
+  tot = Math.round(tot * 1000) / 1000; var lk = null, q;
+  if (dv && tot > 0) for (q = 0; q < cells.length && !lk; q++) { var an = cells[q].querySelector ? cells[q].querySelector('a.n') : null; if (an && an.dataset.s) { try { lk = JSON.parse(an.dataset.s); } catch (e) { lk = null; } } }
+  var txt = tot === 0 && !dec ? '<span class="z">0</span>' : (dec ? tot.toFixed(Math.min(dec, 2)) : String(tot));
+  if (lk) { lk.ws = dv === '*' ? null : 'DIV::' + dv; lk.t = (dv === '*' ? 'TOTAL' : dv) + (lk.t && lk.t.indexOf(' - ') >= 0 ? lk.t.slice(lk.t.indexOf(' - ')) : ''); txt = '<a class="n" data-s=\'' + esc(JSON.stringify(lk)).replace(/'/g, '&#39;') + '\'>' + txt + '</a>'; }
+  c.innerHTML = txt; return c;
 }
 function seDivRow(name, wsRows, tpl, cls) {
-  var tr = tpl.cloneNode(true); tr.className = cls || ''; var i, n = tr.cells.length;
+  var tr = tpl.cloneNode(true); tr.className = cls || ''; var i, n = tr.cells.length, dvn = name === 'TOTAL' ? '*' : String(name).replace(/ TOTAL$/, '');
   for (i = 0; i < n; i++) {
     var c = tr.cells[i];
     if (i === 0) { [].slice.call(c.attributes).forEach(function (a) { if (/^data-/.test(a.name)) c.removeAttribute(a.name); }); c.innerHTML = esc(name); continue; }
-    var nc = seSumCell(c, wsRows.map(function (r) { return r.cells[i] || c; })); tr.replaceChild(nc, c);
+    var nc = seSumCell(c, wsRows.map(function (r) { return r.cells[i] || c; }), dvn); tr.replaceChild(nc, c);
   }
   return tr;
 }
@@ -9061,11 +9073,11 @@ function seColTable(src, mode, keep) {      // mode = 'div' (a column per divisi
     for (i = 0; i < gr.n; i++) ws.push({ w: names[gr.start + i], c: cells[gr.start + i + off] });
     var totc = gr.tot ? cells[gr.start + gr.n + off] : null;
     if (mode === 'div') {
-      divs.forEach(function (d) { var m = ws.filter(function (x) { return WSDIV[x.w] === d; }); if (!m.length) return; if (isHead1) { var th = m[0].c.cloneNode(true); th.textContent = d; th.removeAttribute('data-ws'); out.push(th); } else out.push(seSumCell(m[0].c, m.map(function (x) { return x.c; }))); });
+      divs.forEach(function (d) { var m = ws.filter(function (x) { return WSDIV[x.w] === d; }); if (!m.length) return; if (isHead1) { var th = m[0].c.cloneNode(true); th.textContent = d; th.removeAttribute('data-ws'); out.push(th); } else out.push(seSumCell(m[0].c, m.map(function (x) { return x.c; }), d)); });
       if (totc) out.push(totc);
     } else {
       var m2 = ws.filter(function (x) { return WSDIV[x.w] === mode; }); m2.forEach(function (x) { out.push(x.c); });
-      if (totc) out.push(isHead1 ? totc : seSumCell(totc, m2.map(function (x) { return x.c; })));
+      if (totc) out.push(isHead1 ? totc : seSumCell(totc, m2.map(function (x) { return x.c; }), mode));
     }
     return out;
   }
