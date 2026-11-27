@@ -2331,7 +2331,7 @@ table tr.kgt td{background:#7dd3fc!important;color:#0c4a6e!important;font-weight
 #mmout .card.seoil{padding:0;box-shadow:none;background:transparent;margin:0}
 @media print{.sew{display:table-row!important}.sebody{display:block!important}.setog{display:none!important}}
 .ps .sew{display:table-row!important}.ps .sebody{display:block!important}.ps .setog{display:none!important}
-body.se-on #mkit,body.se-on #mrep,body.se-on #tsq,body.se-on #mkbc,body.se-on #msbase,body.se-on #mssave,body.se-on #mkbase,body.se-on #mksave,body.se-on #chmbase,body.se-on #mmstd,body.se-on #mmreset,body.se-on #rpweb,body.se-on .ulnew{display:none!important}
+body.se-on .sapp,body.se-on #mkit,body.se-on #mrep,body.se-on #tsq,body.se-on #mkbc,body.se-on #msbase,body.se-on #mssave,body.se-on #mkbase,body.se-on #mksave,body.se-on #chmbase,body.se-on #mmstd,body.se-on #mmreset,body.se-on #rpweb,body.se-on .ulnew{display:none!important}
 </style>
 <style id="sir-css">
 /* ===== SIR tab ===== */
@@ -3279,12 +3279,12 @@ function initDates() {
 var CURTAB = 'sum', SSEQ = 0;
 var WSDIV = {}, DRV = [];
 function allowedTabs() {
-  var base = { se: ['sum', 'cmp', 'adm'], creator: ['sum', 'emg', 'adm'], discom: ['sum', 'cmp', 'emg'], admin: ['sum', 'data', 'drv', 'cmp', 'emg', 'adm'], je: ['sum', 'data', 'drv', 'cmp', 'emg'] }[ME.role] || ['sum'];
-  var keepPrs = ME.role !== 'se';
+  var base = { se: ['sum', 'data', 'cmp', 'emg', 'adm'], creator: ['sum', 'emg', 'adm'], discom: ['sum', 'cmp', 'emg'], admin: ['sum', 'data', 'drv', 'cmp', 'emg', 'adm'], je: ['sum', 'data', 'drv', 'cmp', 'emg'] }[ME.role] || ['sum'];
+  var keepPrs = true;
   if (ME.tabs && ME.role === 'je') base = base.filter(function (t) { return t === 'cmp' || ME.tabs.indexOf(t) >= 0; });
   else if (ME.tabs && ME.role !== 'je') base = base.filter(function (t) { return t === 'adm' || t === 'cmp' || ME.tabs.indexOf(t) >= 0; });
   if (typeof mrAccess === 'function' && mrAccess()) base = (mrOnly() ? ['sum'] : base).concat('mr');
-  if (keepPrs) base = base.slice(); if (keepPrs) { var ci = base.indexOf('cmp'); base.splice(ci >= 0 ? ci + 1 : base.length, 0, 'sir', 'prs'); }
+  if (keepPrs) base = base.slice(); if (keepPrs) { var ci = base.indexOf('cmp'); base.splice.apply(base, [ci >= 0 ? ci + 1 : base.length, 0].concat(['sir', 'prs'])); }
   return base.length ? base : ['sum'];
 }
 function showTab(t) {
@@ -4996,6 +4996,11 @@ window.addEventListener('load', function () { var on = ''; try { on = localStora
   /* ---- which projects are searched: a device linked to one Admin searches only his data; a fresh app searches every approved Admin (directory) ---- */
   var PJ = null, PJK = '';
   function pjList() {
+    if (ME && ME.role === 'se' && window.SE && SE.list && SE.list.length) {          // the SE searches every division he added (pr_find is open to the search box, no code needed)
+      var sk = 'se:' + SE.list.map(function (x) { return x.id; }).join(',');
+      if (PJ && PJK === sk) return Promise.resolve(PJ);
+      PJ = SE.list.map(function (x) { return { u: x.url, k: x.key, l: x.name || x.label || '', main: false, c: null }; }); PJK = sk; MULTI = PJ.length > 1; return Promise.resolve(PJ);
+    }
     var C = ttConn(), key = C.own ? C.u : 'default';
     if (PJ && PJK === key) return Promise.resolve(PJ);
     var base = [{ u: C.u, k: C.k, l: '', main: true, c: null }];
@@ -8755,7 +8760,7 @@ function sirDraw(s, allPrs, sh, fromS, till) {
   cs.forEach(function (c) { A[c] = {}; D[c] = {}; W.forEach(function (w) { A[c][w] = 0; D[c][w] = 0; }); });
   prs.forEach(function (r) { var w = r[0], c = +r[2]; if (!A[c] || A[c][w] == null) return; A[c][w]++; if (set[sirNorm(r[3])]) D[c][w]++; });
   var nW = W.length, multi = nW > 1, PL = {};      // PL: pending PR numbers by 'workshop|capacity'
-  prs.forEach(function (r) { if (!set[sirNorm(r[3])]) { var c = +r[2]; [r[0] + '|' + c, r[0] + '|*', '*|' + c, '*|*'].forEach(function (k) { (PL[k] = PL[k] || []).push(r[3]); }); } });
+  prs.forEach(function (r) { if (!set[sirNorm(r[3])]) { var c = +r[2]; [r[0] + '|' + c, r[0] + '|*', '*|' + c, '*|*'].concat(seIsSE() ? ['DIV::' + WSDIV[r[0]] + '|' + c, 'DIV::' + WSDIV[r[0]] + '|*'] : []).forEach(function (k) { (PL[k] = PL[k] || []).push(r[3]); }); } });
   SIRPEND = PL;
   function pk(v, w, c) { var k = (w || '*') + '|' + (c || '*'); if (!v) return z(0); var sp0 = { sirk: k, t: 'SIR pending - ' + (w || 'all workshops') + (c ? ' - ' + c + ' kVA' : ' - 100 kVA & above') + ' (PR ' + fromS + ' to ' + till + ')' }; if (w) sp0.ws = w; if (c) sp0.caps = [c]; return LK(v, sp0, sp0.t); }
   function z(v) { return v ? v : '<span class="z">0</span>'; }
@@ -8870,10 +8875,10 @@ new MutationObserver(function () { setTimeout(homeFit, 30); }).observe(document.
 var SE = { list: [], byId: {}, cl: {}, map: {}, warn: {} }, SEG = null, SE_NEW = '';
 var SE_PERMS = [['sum', 'R&R Summary (division wise, capacity wise, age wise)'], ['rrs', 'R&R Repair / Assembly / Oven daily report'], ['mrs', 'M&R Summary and Kitty'], ['scrap', 'Scrap'],
   ['mat_ws', 'Material Management: Wire & Strip consumption'], ['mat_oil', 'Material Management: Oil Recovery Sheet'], ['test', 'Testing Register (view and download only)'], ['mat_ins', 'Material Management: Insulating Material'], ['mat_rcv', 'Material Management: Oil Receive list'], ['mat_req', 'Material Management: Material Requirement'],
-  ['cmp', 'Reports: PR Comparative'], ['day', 'Reports: Daywise & Division wise PR and Repair'], ['plinth', 'Reports: Same Plinth Damage']];
-var SE_FED = {}; 'summary_json dashboard_json rr_summary_json mr_summary_json mr_repair_json mr_pending_json kitty_range_json kitty_json kitty_cmp_json kitty_lyk_json kitty_need_json scrap_json scrap_range_json scrap_cap_json mat_get mat_rep mat_dtc mat_low_adj mat_low_list mat_recv_list mat_req_pr compare_all installed_all_json daywise_json plinth_json list_json struct_json rr_json mr_list_json test_std_json test_list_json test_report_json test_firms_json'.split(' ').forEach(function (f) { SE_FED[f] = 1; });
+  ['sir', 'SIR Summary and Pending SIR (view only)'], ['data', 'Data Sheet (view and download only)'], ['emg', 'Emergency (view only)'], ['cmp', 'Reports: PR Comparative'], ['day', 'Reports: Daywise & Division wise PR and Repair'], ['plinth', 'Reports: Same Plinth Damage']];
+var SE_FED = {}; 'summary_json dashboard_json rr_summary_json mr_summary_json mr_repair_json mr_pending_json data_json sir_prs_json sir_cfg_get sir_prs sir_rows_json sir_list_json emg_json emg_open_prs dtc_map_json prot_map_json kitty_range_json kitty_json kitty_cmp_json kitty_lyk_json kitty_need_json scrap_json scrap_range_json scrap_cap_json mat_get mat_rep mat_dtc mat_low_adj mat_low_list mat_recv_list mat_req_pr compare_all installed_all_json daywise_json plinth_json list_json struct_json rr_json mr_list_json test_std_json test_list_json test_report_json test_firms_json'.split(' ').forEach(function (f) { SE_FED[f] = 1; });
 var _rpcBase = rpc;
-rpc = function (fn, args) { return (ME && ME.role === 'se' && SE_FED[fn]) ? seFed(fn, args || {}) : _rpcBase(fn, args); };
+rpc = function (fn, args) { if (ME && ME.role === 'se' && fn === 'emg_workshops') return Promise.resolve([]); return (ME && ME.role === 'se' && SE_FED[fn]) ? seFed(fn, args || {}) : _rpcBase(fn, args); };
 var _wsSelBase = wsSelect;
 wsSelect = function () { document.body.classList.remove('se-on'); return (ME && ME.role === 'se') ? seBoot().then(function (rows) { return { data: rows }; }) : _wsSelBase(); };
 function seBoot() {
@@ -8899,7 +8904,7 @@ function seCall(id, fn, args) {
   var x = SE.byId[id]; if (!x) return Promise.reject(new Error('Division not found.'));
   if (fn === 'list_json') { var a2 = {}; Object.keys(args || {}).forEach(function (k) { if (args[k] !== null && args[k] !== undefined && args[k] !== '') a2[k] = args[k]; }); args = a2; }   // a null array ("cannot extract elements from a scalar") is simply left out: the function has its own defaults
   return SE.cl[id].rpc('se_call', { p_code: x.code, p_fn: fn, p_args: args || {} }).then(function (r) {
-    if (r.error) throw new Error(friendly(r.error)); var d = r.data; if (d && typeof d === 'object' && !Array.isArray(d) && 'edit' in d) d.edit = false; return d;     // the SE only looks
+    if (r.error) throw new Error(friendly(r.error)); var d = r.data; if (d && typeof d === 'object' && !Array.isArray(d)) { if ('edit' in d) d.edit = false; if ('canEdit' in d) d.canEdit = false; } if (fn === 'emg_json' && Array.isArray(d)) d.forEach(function (e) { e.can_edit = false; e.can_del = false; }); return d;     // the SE only looks
   });
 }
 function seMerge(list) {
@@ -8924,6 +8929,15 @@ function seMergeKit(list) {
   });
   return { ws: ws, rows: rows, nobase: nob };
 }
+function seDataMerge(list) {        // data_json: {canEdit, total, rows} per division -> all rows, totals added, never editable
+  var rows = [], tot = 0; list.forEach(function (v) { rows = rows.concat(v.rows || []); tot += +v.total || 0; });
+  return { canEdit: false, total: tot, rows: rows };
+}
+function seSirListMerge(list) {     // sir_list_json: {n, rows} per division -> newest first
+  var rows = []; list.forEach(function (v) { rows = rows.concat(v.rows || []); });
+  rows.sort(function (a, b) { return String(b.at || '') < String(a.at || '') ? -1 : String(b.at || '') > String(a.at || '') ? 1 : 0; });
+  return { n: rows.length, rows: rows };
+}
 function seListMerge(list) {        // list_json answers {total, rows} per division: rows one after the other, totals added
   var rows = [], tot = 0; list.forEach(function (v) { rows = rows.concat(v.rows || []); tot += +v.total || 0; });
   return { total: Math.max(tot, rows.length), rows: rows };
@@ -8931,7 +8945,8 @@ function seListMerge(list) {        // list_json answers {total, rows} per divis
 function seFed(fn, args) {
   var w = args.p_ws, dvn = null;
   if (w && /^DIV::/.test(w)) { dvn = w.slice(5); args = JSON.parse(JSON.stringify(args)); args.p_ws = null; w = null; }      // a division link: all workshops of that division's project
-  if (fn === 'list_json') { args = JSON.parse(JSON.stringify(args)); if ((args.p_offset || 0) > 0 && !w) return Promise.resolve({ total: 0, rows: [] }); if (!w) { args.p_limit = 2000; args.p_offset = 0; } }
+  if (fn === 'sir_list_json' && !w) { args = JSON.parse(JSON.stringify(args)); if ((args.p_off || 0) > 0) return Promise.resolve({ n: 0, rows: [] }); args.p_limit = 2000; args.p_off = 0; }
+  if (fn === 'list_json' || fn === 'sir_rows_json') { args = JSON.parse(JSON.stringify(args)); if ((args.p_offset || 0) > 0 && !w) return Promise.resolve({ total: 0, rows: [] }); if (!w) { args.p_limit = 2000; args.p_offset = 0; } }
   if (w && w !== '__ALL__') { if (SE.map[w]) return seCall(SE.map[w], fn, args); return Promise.reject(new Error('This workshop is not in your divisions.')); }
   var ids = Object.keys(SE.byId).filter(function (id) { return dvn === null || (SE.byId[id].name || SE.byId[id].label || '') === dvn; });
   if (!ids.length) return Promise.reject(new Error('No division added yet. Open the Admin tab and add a division.'));
@@ -8939,7 +8954,7 @@ function seFed(fn, args) {
   return Promise.all(ids.map(function (id) { return seCall(id, fn, args).then(function (v) { return { v: v }; }).catch(function (e) { SE.warn[SE.byId[id].name] = e.message; return null; }); })).then(function (rs) {
     seWarnShow(); var ok = rs.filter(function (x) { return x && x.v !== undefined && x.v !== null; }).map(function (x) { return x.v; });
     if (!ok.length) throw new Error('No division has shared this report yet.');
-    return fn === 'kitty_cmp_json' ? seMergeKit(ok) : fn === 'list_json' ? seListMerge(ok) : seMerge(ok);
+    return fn === 'kitty_cmp_json' ? seMergeKit(ok) : fn === 'list_json' ? seListMerge(ok) : fn === 'data_json' ? seDataMerge(ok) : fn === 'sir_rows_json' ? seListMerge(ok) : fn === 'sir_list_json' ? seSirListMerge(ok) : seMerge(ok);
   });
 }
 /* ---- Admin side: share with the SE ---- */
@@ -9022,7 +9037,8 @@ function seSumCell(base, cells, dv) {          // a copy of one cell holding the
   tot = Math.round(tot * 1000) / 1000; var lk = null, q;
   if (dv && tot > 0) for (q = 0; q < cells.length && !lk; q++) { var an = cells[q].querySelector ? cells[q].querySelector('a.n') : null; if (an && an.dataset.s) { try { lk = JSON.parse(an.dataset.s); } catch (e) { lk = null; } } }
   var txt = tot === 0 && !dec ? '<span class="z">0</span>' : (dec ? tot.toFixed(Math.min(dec, 2)) : String(tot));
-  if (lk) { lk.ws = dv === '*' ? null : 'DIV::' + dv; lk.t = (dv === '*' ? 'TOTAL' : dv) + (lk.t && lk.t.indexOf(' - ') >= 0 ? lk.t.slice(lk.t.indexOf(' - ')) : ''); txt = '<a class="n" data-s=\'' + esc(JSON.stringify(lk)).replace(/'/g, '&#39;') + '\'>' + txt + '</a>'; }
+  if (lk && lk.sirk) { var cpk = String(lk.sirk).split('|')[1] || '*'; if (lk.ws && lk.t) lk.t = lk.t.replace(lk.ws, dv === '*' ? 'all workshops' : dv); lk.sirk = (dv === '*' ? '*' : 'DIV::' + dv) + '|' + cpk; lk.ws = dv === '*' ? null : 'DIV::' + dv; if (!lk.ws) delete lk.ws; txt = '<a class="n" data-s=\'' + esc(JSON.stringify(lk)).replace(/'/g, '&#39;') + '\'>' + txt + '</a>'; }
+  else if (lk) { lk.ws = dv === '*' ? null : 'DIV::' + dv; lk.t = (dv === '*' ? 'TOTAL' : dv) + (lk.t && lk.t.indexOf(' - ') >= 0 ? lk.t.slice(lk.t.indexOf(' - ')) : ''); txt = '<a class="n" data-s=\'' + esc(JSON.stringify(lk)).replace(/'/g, '&#39;') + '\'>' + txt + '</a>'; }
   c.innerHTML = txt; return c;
 }
 function seDivRow(name, wsRows, tpl, cls) {
@@ -9129,7 +9145,6 @@ renderSummary = function (s, quiet) {
     var ws = o.querySelector('.k-ws table'); if (ws) { seRows(ws, true, 'DIVISION NAME'); var h = o.querySelector('.k-ws h3'); if (h) h.textContent = 'Workshop wise summary'; }
     var pd = o.querySelector('.k-pd table'); if (pd) seRows(pd, true, 'DIVISION NAME');
     var cp = o.querySelector('.k-cap'); if (cp) seCapCard(cp, /PENDING FOR ISSUE|PR RECEIVED|AVERAGE PR PER DAY/);
-    [].forEach.call(o.querySelectorAll('.k-sir'), function (c) { c.parentNode.removeChild(c); });
     [].forEach.call(o.querySelectorAll('.card'), function (c) { c.classList.remove('col'); });
   } catch (e) { if (window.console) console.log('seSummary', e); }
 };
@@ -9146,6 +9161,33 @@ mrSumKitDraw = function (K0, el0) {
   _mrSumKitDrawBase.apply(this, arguments); if (!seIsSE()) return;
   try { var el = el0 || $('mrkit'), t = el.querySelector('table'); if (t && seRows(t, true, 'KITTY')) { el.classList.add('card'); } } catch (e) { if (window.console) console.log('seKit', e); }
 };
+
+/* ---- SE: SIR (summary card and Pending SIR): division wise, workshop wise under "tap to open"; the sheets / SIR records of every division are read together ---- */
+var _sirDoneSetBase = sirDoneSet;
+sirDoneSet = function (cfg, force) {
+  if (!seIsSE()) return _sirDoneSetBase(cfg, force);
+  var empty = { set: {}, n: 0, rows: 0, blank: 0 };
+  return Promise.all(Object.keys(SE.byId).map(function (id) {
+    return Promise.all([seCall(id, 'sir_cfg_get', {}), seCall(id, 'sir_prs', {})]).then(function (r) {
+      var c = (r[0] || [])[0], prs = r[1] || [], a = c ? sirLoadSheet({ url: c.url, col: c.col }, force).catch(function () { return empty; }) : Promise.resolve(empty);
+      return a.then(function (sh) { return { sh: sh, prs: prs, cfg: !!c }; });
+    }).catch(function (e) { SE.warn[SE.byId[id].name] = e.message; return null; });
+  })).then(function (L) {
+    seWarnShow(); var ok = L.filter(Boolean); if (!ok.length) throw new Error('No division has shared the SIR yet.');
+    var set = {}, n = 0, rows = 0, blank = 0, any = false;
+    ok.forEach(function (x) { Object.keys(x.sh.set || {}).forEach(function (k) { if (!set[k]) { set[k] = 1; n++; } }); x.prs.forEach(function (pr) { sirKeys(pr).forEach(function (k) { if (!set[k]) { set[k] = 1; n++; } }); }); rows += (x.sh.rows || 0) + x.prs.length; blank += x.sh.blank || 0; if (x.cfg || x.prs.length) any = true; });
+    return { set: set, n: n, rows: rows, blank: blank, any: any };
+  });
+};
+var _sirDrawBase = sirDraw;
+sirDraw = function () {
+  _sirDrawBase.apply(this, arguments); if (!seIsSE()) return;
+  try { var c = $('sircard'); if (c) seCapCard(c, /PR RAISED|SIR DONE|SIR PENDING/); } catch (e) { if (window.console) console.log('seSir', e); }
+};
+
+/* ---- SE: Data Sheet is view only (no typing, no SIR column) ---- */
+var _rowLockedBase = rowLocked; rowLocked = function (r, i) { return seIsSE() ? true : _rowLockedBase(r, i); };
+var _sirDataPrepBase = sirDataPrep; sirDataPrep = function (f) { if (seIsSE()) { SIRSET = null; return Promise.resolve(); } return _sirDataPrepBase(f); };
 
 /* ---- SE: Oil Receive summary - DIVISION WISE, and WORKSHOP WISE under "tap to open" (same pattern as the Kitty) ---- */
 var _mmRcvSumBase = mmRcvSum;
