@@ -939,7 +939,7 @@ table.cmpt thead th{position:static!important;overflow:hidden}
 table.cmpt th.cp,table.cmpt th.nm,table.cmpt td.nm{min-width:0!important;max-width:none!important}
 table.cmpt td{overflow:hidden;text-overflow:clip}
 table.cmpt input.ci{width:92%!important;min-width:0}
-@media(min-width:701px){table.cmpt{width:100%!important;min-width:1250px!important;font-size:11px!important}
+@media(min-width:701px){table.cmpt{width:100%!important;min-width:1500px!important;font-size:11px!important}
  table.cmpt th,table.cmpt td{padding:7px 1px!important}table.cmpt thead th{padding:4px 1px!important}
  table.cmpt th.cp{font-size:9.5px!important}table.cmpt td.nm{text-align:left;padding-left:4px!important}}
 @media print{#pz .cmpp table.cmpt thead{display:table-header-group}#pz .cmpp table.cmpt tr{break-inside:avoid;page-break-inside:avoid}}
@@ -3159,7 +3159,7 @@ function rpc(fn, args, again) {
 document.addEventListener('visibilitychange', function () { if (!document.hidden && typeof SB !== 'undefined' && SB && ME) { try { SB.auth.getSession(); } catch (e) {} } });
 
 /* ---------- login / logout ---------- */
-function idMail(id) { var v = String(id || '').trim().toLowerCase(); if (v.indexOf('@') > 0) return v; return v + (ttConn().own ? '@tf.uppcl' : '@tf.puvvnl'); }   // a full e-mail (the project owner) is used as it is   // own-workshop projects use @tf.uppcl; the default project keeps @tf.puvvnl
+function idMail(id) { var v = String(id || '').trim().toLowerCase(); try { var ov = JSON.parse(localStorage.getItem('tt_mailovr') || '{}'); if (ov[v]) return ov[v]; } catch (e) { } if (v.indexOf('@') > 0) return v; return v + (ttConn().own ? '@tf.uppcl' : '@tf.puvvnl'); }   // a full e-mail (the project owner) is used as it is   // own-workshop projects use @tf.uppcl; the default project keeps @tf.puvvnl
 function showLogin(note) {
   ME = null; SUM = null; document.body.classList.add('on-home');
   $('app').classList.add('hide'); $('login').classList.remove('hide'); $('pov').classList.add('hide'); $('lov').classList.add('hide');
@@ -3203,7 +3203,17 @@ function ttTryLogin(id, pw, cands) {                       // cands: connections
   var i = 0;
   function next() {
     ttConnSet(cands[i++]);
-    return SB.auth.signInWithPassword({ email: idMail(id), password: pw }).then(function (r) { return r.error && /invalid login/i.test(r.error.message) && i < cands.length ? next() : r; });
+    return SB.auth.signInWithPassword({ email: idMail(id), password: pw }).then(function (r) {
+      var v = String(id || '').trim().toLowerCase();
+      if (r.error && /invalid login/i.test(r.error.message) && v.indexOf('@') > 0) {       // an ID with @ that the old user function made as  id@tf.uppcl  (or @tf.puvvnl): try that e-mail too
+        var alt = v + (ttConn().own ? '@tf.uppcl' : '@tf.puvvnl');
+        return SB.auth.signInWithPassword({ email: alt, password: pw }).then(function (r2) {
+          if (!r2.error) { try { var ov = JSON.parse(localStorage.getItem('tt_mailovr') || '{}'); ov[v] = alt; localStorage.setItem('tt_mailovr', JSON.stringify(ov)); } catch (e) { } return r2; }
+          return i < cands.length ? next() : r;
+        });
+      }
+      return r.error && /invalid login/i.test(r.error.message) && i < cands.length ? next() : r;
+    });
   }
   return next();
 }
@@ -4256,6 +4266,7 @@ $('ncreate').onclick = function () {
   var b = $('ncreate'), role = $('nrole').value, tabs = chkGet($('ntabs')), mr = role === 'je' && $('ntmr').checked, all = tabs.length === DRV_ALL_TABS.length && !mr;
   var id = $('nu').value.trim().toLowerCase();
   if (!id) return msg('amsg', 'Enter a User ID.', 'err');
+  if (!/^[a-z0-9._-]{3,30}$/.test(id)) return msg('amsg', 'User ID: 3 to 30 characters, only a-z, 0-9, . _ - (no spaces, no @).', 'err');
   if (role !== 'discom' && !tabs.length && !mr) return msg('amsg', 'Choose at least one tab.', 'err');
   var body = { action: 'create', login: id, name: $('nn').value.trim() || id, role: role, div: divOf(), scope: chkGet($('ns')), edit: $('ne').value === '1', tabs: role === 'discom' || all ? null : tabs.concat(mr ? ['mr'] : []) };
   if (role === 'je' && !body.scope.length) return msg('amsg', 'Choose at least one workshop for this user.', 'err');
@@ -4263,6 +4274,7 @@ $('ncreate').onclick = function () {
   udOtherUse(id).then(function (used) { if (used) throw new Error('This ID is already used by another Admin. Please choose a different ID.'); return fnCall(body); }).then(function (r) { busy(b, false); showPw('User created', id, r.password); newUserForm(); return admLoad(); }).catch(function (e) { busy(b, false); msg('amsg', esc(e.message), 'err'); try { $('amsg').scrollIntoView({ block: 'center' }); } catch (x) { } });
 };
 function fnCall(body) {
+  try { body.dom = idMail('x').split('@')[1]; } catch (e) { }   // the same login domain the sign-in uses (own project: tf.uppcl, default project: tf.puvvnl)
   return SB.functions.invoke('admin-users', { body: body }).then(function (r) {
     if (r.error && !r.data) {
       var ctx = r.error.context, st = ctx && ctx.status;
@@ -4634,7 +4646,7 @@ function cmpHtml(edit) {
   var sub = same ? 'COMPARISON OF DIVISION WISE PR FOR THE M/O-' + p2(f.getMonth() + 1) + '/' + f.getFullYear() + ' WITH LAST YEAR SAME MONTH' : 'COMPARISON OF DIVISION WISE PR FOR ' + C.from + ' TO ' + C.to + ' WITH THE SAME DATES OF LAST YEAR';
   var capH = CCAPS.slice(0, 4).map(String).concat(['BELOW<br>100 KVA'], CCAPS.slice(4).map(String), ['100 AND<br>ABOVE', 'TOTAL PR']);
   if (!edit || edit) h = '<div class="cmph"><b>' + esc(cmpTitle()) + '</b><span>' + esc(sub) + '</span><span>' + esc(C.from + ' TO ' + C.to) + '</span></div>' + h;
-  var U = [3, 8], sd = []; for (var q = 0; q < 10; q++) sd.push(2.2); sd.splice(4, 0, 3.4); sd.splice(11, 0, 3.6, 3.8, 5.2, 4.4);       // BELOW / ABOVE / TOTAL PR are wider: a 5-digit total must show fully
+  var U = [3, 8], sd = []; for (var q = 0; q < 10; q++) sd.push(3.4); sd.splice(4, 0, 4.2); sd.splice(11, 0, 4.2, 4.2, 5.2, 4.4);       // BELOW / ABOVE / TOTAL PR are wider: a 5-digit total must show fully
   var all = U.concat(sd, sd, [4.2, 4.2, 4.2]), sum = all.reduce(function (a, b) { return a + b; }, 0);
   h += '<table class="cmpt"><colgroup>' + all.map(function (u) { return '<col style="width:' + (u / sum * 100).toFixed(3) + '%">'; }).join('') + '</colgroup><thead>';
   h += '<tr class="ca"><th colspan="' + (NC - 4) + '" class="ct">' + esc(cmpTitle()) + '</th><th>MONTH</th><th colspan="3">' + esc(C.from + ' TO ' + C.to) + '</th></tr>';
@@ -5345,6 +5357,7 @@ document.addEventListener('click', function (e) {
       '<p><b>If you are a JE / User or DISCOM head:</b> ask your <b>Admin</b>. In the Admin tab he opens your ID and sets a new password for you. After you login with it, the app asks you to change it.</p>' +
       '<p><b>If you are the Admin:</b> ask another Admin of your account to reset it (this is why every account should have <u>two Admins</u>).</p>' +
       '<p><b>Another Admin who forgot the password, and no other Admin is there</b> (the owner of the Supabase project does this): open <i>supabase.com/dashboard</i> &rarr; your project &rarr; <b>Authentication</b> &rarr; <b>Users</b> &rarr; click the three dots (&hellip;) next to your login (for example <code>anita' + (ttConn().own ? '@tf.uppcl' : '@tf.puvvnl') + '</code>) &rarr; <b>Reset password</b> / <b>Update user</b> &rarr; type a new password and save. Then login here with the new password.</p>' +
+      '<p class="muted">If the link of the mail opens a wrong or old address: Supabase dashboard &rarr; <b>Authentication</b> &rarr; <b>URL Configuration</b> &rarr; set <b>Site URL</b> to <code>' + esc(ttResetBack()) + '</code> and add the same address in <b>Redirect URLs</b> (also with <code>**</code> at the end).</p>' +
       '<p class="muted">The reset mail works only for a login that is a real e-mail of the Supabase project owner. A JE / User ID (like anita@tf.uppcl) is only a name, not a real mailbox.</p></div>';
     m.style.display = 'flex'; return;
   }
@@ -5357,12 +5370,15 @@ document.addEventListener('click', function (e) {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return msg('fpm', 'Type your full e-mail, like name@gmail.com', 'err');
   if (!SB) return msg('fpm', 'The app is not connected to a database yet.', 'err');
   b.disabled = true; msg('fpm', 'Please wait...', 'info');
-  SB.auth.resetPasswordForEmail(em, { redirectTo: location.origin + location.pathname }).then(function (r) {
+  SB.auth.resetPasswordForEmail(em, { redirectTo: ttResetBack() }).then(function (r) {
     b.disabled = false;
     if (r.error) return msg('fpm', /rate|seconds|too many/i.test(r.error.message || '') ? 'Too many tries. Please wait one hour and try again.' : /not authorized|authorised/i.test(r.error.message || '') ? 'The mail service of Supabase sends mail only to the people of the project team. Use the Supabase dashboard (see below).' : esc(r.error.message || 'Could not send.'), 'err');
     msg('fpm', 'If this e-mail is the login of the project owner, a mail has been sent. Open it and tap the link (check Spam too).', 'ok');
   }).catch(function () { b.disabled = false; msg('fpm', 'Could not send. Check your internet.', 'err'); });
 });
+/* where the link of the reset mail brings the owner back: this site itself; from the Windows / Android app (no web address) the main site */
+var TT_HOME = 'https://puvvnltf-tracker.github.io/';
+function ttResetBack() { try { if (/^https?:$/.test(location.protocol) && !/Electron\//.test(navigator.userAgent)) return location.origin + location.pathname.replace(/[^\/]*$/, ''); } catch (e) { } return TT_HOME; }
 /* the owner opened the link of the reset mail: ask for the new password */
 function ttRecovery() {
   var m = document.getElementById('rov'); if (m && m.style.display === 'flex') return;

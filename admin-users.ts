@@ -23,7 +23,7 @@ export function decide(caller, action, body, target, wsDiv) {
   if (caller.role !== "creator" && caller.role !== "admin") return "Only an Admin can do this.";
   if (action === "create") {
     const id = String(body.login || "").trim().toLowerCase();
-    if (!/^[a-z0-9._@-]{3,30}$/.test(id)) return "User ID must be 3-30 characters (a-z, 0-9, . _ - @), no spaces.";
+    if (!/^[a-z0-9._-]{3,30}$/.test(id)) return "User ID must be 3-30 characters (a-z, 0-9, . _ -), no spaces and no @.";
     const role = String(body.role || "je");
     if (caller.role === "admin" && role !== "je") return "An Admin can create only normal users.";
     if (caller.role === "creator" && !["admin", "discom", "je"].includes(role)) return "Role must be admin, discom or je.";
@@ -68,7 +68,7 @@ async function handle(req) {
   if (action === "create") {
     const pw = tempPass(), role = String(body.role || "je");
     const div = caller.role === "admin" ? caller.org_division : String(body.div || "").trim() || null;
-    const { data: cu, error: ce } = await sb.auth.admin.createUser({ email: login + "@tf.uppcl", password: pw, email_confirm: true });
+    const { data: cu, error: ce } = await sb.auth.admin.createUser({ email: login + "@" + (["tf.uppcl", "tf.puvvnl"].includes(String(body.dom || "")) ? String(body.dom) : "tf.uppcl"), password: pw, email_confirm: true });
     if (ce) return { ok: false, error: /already|exists|registered/i.test(ce.message) ? "This User ID already exists." : ce.message };
     const tabs = body.tabs == null ? null : body.tabs;
     const edit = role === "je" || role === "admin" ? !!body.edit && (!tabs || tabs.includes("data")) : false;
