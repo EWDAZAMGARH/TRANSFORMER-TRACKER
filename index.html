@@ -3657,7 +3657,7 @@ function dotFmt(v) { var d = String(v).replace(/\D/g, '').slice(0, 8), o = d.sli
 var DCOL = [[0, 'WORKSHOP', 'ws'], [1, 'DIVISION'], [2, 'SUBSTATION'], [3, 'FEEDER'], [4, 'PLACE OF DAMAGE'], [5, 'CAPACITY'], [7, 'COMPLAIN NUMBER'], [8, 'PR NO'], [9, 'PR DATE', 'date'], [10, 'JE NAME'], [11, 'JE MOBILE', 'mob'],
   [12, 'ISSUED TO FIRM'], [13, 'ISSUE DATE', 'date'], [14, 'DRIVER NAME'], [15, 'DRIVER MOBILE', 'mob'], [16, 'REPLACEMENT DATE', 'date'], [18, 'RETURN DATE', 'date'], [23, 'HT PROTECTION', 'yn'], [24, 'LT PROTECTION', 'yn'], [19, 'REMARK']];
 var ALLCOLS = ['Workshop', 'DIVISION', 'SUBSTATION', 'FEEDER', 'PLACE OF DAMAGE', 'CAPACITY', 'Category of Transformer', 'COMPLAIN NUMBER', 'PR NO', 'PR DATE', 'JE Name', 'JE Mobile', 'ISSUED TO FIRM', 'ISSUE DATE', 'DRIVER NAME', 'DRIVER MOBILE', 'REPLACEMENT DATE', 'TIME', 'RETURN DATE', 'REMARK'];
-var DATE_IDX = [9, 13, 16, 18], DATE_UI = [9, 13, 16, 18, 22], EDIT_FROM = 10, DSHOW = 400;
+var DATE_IDX = [9, 13, 16, 18], DATE_UI = [9, 13, 16, 18, 22], EDIT_FROM = 10, DSHOW = 1500;
 var DROWS = [], DCAN = false, DTOTAL = 0, DSEQ = 0, DTM = null, DSAVING = false, DNEED = false, DLOADED = '';
 function blank20() { var a = []; for (var i = 0; i < 20; i++) a.push(''); return a; }
 function oneWs() { return WSL.length === 1 ? WSL[0] : ''; }
@@ -3744,7 +3744,7 @@ function loadData(force) {
     if (seq !== DSEQ) return;
     DCAN = !!r.canEdit; DTOTAL = r.total; DLOADED = all ? 'ALL' : multi ? DMULTI[0] + '_to_' + DMULTI[DMULTI.length - 1] + '_' + DMULTI.length + 'days' : d;
     DROWS = r.rows.map(function (a) { return { o: a.slice(0, 20), k: [a[0], a[8]], c: a.slice(0, 20), dirty: false, bad: false, ver: 0, isNew: false }; });
-    DSHOW = 400; dstat('');
+    DSHOW = 1500; dstat('');
     drawData();            // the rows show at once; the SIR / DTC / protection columns come a moment later (loaded together, not one after another)
     return Promise.all([typeof sirDataPrep === 'function' ? sirDataPrep(force) : Promise.resolve(), dtcDataPrep(), protDataPrep(), emgPrep()]).then(function () { if (seq === DSEQ) drawData(); });
   }).catch(function (e) { if (seq !== DSEQ) return; dstat(''); msg('dmsg', esc(e.message), 'err'); });
@@ -3823,7 +3823,7 @@ $('dt').addEventListener('click', function (e) {
   });
 });
 $('dsave').onclick = function () { flushData(true); };
-$('dmore').onclick = function () { DSHOW += 400; drawData(); };
+$('dmore').onclick = function () { DSHOW += 1500; drawData(); };
 $('dt').addEventListener('paste', function (e) {       // several rows copied from Excel can be pasted straight into the sheet
   var inp = e.target; if (!inp.dataset || inp.dataset.i === undefined || !canWrite()) return;
   var t = (e.clipboardData || window.clipboardData).getData('text'); if (!/[\t\n\r]/.test(String(t).replace(/[\r\n]+$/, ''))) { if (rgMulti() && sheetFill(String(t).trim())) e.preventDefault(); return; }      // one single value: normal paste (into a selected range: fills all of it)
