@@ -2659,6 +2659,10 @@ html.hs-3d .hcard{animation:h3s 8s ease-in-out infinite}
         <div class="muted" style="font-size:12px;margin:4px 2px">If this page stays blank, that web app does not allow itself to open inside another page - use <b>Open in new tab</b>.</div>
         <iframe id="rpwebf" title="Report" referrerpolicy="no-referrer" allow="clipboard-write; fullscreen" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals" style="display:block;width:100%;height:calc(100vh - 150px);min-height:440px;border:1px solid #d9dfee;border-radius:12px;background:#fff"></iframe>
       </div>
+      <div id="rpcircw" class="hide">
+        <div class="bar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b>Circle Reports</b><span style="flex:1"></span><button class="btn sm hide" type="button" id="rpcpl" title="Add a Circle Report">+ Add</button></div>
+        <div id="rpcmsg"></div><div id="rpccards" class="achips"></div>
+      </div>
       <div id="rpaddo" class="hide mmov"></div>
       <div id="rpcmpw" class="hide" data-m="cmp">
         <div class="bar rpbk"><button class="btn sec sm" type="button" data-rpback>&#8249; Reports</button><b id="rpcmpt"></b></div>
@@ -3794,7 +3798,7 @@ $('dt').addEventListener('keydown', function (e) {
   else if (k === 'ArrowLeft' && inp.selectionStart === 0 && inp.selectionEnd === 0) go = td0.previousElementSibling;
   else return;
   var t = go && go.querySelector('input'); if (!t) return;
-  e.preventDefault(); if (inp.value !== inp.defaultValue || true) inp.dispatchEvent(new Event('change', { bubbles: true }));
+  e.preventDefault(); inp.dispatchEvent(new Event('change', { bubbles: true }));
   t.focus(); try { t.select(); } catch (x) {}
 });
 $('dt').addEventListener('click', function (e) {
@@ -5992,7 +5996,7 @@ function mmSetMode(m, noLoad) {
   $('mmper').innerHTML = MM.kind === 'req' ? mmReqCtl() : m === 'entry'
     ? '<div class="tg"><button class="ib" type="button" id="mmprev" title="Previous month">&#9664;</button><input type="month" id="mmm" value="' + MM.month + '" max="' + cm + '"><button class="ib" type="button" id="mmnext" title="Next month">&#9654;</button><button class="btn sec sm" type="button" id="mmnow">This month</button></div>'
     : '<div class="mmrng"><label>From <input type="month" id="mmf" value="' + MM.from + '" max="' + cm + '"></label><label>To <input type="month" id="mmt" value="' + MM.to + '" max="' + cm + '"></label><button class="btn sm" type="button" id="mmgo">Show</button></div>';
-  if (!noLoad || true) mmLoad();
+  mmLoad();   /* always load (mmOpen passes noLoad but relies on this) */
 }
 document.addEventListener('click', function (e) {
   var t = e.target; if (!t.closest) return;
@@ -7361,11 +7365,12 @@ var RP_DEFS = [
   { k: 'ks', t: 'Kitty Summary', s: 'From date to date, workshop wise', i: '\u{1F9FE}', c: '#e8eaff', mr: 1 },
   { k: 'lyk', t: 'Kitty Comparison', s: 'This year against last year', i: '\u{1F5C2}\uFE0F', c: '#fff4cc', mr: 1 },
   { k: 'chm', t: 'Chamber Assembly', s: 'Report of a date', i: '\u{1F527}', c: '#efe6ff', mr: 1 },
-  { k: 'pl', t: 'Same Plinth Damage', s: 'Damaged again and again at one place', i: '⚠️', c: '#ffe8e8' }
+  { k: 'pl', t: 'Same Plinth Damage', s: 'Damaged again and again at one place', i: '⚠️', c: '#ffe8e8' },
+  { k: 'circ', t: 'Circle Reports', s: 'Fill the forms of the SE Workshop', i: '\u{1F4DD}', c: '#e0f7f4' }
 ];
-var RP_PANEL = { cmp: 'rpcmpw', dw: 'rpcmpw', kit: 'rpkitw', ks: 'rpksw', lyk: 'rplykw', chm: 'rpchmw', pl: 'rppw' }, RPK = null, RPKS = 0, PLM = null, PLS = 0;
+var RP_PANEL = { cmp: 'rpcmpw', dw: 'rpcmpw', kit: 'rpkitw', ks: 'rpksw', lyk: 'rplykw', chm: 'rpchmw', pl: 'rppw', circ: 'rpcircw' }, RPK = null, RPKS = 0, PLM = null, PLS = 0;
 function rpShow(k) {
-  ['rpcmpw', 'rpkitw', 'rpksw', 'rplykw', 'rpchmw', 'rppw', 'rpwebw'].forEach(function (id) { $(id).classList.add('hide'); });
+  ['rpcmpw', 'rpkitw', 'rpksw', 'rplykw', 'rpchmw', 'rppw', 'rpwebw', 'rpcircw'].forEach(function (id) { $(id).classList.add('hide'); });
   if (k !== 'web') { try { $('rpwebf').src = 'about:blank'; } catch (e) { } }
   $('rpmenu').classList.toggle('hide', !!k);
   if (k) $(RP_PANEL[k] || 'rpwebw').classList.remove('hide');
@@ -7408,6 +7413,7 @@ function rpAddOpen() {
 }
 function rpOpen(k) {
   rpShow(k);
+  if (k === 'circ') return cirLoad();
   if (k === 'cmp' || k === 'dw') { $('rpcmpw').dataset.m = k; $('rpcmpt').textContent = k === 'cmp' ? 'PR Comparative' : 'Daywise PR & Repair'; if (k === 'cmp') cmpLoad(); else dwOpen(); }
   else if (k === 'kit') { if (!validD($('rkd').value.trim())) $('rkd').value = fmt(new Date()); rpKitLoad(); }
   else if (k === 'ks') ksInit();
@@ -7422,6 +7428,64 @@ document.addEventListener('click', function (e) {
   if (t.closest('[data-rpadd]') && $('rpchips').contains(t)) return rpAddOpen();
   if (t.closest('#rpwebdel')) { var did = +$('rpwebdel').dataset.id; if (did && confirm('Remove this report from the list? (the web app itself is not deleted)')) rpc('rp_del', { p_id: did }).then(function () { rpHome(); }).catch(function (e) { alert(e.message); }); return; }
   if (t.closest('[data-rpback]')) rpHome();
+});
+
+/* ======================= CIRCLE REPORTS (STEP 126): the SE adds a link, every user opens it and fills it (data stays in the SE's Google Sheet) ======================= */
+var CIR = { rows: [], se: false };
+function cirUid() { try { return (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/[^A-Za-z0-9-]/g, ''); } catch (e) { return 'c' + Date.now() + 'x' + Math.floor(Math.random() * 1e9); } }
+function cirLoad() {
+  CIR.se = !!(ME && ME.role === 'se'); $('rpcpl').classList.toggle('hide', !CIR.se);
+  msg('rpcmsg', '<span class="sp" style="border-color:#3b5bdb55;border-top-color:#3b5bdb"></span>Loading...', 'info');
+  rpc('creport_list').then(function (r) { CIR.rows = (r && r.rows) || []; msg('rpcmsg', ''); cirDraw(); })
+    .catch(function (e) { CIR.rows = []; cirDraw(); msg('rpcmsg', /creport|function|schema/i.test(e.message || '') ? 'Run the new setup.sql (STEP 126) in Supabase once.' : esc(e.message), 'err'); });
+}
+function cirDraw() {
+  var h = '';
+  CIR.rows.forEach(function (r) {
+    h += '<span style="display:flex;gap:6px;align-items:stretch"><a class="achip" style="flex:1;text-decoration:none;color:inherit" href="' + esc(r[2]) + '" target="_blank" rel="noopener noreferrer"><span class="ic" style="--c:#e0f7f4">\u{1F4DD}</span><span><b>' + esc(r[1]) + '</b><small>Tap to open and fill</small></span></a>' +
+      (CIR.se ? '<button type="button" class="btn sec sm" data-cirdel="' + esc(r[0]) + '" title="Remove">&#10005;</button>' : '') + '</span>';
+  });
+  if (!h) h = '<div class="muted" style="padding:8px 2px">' + (CIR.se ? 'No Circle Report yet. Tap <b>+ Add</b> and paste the link of your web app.' : 'No Circle Report has been added yet.') + '</div>';
+  $('rpccards').innerHTML = h;
+}
+/* push to the SE's own project and to every connected division; returns the names that failed */
+function cirPush(fnOwn, argsOwn, fnDv, argsDv) {
+  var fails = [], jobs = [_rpcBase(fnOwn, argsOwn).catch(function (e) { fails.push('own login project (' + (e.message || '') + ')'); })];
+  (SE.list || []).forEach(function (x) {
+    var c = SE.cl[x.id]; if (!c) return;
+    var a = {}; for (var k in argsDv) a[k] = argsDv[k]; a.p_code = x.code;
+    jobs.push(c.rpc(fnDv, a).then(function (r) { if (r.error) throw new Error(r.error.message); }).catch(function (e) { fails.push((x.name || x.label) + (/se_creport|schema cache/i.test(e.message || '') ? ' (run setup.sql STEP 126)' : ' (' + (e.message || '') + ')')); }));
+  });
+  return Promise.all(jobs).then(function () { return fails; });
+}
+function cirAddOpen() {
+  var o = $('rpaddo');
+  o.innerHTML = '<div class="mmbox" style="width:min(520px,96vw)"><div class="bar" style="justify-content:space-between"><b>Add Circle Report</b><button class="btn sec sm" type="button" id="rpcx">Close</button></div><div id="rpcam"></div>' +
+    '<label>Report name</label><input type="text" id="rpcn" maxlength="60" placeholder="e.g. Monthly Circle Return" style="width:100%">' +
+    '<label style="margin-top:8px">Link of your web app (https://...)</label><input type="text" id="rpcu" maxlength="800" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" style="width:100%">' +
+    '<p class="muted" style="font-size:12px;margin:8px 0 0">It is added for every division you are connected to. Everyone fills it in your web app, and the data goes to your Google Sheet. Google Apps Script: Deploy &rarr; Web app &rarr; Who has access: <b>Anyone</b>.</p>' +
+    '<div class="bar" style="margin-top:10px;justify-content:flex-end"><button class="btn" type="button" id="rpcs">Add</button></div></div>';
+  o.classList.remove('hide'); $('rpcn').focus();
+  $('rpcx').onclick = function () { o.classList.add('hide'); };
+  $('rpcs').onclick = function () {
+    var n = $('rpcn').value.trim(), u = $('rpcu').value.trim();
+    if (!n) return msg('rpcam', 'Write the report name.', 'err');
+    if (!/^https:\/\/\S+$/i.test(u)) return msg('rpcam', 'The link must start with https:// and have no spaces.', 'err');
+    var id = cirUid(); $('rpcs').disabled = true; msg('rpcam', '<span class="sp" style="border-color:#3b5bdb55;border-top-color:#3b5bdb"></span>Adding in all divisions...', 'info');
+    cirPush('creport_add', { p_uid: id, p_title: n, p_url: u }, 'se_creport_add', { p_uid: id, p_title: n, p_url: u }).then(function (f) {
+      $('rpcs').disabled = false;
+      if (f.length) { msg('rpcam', 'Added, but NOT in: ' + f.map(esc).join(' &middot; ') + '. Fix that and add again (same name is fine, it will not duplicate if you remove the old one first).', 'err'); cirLoad(); return; }
+      o.classList.add('hide'); cirLoad();
+    });
+  };
+}
+document.addEventListener('click', function (e) {
+  var t = e.target; if (!t.closest) return;
+  if (t.closest('#rpcpl')) return cirAddOpen();
+  var b = t.closest('[data-cirdel]');
+  if (b && confirm('Remove this Circle Report from every division? (your web app and Google Sheet are not deleted)')) {
+    var id = b.dataset.cirdel; cirPush('creport_del', { p_uid: id }, 'se_creport_del', { p_uid: id }).then(function (f) { cirLoad(); if (f.length) msg('rpcmsg', 'Not removed in: ' + f.map(esc).join(' &middot; '), 'err'); });
+  }
 });
 /* Kitty (the same card as in the M&R Summary) */
 function rpKitLoad() {
@@ -9295,7 +9359,7 @@ function protDataPrep() {
   return Promise.all(parts.map(function (ks) { return rpc('prot_map_json', { p_keys: ks }); })).then(function (a) {
     var m = {}; a.forEach(function (x) { (x || []).forEach(function (y) { m[y[0] + '\u0001' + y[1]] = y; }); });
     DROWS.forEach(function (r) { var y = r.k && m[r.k[0] + '\u0001' + r.k[1]]; if (y) { r.c[23] = y[2]; r.c[24] = y[3]; r.pS = [y[2], y[3]]; } });
-  }).catch(function (e) { try { msg('dmsg', 'HT / LT protection not shown: ' + /Could not find|schema cache|does not exist/i.test(e.message) ? 'run the new setup.sql (STEP 116) once.' : esc(e.message), 'info'); } catch (x) { } });
+  }).catch(function (e) { try { msg('dmsg', 'HT / LT protection not shown: ' + (/Could not find|schema cache|does not exist/i.test(e.message) ? 'run the new setup.sql (STEP 116) once.' : esc(e.message)), 'info'); } catch (x) { } });
 }
 function protFlush() {
   if (PROTBUSY) return Promise.resolve();
@@ -9313,7 +9377,7 @@ function protFlush() {
 </script>
 <script id="sir-js">
 /* =====================  SIR inside the app (form, Summary, PDF, Drive, signatures)  ===================== */
-var SIR_GS = "/*\n TF-Tracker : SIR photos and PDFs in YOUR Google Drive  (Google Apps Script web app)\n The app sends each SIR photo and each SIR PDF to this script. The script saves the file in YOUR Drive folder\n and gives the link back. Only the link is kept in the app (Supabase), so the database does not fill up.\n\n SETUP (once, by the Admin):\n   1) Google Drive: make a folder (for example \"SIR Photos and PDFs\"). Open it. The web address ends with  /folders/XXXXXXXX  - that XXXXXXXX is the FOLDER ID.\n   2) script.google.com > New project > delete the sample code > paste this whole file > Save.\n   3) In the toolbar choose the function  authorizeOnce  and press Run. Click Review permissions > your account > Advanced > Go to ... > Allow.\n   4) Deploy > New deployment > type: Web app > Execute as: Me > Who has access: Anyone > Deploy.\n   5) Copy the \"Web app\" link (ends with /exec). Open it once in a browser tab: it must show  {\"ok\":true,\"msg\":\"TF-Tracker SIR Drive is running\"}.\n   6) In the app: Admin tab > SIR form > paste the link and the FOLDER ID > Save > Test.\n After you change this code, use Deploy > Manage deployments > Edit > Version: New version > Deploy (the link stays the same).\n\n Files are saved with \"anyone with the link can view\" so every employee can open the photo / PDF from the app.\n*/\nvar MAX_BYTES = 3 * 1024 * 1024;           // one file at most 3 MB\nvar OK_TYPES = { 'image/jpeg': 1, 'image/png': 1, 'application/pdf': 1 };\n\nfunction out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }\nfunction reply_(o, id) {                    // the app posts a hidden form and reads the answer through postMessage (no CORS problem)\n  var j = JSON.stringify(o).replace(/<\/g, '\\\\u003c'), i = JSON.stringify(String(id || '')).replace(/<\/g, '\\\\u003c');\n  return HtmlService.createHtmlOutput('<script>var r=' + j + ';r.id=' + i + ';window.top.postMessage(r,\"*\");<\/script>OK').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);\n}\nfunction authorizeOnce() {                  // run this ONCE in the editor so Google asks for your permission\n  DriveApp.getRootFolder();\n  return 'OK';\n}\nfunction doGet() { return out_({ ok: true, msg: 'TF-Tracker SIR Drive is running' }); }\n\nfunction idOf_(u) { var m = String(u || '').match(/[-\\w]{25,}/); return m ? m[0] : ''; }\nfunction folder_(id) { if (!/^[A-Za-z0-9_-]{10,100}$/.test(String(id || ''))) throw new Error('Wrong folder ID.'); return DriveApp.getFolderById(id); }\n\nfunction doPost(e) {\n  var id = '', out = function (o) { return id ? reply_(o, id) : out_(o); };\n  try {\n    var raw = (e && e.parameter && e.parameter.payload) || (e && e.postData && e.postData.contents), b = JSON.parse(raw);\n    id = (b && b.id) ? String(b.id) : '';\n    if (!b) return out({ ok: false, error: 'Empty request.' });\n    if (b.ping) { var f0 = folder_(b.folder); return out({ ok: true, ping: true, folder: f0.getName() }); }\n    var folder = folder_(b.folder);\n    if (b.action === 'put') {\n      var type = String(b.mime || '');\n      if (!OK_TYPES[type]) return out({ ok: false, error: 'Only JPG, PNG or PDF files are allowed.' });\n      var bytes = Utilities.base64Decode(String(b.b64 || ''));\n      if (!bytes.length || bytes.length > MAX_BYTES) return out({ ok: false, error: 'The file is empty or larger than 3 MB.' });\n      var name = String(b.name || 'file').replace(/[^\\w.\\-]+/g, '_').slice(0, 80);\n      var file = folder.createFile(Utilities.newBlob(bytes, type, name));\n      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);\n      return out({ ok: true, url: file.getUrl(), id: file.getId() });\n    }\n    if (b.action === 'get') {               // give the photo back (used when the Admin edits a SIR and the PDF is made again)\n      var fid = idOf_(b.url || b.fid), file2 = DriveApp.getFileById(fid), inside = false, ps = file2.getParents();\n      while (ps.hasNext()) { if (ps.next().getId() === folder.getId()) inside = true; }\n      if (!inside) return out({ ok: false, error: 'This file is not in your SIR folder.' });\n      var blob = file2.getBlob(), by = blob.getBytes();\n      if (by.length > 1024 * 1024) return out({ ok: false, error: 'The photo is too large to read back.' });\n      return out({ ok: true, mime: blob.getContentType(), b64: Utilities.base64Encode(by) });\n    }\n    return out({ ok: false, error: 'Unknown request.' });\n  } catch (err) {\n    return out({ ok: false, error: String(err && err.message || err) });\n  }\n}\n";
+var SIR_GS = "/*\n TF-Tracker : SIR photos and PDFs in YOUR Google Drive  (Google Apps Script web app)\n The app sends each SIR photo and each SIR PDF to this script. The script saves the file in YOUR Drive folder\n and gives the link back. Only the link is kept in the app (Supabase), so the database does not fill up.\n\n SETUP (once, by the Admin):\n   1) Google Drive: make a folder (for example \"SIR Photos and PDFs\"). Open it. The web address ends with  /folders/XXXXXXXX  - that XXXXXXXX is the FOLDER ID.\n   2) script.google.com > New project > delete the sample code > paste this whole file > Save.\n   3) In the toolbar choose the function  authorizeOnce  and press Run. Click Review permissions > your account > Advanced > Go to ... > Allow.\n   4) Deploy > New deployment > type: Web app > Execute as: Me > Who has access: Anyone > Deploy.\n   5) Copy the \"Web app\" link (ends with /exec). Open it once in a browser tab: it must show  {\"ok\":true,\"msg\":\"TF-Tracker SIR Drive is running\"}.\n   6) In the app: Admin tab > SIR form > paste the link and the FOLDER ID > Save > Test.\n After you change this code, use Deploy > Manage deployments > Edit > Version: New version > Deploy (the link stays the same).\n\n Files are saved with \"anyone with the link can view\" so every employee can open the photo / PDF from the app.\n*/\nvar MAX_BYTES = 3 * 1024 * 1024;           // one file at most 3 MB\nvar OK_TYPES = { 'image/jpeg': 1, 'image/png': 1, 'application/pdf': 1 };\n\nfunction out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }\nfunction reply_(o, id) {                    // the app posts a hidden form and reads the answer through postMessage (no CORS problem)\n  var j = JSON.stringify(o).replace(/<\/g, '\\\\u003c'), i = JSON.stringify(String(id || '')).replace(/<\/g, '\\\\u003c');\n  return HtmlService.createHtmlOutput('<script>var r=' + j + ';r.id=' + i + ';window.top.postMessage(r,\"*\");<\/script>OK').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);\n}\nfunction authorizeOnce() {                  // run this ONCE in the editor so Google asks for your permission\n  DriveApp.getRootFolder();\n  return 'OK';\n}\nfunction doGet() { return out_({ ok: true, msg: 'TF-Tracker SIR Drive is running' }); }\n\nfunction idOf_(u) { var m = String(u || '').match(/[-\\w]{25,}/); return m ? m[0] : ''; }\nfunction folder_(id) { if (!/^[A-Za-z0-9_-]{10,100}$/.test(String(id || ''))) throw new Error('Wrong folder ID.'); return DriveApp.getFolderById(id); }\n\nfunction doPost(e) {\n  var id = '', out = function (o) { return id ? reply_(o, id) : out_(o); };\n  try {\n    var raw = (e && e.parameter && e.parameter.payload) || (e && e.postData && e.postData.contents), b = JSON.parse(raw);\n    id = (b && b.id) ? String(b.id) : '';\n    if (!b) return out({ ok: false, error: 'Empty request.' });\n    if (b.ping) {                          // the Test button: also proves that this Google account may WRITE in the folder\n      var f0 = folder_(b.folder);\n      try { var t0 = f0.createFile('tf-test.txt', 'ok'); t0.setTrashed(true); }\n      catch (e0) { return out({ ok: false, error: 'This Google account cannot add files in the folder \"' + f0.getName() + '\". Make the folder yours, or share it with this account as Editor. (' + String(e0 && e0.message || e0) + ')' }); }\n      return out({ ok: true, ping: true, folder: f0.getName() });\n    }\n    var folder = folder_(b.folder);\n    if (b.action === 'put') {\n      var type = String(b.mime || '');\n      if (!OK_TYPES[type]) return out({ ok: false, error: 'Only JPG, PNG or PDF files are allowed.' });\n      var bytes = Utilities.base64Decode(String(b.b64 || ''));\n      if (!bytes.length || bytes.length > MAX_BYTES) return out({ ok: false, error: 'The file is empty or larger than 3 MB.' });\n      var name = String(b.name || 'file').replace(/[^\\w.\\-]+/g, '_').slice(0, 80);\n      var file;\n      try { file = folder.createFile(Utilities.newBlob(bytes, type, name)); }\n      catch (e1) { return out({ ok: false, error: 'This Google account cannot add files in the SIR folder. Make the folder yours, or share it with this account as Editor. (' + String(e1 && e1.message || e1) + ')' }); }\n      var shared = true;\n      try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); }\n      catch (e2) { shared = false; }      // the Google domain may block \"anyone with the link\": the file is still saved; share the FOLDER with your staff instead\n      return out({ ok: true, url: file.getUrl(), id: file.getId(), shared: shared });\n    }\n    if (b.action === 'get') {               // give the photo back (used when the Admin edits a SIR and the PDF is made again)\n      var fid = idOf_(b.url || b.fid), file2 = DriveApp.getFileById(fid), inside = false, ps = file2.getParents();\n      while (ps.hasNext()) { if (ps.next().getId() === folder.getId()) inside = true; }\n      if (!inside) return out({ ok: false, error: 'This file is not in your SIR folder.' });\n      var blob = file2.getBlob(), by = blob.getBytes();\n      if (by.length > MAX_BYTES) return out({ ok: false, error: 'The photo is too large to read back.' });\n      return out({ ok: true, mime: blob.getContentType(), b64: Utilities.base64Encode(by) });\n    }\n    return out({ ok: false, error: 'Unknown request.' });\n  } catch (err) {\n    return out({ ok: false, error: String(err && err.message || err) });\n  }\n}\n";
 var SIRD = { url: '', folder: '', zone: '' }, SIGS = {}, SIRL = { rows: [], n: 0, off: 0, q: '', busy: false }, SIRPRE = null, SIREDIT = null, SIRLAST = null;
 var SIR_YN = ['YES', 'NO'], SIR_SAT = ['SATISFACTORY', 'UN_SATISFACTORY'], SIR_CAPS = ['63 KVA', '100 KVA', '160 KVA', '250 KVA', '400 KVA', '630 KVA', '1000 KVA'];
 var SIR_S1 = [['dateOfDamage', 'Date of damage', 'date'], ['dateOfSIR', 'Date of SIR', 'date'], ['zone', 'Zone', 'text'], ['circle', 'Circle', 'circle'], ['divisionName', 'Division name', 'division'], ['substationName', 'Substation name', 'text'], ['placeOfDT', 'Place / location of DT', 'text'], ['capacityOfDT', 'Capacity of DT', 'sel', SIR_CAPS]];
@@ -9635,7 +9699,7 @@ function sirListLoad(more) {
   if (days) { var t = new Date(); to = sirIso(t); t.setDate(t.getDate() - days); from = sirIso(t); }
   var off = more ? SIRL.rows.length : 0; SIRL.busy = true;
   if (!more) $('sllist').innerHTML = '<div class="muted" style="padding:12px">Loading...</div>';
-  rpc('sir_list_json', { p_ws: ($('slws') || {}).value || null, p_from: from, p_to: null, p_q: ($('slq') || {}).value.trim() || null, p_limit: 25, p_off: off }).then(function (r) {
+  rpc('sir_list_json', { p_ws: ($('slws') || {}).value || null, p_from: from, p_to: to, p_q: ($('slq') || {}).value.trim() || null, p_limit: 25, p_off: off }).then(function (r) {
     SIRL.busy = false; r = r || { n: 0, rows: [] }; SIRL.n = r.n; SIRL.rows = more ? SIRL.rows.concat(r.rows) : r.rows; sirListDraw();
   }).catch(function (er) { SIRL.busy = false; var m = /sir_list_json|schema cache|does not exist/i.test(er.message) ? 'Run the new setup.sql (STEP 118) once.' : er.message; $('sllist').innerHTML = '<div class="msg err">' + esc(m) + '</div>'; });
 }
@@ -9783,20 +9847,20 @@ function sirImport(btn) {
     var rows = csvRows(t), hd = (rows[0] || []).map(function (x) { return String(x || '').trim().toUpperCase(); }), map = {};
     hd.forEach(function (h, i) { var k = SIR_HK[h === 'MERGED DOC URL' ? 'MERGED DOC URL' : h] || (h === 'TIMESTAMP' ? 'timestamp' : ''); if (k && map[k] == null) map[k] = i; });
     if (map.placeOfDT == null && map.circle == null) throw new Error('This does not look like the SIR sheet (no CIRCLE / PLACE column).');
-    var out = [];
+    var out = [], nows = 0;
     for (var i = 1; i < rows.length; i++) {
       var r = rows[i], d = {}; if (!r.join('').trim()) continue;
       Object.keys(map).forEach(function (k) { var v = String(r[map[k]] == null ? '' : r[map[k]]).trim(); if (k === 'dateOfDamage' || k === 'dateOfSIR') v = sirIsoAny(v); d[k] = v; });
       if (!d.circle && !d.placeOfDT && !d.substationName) continue;
       var cu = String(d.circle || '').toUpperCase(), ws = WSL.filter(function (w) { return cu.indexOf(String(w).toUpperCase()) >= 0; })[0] || (WSL.length === 1 ? WSL[0] : '');
-      if (!ws) continue; d.ws = ws; d.src = 'imp|' + (d.timestamp || '') + '|' + (d.uniqueNo || '') + '|' + (d.prNo || '') + '|' + (d.placeOfDT || '');
+      if (!ws) { nows++; continue; } d.ws = ws; d.src = 'imp|' + (d.timestamp || '') + '|' + (d.uniqueNo || '') + '|' + (d.prNo || '') + '|' + (d.placeOfDT || '');
       var ts = d.timestamp; d.at = ts && !isNaN(new Date(ts)) ? new Date(ts).toISOString() : ''; delete d.timestamp; out.push(d);
     }
     if (!out.length) throw new Error('No rows could be read.');
     var done = 0, n = 0, parts = [];
     for (var j = 0; j < out.length; j += 150) parts.push(out.slice(j, j + 150));
     function next() { if (!parts.length) return Promise.resolve(); var p = parts.shift(); return rpc('sir_import', { p_rows: p }).then(function (c) { n += (c || 0); done += p.length; msg('sfmsg', '<span class="sp"></span>Copied ' + done + ' of ' + out.length + '...', 'info'); return next(); }); }
-    return next().then(function () { msg('sfmsg', 'Done. ' + n + ' new records copied (' + (out.length - n) + ' were already in the app).', 'info'); });
+    return next().then(function () { msg('sfmsg', 'Done. ' + n + ' new records copied. ' + (out.length - n) + ' were skipped (already in the app, older than 14 months, or could not be saved).' + (nows ? ' ' + nows + ' rows were left out because the CIRCLE name does not match any of your workshops.' : ''), 'info'); });
   }).catch(function (er) { msg('sfmsg', /sir_import|schema cache|does not exist/i.test(er.message) ? 'Run the new setup.sql (STEP 118) once, then try again.' : esc(er.message), 'err'); }).then(function () { btn.disabled = false; });
 }
 var _admLoadSir = admLoad; admLoad = function () { var p = _admLoadSir.apply(this, arguments); try { sirfInit(); } catch (e) { } return p; };
@@ -9946,7 +10010,7 @@ html body #dt tr.sel td.rn::after{content:none!important}
 /* Windows app (Electron) does not draw the browser's drop-down for <input list=...>; this small list does the same job there (nothing changes in a normal browser) */
 (function () {
   if (!/Electron\//.test(navigator.userAgent)) return;
-  var pop = document.createElement('div'); pop.id = 'dlpop'; document.body.appendChild(pop), cur = null, idx = -1, opts = [];
+  var pop = document.createElement('div'); pop.id = 'dlpop'; document.body.appendChild(pop); var cur = null, idx = -1, opts = [];
   function hide() { pop.style.display = 'none'; cur = null; idx = -1; }
   function show(inp) {
     var dl = document.getElementById(inp.getAttribute('list')); if (!dl || inp.readOnly) return hide();

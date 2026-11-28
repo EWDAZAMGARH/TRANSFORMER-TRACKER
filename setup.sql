@@ -3921,7 +3921,7 @@ begin
   for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
     d := (e->>'day')::date; cp := (e->>'cap')::int; q := coalesce((e->>'repair')::int, 0);
     if cp not in (10, 16, 25, 63, 100, 160, 250, 400, 630, 1000) then continue; end if;
-    if d >= current_date then raise exception 'Choose a day of the past.'; end if;
+    if d >= (now() at time zone 'Asia/Kolkata')::date then raise exception 'Choose a day of the past.'; end if;
     if q < 0 or q > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
     if q = 0 then delete from public.kitty_lyd where workshop = p_ws and day = d and cap = cp;
     else insert into public.kitty_lyd(workshop, day, cap, repair, by_login, at) values (p_ws, d, cp, q, c.login_id, now())
@@ -4150,7 +4150,7 @@ begin
   if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the Material Management of this workshop.'; end if;
   if p_kind not in ('ws', 'oil') then raise exception 'Wrong kind.'; end if;
   if p_month !~ '^\d{4}-(0[1-9]|1[0-2])$' then raise exception 'Wrong month.'; end if;
-  if p_month > to_char(current_date, 'YYYY-MM') then raise exception 'Entries for future months are not allowed.'; end if;
+  if p_month > to_char((now() at time zone 'Asia/Kolkata')::date, 'YYYY-MM') then raise exception 'Entries for future months are not allowed.'; end if;
   if p_data is not null and length(p_data::text) > 60000 then raise exception 'Too much data.'; end if;
   select login_id into me from public.profiles where user_id = auth.uid();
   if p_kind = 'ws' then
@@ -4258,7 +4258,7 @@ declare me text; nid bigint;
 begin
   if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the Oil Receive of this workshop.'; end if;
   if p_kind not in ('fresh', 'reclaim') then raise exception 'Choose Fresh or Reclaim oil.'; end if;
-  if p_day is null or p_day > current_date or p_day < date '2000-01-01' then raise exception 'Wrong date (a future date is not allowed).'; end if;
+  if p_day is null or p_day > (now() at time zone 'Asia/Kolkata')::date or p_day < date '2000-01-01' then raise exception 'Wrong date (a future date is not allowed).'; end if;
   if p_qty is null or p_qty <= 0 or p_qty > 10000000 then raise exception 'Wrong quantity.'; end if;
   if length(coalesce(p_src, '')) > 120 or length(coalesce(p_note, '')) > 300 then raise exception 'Text too long.'; end if;
   select login_id into me from public.profiles where user_id = auth.uid();
@@ -4327,7 +4327,7 @@ declare me text; nid bigint; r record; pr text := btrim(coalesce(p_pr, ''));
 begin
   if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change this list of this workshop.'; end if;
   if pr = '' or length(pr) > 60 then raise exception 'Enter the PR no.'; end if;
-  if p_day is null or p_day > current_date or p_day < date '2000-01-01' then raise exception 'Wrong date (a future date is not allowed).'; end if;
+  if p_day is null or p_day > (now() at time zone 'Asia/Kolkata')::date or p_day < date '2000-01-01' then raise exception 'Wrong date (a future date is not allowed).'; end if;
   if p_found is null or p_found < 0 or p_found > 100000 then raise exception 'Wrong oil found quantity.'; end if;
   if length(coalesce(p_reason, '')) > 300 or length(coalesce(p_remark, '')) > 300 then raise exception 'Text too long.'; end if;
   select place_of_damage, substation, je_name, division, capacity, pr_no into r from public.data where workshop = p_ws and not dup and upper(btrim(pr_no)) = upper(pr) limit 1;
@@ -4457,7 +4457,7 @@ begin
   if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the Material Management of this workshop.'; end if;
   if p_kind not in ('ws', 'oil', 'ins') then raise exception 'Wrong kind.'; end if;
   if p_month !~ '^\d{4}-(0[1-9]|1[0-2])$' then raise exception 'Wrong month.'; end if;
-  if p_month > to_char(current_date, 'YYYY-MM') then raise exception 'Entries for future months are not allowed.'; end if;
+  if p_month > to_char((now() at time zone 'Asia/Kolkata')::date, 'YYYY-MM') then raise exception 'Entries for future months are not allowed.'; end if;
   if p_data is not null and length(p_data::text) > 60000 then raise exception 'Too much data.'; end if;
   select login_id into me from public.profiles where user_id = auth.uid();
   if p_kind = 'ins' then
@@ -4494,7 +4494,7 @@ declare me text; nid bigint;
 begin
   if not public.mr_edit_ok(p_ws) then raise exception 'You cannot change the Oil Receive of this workshop.'; end if;
   if p_kind not in ('fresh', 'reclaim', 'ou', 'reclaim_ou') then raise exception 'Choose the oil: Fresh, Reclaim, O&U or Reclaimed (O&U).'; end if;
-  if p_day is null or p_day > current_date or p_day < date '2000-01-01' then raise exception 'Wrong date (a future date is not allowed).'; end if;
+  if p_day is null or p_day > (now() at time zone 'Asia/Kolkata')::date or p_day < date '2000-01-01' then raise exception 'Wrong date (a future date is not allowed).'; end if;
   if p_qty is null or p_qty <= 0 or p_qty > 10000000 then raise exception 'Wrong quantity.'; end if;
   if length(coalesce(p_src, '')) > 120 or length(coalesce(p_note, '')) > 300 then raise exception 'Text too long.'; end if;
   select login_id into me from public.profiles where user_id = auth.uid();
@@ -4556,7 +4556,7 @@ begin
   for e in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
     d := (e->>'day')::date; cp := (e->>'cap')::int; q := coalesce((e->>'qty')::int, 0);
     if cp not in (10, 16, 25, 63, 100, 160, 250, 400, 630, 1000) then continue; end if;
-    if d >= current_date then raise exception 'Choose a day of the past.'; end if;
+    if d >= (now() at time zone 'Asia/Kolkata')::date then raise exception 'Choose a day of the past.'; end if;
     if q < 0 or q > 100000 then raise exception 'Numbers must be 0 or more.'; end if;
     if q = 0 then delete from public.kitty_lyk where workshop = p_ws and day = d and cap = cp;
     else insert into public.kitty_lyk(workshop, day, cap, qty, by_login, at) values (p_ws, d, cp, q, c.login_id, now())
@@ -5371,4 +5371,68 @@ notify pgrst, 'reload schema';
 insert into public.profiles(user_id, login_id, display, role, active, must_change)
 select id, 'se.workshop@puvvnl.in', 'SE Workshop', 'se', true, true from auth.users where email = 'se.workshop@puvvnl.in'
 on conflict (user_id) do update set role = 'se', active = true;
+notify pgrst, 'reload schema';
+
+-- ================================================================================================================
+-- STEP 126 : REPORTS > "Circle Reports" - the SE Workshop adds the link of his own web app (data is kept in HIS Google Sheet, not in the app).
+--   The SE connects to every division with its share code; the link is pushed to each of them (and to the SE's own login project), so
+--   every user (Admin, JE, DISCOM, SE) sees it in Reports > Circle Reports and opens it to fill.  Run once in the default project and
+--   in EVERY division's project.  Needs the share of the division to be ON (no extra tick).  Safe to run again.
+-- ================================================================================================================
+create table if not exists public.circle_report (id bigserial primary key, uid text not null unique, title text not null, url text not null, at timestamptz not null default now());
+alter table public.circle_report enable row level security;
+revoke all on public.circle_report from public, anon, authenticated;
+
+create or replace function public.creport_list() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller();
+begin
+  if c.user_id is null or c.role not in ('admin', 'je', 'discom', 'se') then raise exception 'No access.'; end if;
+  return jsonb_build_object('se', c.role = 'se',
+    'rows', coalesce((select jsonb_agg(jsonb_build_array(uid, title, url) order by id) from public.circle_report), '[]'::jsonb));
+end $$;
+
+create or replace function public.creport_put(p_uid text, p_title text, p_url text) returns text
+language plpgsql security definer set search_path = public as $$
+declare t text := btrim(coalesce(p_title, '')); u text := btrim(coalesce(p_url, '')); k text := btrim(coalesce(p_uid, ''));
+begin
+  if length(t) < 1 or length(t) > 60 then raise exception 'Report name: 1 to 60 characters.'; end if;
+  if u !~* '^https://[^\s]+$' or length(u) > 800 then raise exception 'The link must start with https:// and have no spaces.'; end if;
+  if k !~ '^[A-Za-z0-9-]{8,64}$' then raise exception 'Bad key.'; end if;
+  if (select count(*) from public.circle_report where uid <> k) >= 200 then raise exception 'At most 200 Circle Reports.'; end if;
+  insert into public.circle_report(uid, title, url) values (k, t, u) on conflict (uid) do update set title = excluded.title, url = excluded.url;
+  return 'ok';
+end $$;
+
+-- the SE's own login project
+create or replace function public.creport_add(p_uid text, p_title text, p_url text) returns text
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller();
+begin
+  if c.user_id is null or c.role <> 'se' then raise exception 'Only the SE Workshop can add a Circle Report.'; end if;
+  return public.creport_put(p_uid, p_title, p_url);
+end $$;
+create or replace function public.creport_del(p_uid text) returns text
+language plpgsql security definer set search_path = public as $$
+declare c public.profiles := public.tf_caller();
+begin
+  if c.user_id is null or c.role <> 'se' then raise exception 'Only the SE Workshop can remove a Circle Report.'; end if;
+  delete from public.circle_report where uid = p_uid; return 'deleted';
+end $$;
+
+-- every division project, called with the share code
+create or replace function public.se_creport_add(p_code text, p_uid text, p_title text, p_url text) returns text
+language plpgsql security definer set search_path = public as $$
+declare s public.se_share := public.se_chk(p_code);
+begin return public.creport_put(p_uid, p_title, p_url); end $$;
+create or replace function public.se_creport_del(p_code text, p_uid text) returns text
+language plpgsql security definer set search_path = public as $$
+declare s public.se_share := public.se_chk(p_code);
+begin delete from public.circle_report where uid = p_uid; return 'deleted'; end $$;
+
+revoke all on function public.creport_put(text, text, text) from public, anon, authenticated;
+revoke all on function public.creport_list(), public.creport_add(text, text, text), public.creport_del(text) from public, anon;
+grant execute on function public.creport_list(), public.creport_add(text, text, text), public.creport_del(text) to authenticated;
+revoke all on function public.se_creport_add(text, text, text, text), public.se_creport_del(text, text) from public;
+grant execute on function public.se_creport_add(text, text, text, text), public.se_creport_del(text, text) to anon, authenticated;
 notify pgrst, 'reload schema';

@@ -63,7 +63,7 @@ function doPost(e) {
       while (ps.hasNext()) { if (ps.next().getId() === folder.getId()) inside = true; }
       if (!inside) return out({ ok: false, error: 'This file is not in your SIR folder.' });
       var blob = file2.getBlob(), by = blob.getBytes();
-      if (by.length > 1024 * 1024) return out({ ok: false, error: 'The photo is too large to read back.' });
+      if (by.length > MAX_BYTES) return out({ ok: false, error: 'The photo is too large to read back.' });
       return out({ ok: true, mime: blob.getContentType(), b64: Utilities.base64Encode(by) });
     }
     return out({ ok: false, error: 'Unknown request.' });
