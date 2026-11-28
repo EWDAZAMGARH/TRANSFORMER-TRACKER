@@ -939,7 +939,7 @@ table.cmpt thead th{position:static!important;overflow:hidden}
 table.cmpt th.cp,table.cmpt th.nm,table.cmpt td.nm{min-width:0!important;max-width:none!important}
 table.cmpt td{overflow:hidden;text-overflow:clip}
 table.cmpt input.ci{width:92%!important;min-width:0}
-@media(min-width:701px){table.cmpt{width:100%!important;min-width:1500px!important;font-size:11px!important}
+@media(min-width:701px){table.cmpt{width:100%!important;min-width:1900px!important;font-size:11px!important}
  table.cmpt th,table.cmpt td{padding:7px 1px!important}table.cmpt thead th{padding:4px 1px!important}
  table.cmpt th.cp{font-size:9.5px!important}table.cmpt td.nm{text-align:left;padding-left:4px!important}}
 @media print{#pz .cmpp table.cmpt thead{display:table-header-group}#pz .cmpp table.cmpt tr{break-inside:avoid;page-break-inside:avoid}}
@@ -2863,6 +2863,7 @@ html.hs-3d .hcard{animation:h3s 8s ease-in-out infinite}
           <div class="ptitle"><b>Testing Register</b><span>test results of the repaired transformers</span></div>
           <button class="btn" id="tsq" type="button" title="Quick entry - fill one test and submit (easy on a phone)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>Quick entry</button>
           <button class="btn sec" id="tstd" type="button" title="STD - the standard full load loss of every capacity (IS losses)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>STD</button>
+          <div id="tsdvw" class="hide"><label>Division</label><select id="tsdv"></select></div>
           <div><label>Workshop</label><select id="tsw"></select></div>
           <div><label>From (testing date)</label><div class="dt"><input type="text" class="dtx" id="tsf" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="tsf"></span></div></div>
           <div><label>To</label><div class="dt"><input type="text" class="dtx" id="tst" inputmode="numeric" placeholder="DD.MM.YYYY"><span class="calw">&#128197;<input type="date" data-c="tst"></span></div></div>
@@ -6972,9 +6973,17 @@ var TS_SLAB = ['up to 100%', 'above 100% & up to 115%', 'above 115% & up to 120%
 var TS_DT = '43.5-44.5', TS_DM = '2000-5000M-ohm';
 function tsInit() {
   var t = new Date(), td = fmt(t); $('tsf').value = '01.' + p2(t.getMonth() + 1) + '.' + t.getFullYear(); $('tst').value = td;
-  $('tsw').innerHTML = '<option value="">All workshops</option>' + mrWs().map(function (w) { return '<option>' + esc(w) + '</option>'; }).join('');
+  tsFillWs();
   TS.rows = []; TS.firms = {}; $('tsout').innerHTML = '';
 }
+function tsFillWs() {                     // the SE picks the DIVISION first (All divisions), then a workshop of it
+  var se = seIsSE(), dv = se ? $('tsdv').value : '';
+  if (se) { var dl = seDivList(), cur = $('tsdv').value; $('tsdv').innerHTML = '<option value="">All divisions</option>' + dl.map(function (d) { return '<option' + (d === cur ? ' selected' : '') + '>' + esc(d) + '</option>'; }).join(''); dv = $('tsdv').value; }
+  $('tsdvw').classList.toggle('hide', !se);
+  var cw = $('tsw').value, list = se && dv ? seDivWs(dv) : mrWs();
+  $('tsw').innerHTML = '<option value="">' + (se && dv ? 'All workshops of ' + esc(dv) : 'All workshops') + '</option>' + list.map(function (w) { return '<option' + (w === cw ? ' selected' : '') + '>' + esc(w) + '</option>'; }).join('');
+}
+document.addEventListener('change', function (e) { if (e.target && e.target.id === 'tsdv') { $('tsw').value = ''; tsFillWs(); } });
 (function () { var o = mrAfterLogin; mrAfterLogin = function () { o.apply(this, arguments); tsInit(); }; })();
 function tsRow(a) { return { id: a[0], ws: a[1], firm: a[2] || '', cap: a[3] || '', job: a[4] || '', date: a[5] || '', tr: [a[6] || ''], mg: [a[9] || ''], cnt: +a[18] || 0, dvdf: a[12] || '', hv: a[13] || '', nll: a[14] == null ? '' : a[14], fll: a[15] == null ? '' : a[15], remark: a[16] || '', edit: a[17] === 1 }; }
 function tsBlank() { var w = $('tsw').value || mrWs()[0] || ''; return { id: null, ws: w, firm: '', cap: '', job: '', date: fmt(new Date()), tr: [''], mg: [''], cnt: 0, dvdf: '', hv: '', nll: '', fll: '', remark: '', edit: true, isNew: true }; }
@@ -6990,6 +6999,7 @@ function tsLoad() {
   Promise.all([rpc('test_std_json'), rpc('test_list_json', { p_from: mrIso(f), p_to: mrIso(t), p_ws: w || null })]).then(function (a) {
     if (seq !== TS.seq) return; TS.std = {}; (a[0].rows || []).forEach(function (x) { TS.std[x[0]] = x; }); TS.stdEdit = !!a[0].edit;
     TS.rows = (a[1].rows || []).map(tsRow); TS.total = a[1].total || 0;
+    if (seIsSE() && $('tsdv').value && !w) { var dvn = $('tsdv').value; TS.rows = TS.rows.filter(function (r) { return WSDIV[r.ws] === dvn; }); }
     var wl = {}; TS.rows.forEach(function (r) { wl[r.ws] = 1; }); wl[w || mrWs()[0]] = 1;
     return Promise.all(Object.keys(wl).map(tsFirms)).then(function () { if (seq !== TS.seq) return; if (!seIsSE()) for (var i = 0; i < 10; i++) TS.rows.push(tsBlank()); busy(b, false); msg('tsmsg', TS.total > TS.rows.length - (seIsSE() ? 0 : 10) ? 'First ' + (TS.rows.length - 10) + ' of ' + TS.total + ' rows are shown. Narrow the dates to see the rest.' : '', 'info'); tsDraw(); });
   }).catch(function (e) { busy(b, false); if (seq === TS.seq) msg('tsmsg', esc(e.message), 'err'); });
@@ -9251,7 +9261,7 @@ renderSummary = function (s, quiet) {
   _renderSummaryBase(s, quiet); if (!seIsSE()) return;
   try {
     var o = $('sout'), dv = o.querySelector('.k-div'); if (dv) dv.parentNode.removeChild(dv);
-    var ws = o.querySelector('.k-ws table'); if (ws) { seRows(ws, true, 'DIVISION NAME'); var h = o.querySelector('.k-ws h3'); if (h) h.textContent = 'Workshop wise summary'; }
+    var ws = o.querySelector('.k-ws table'); if (ws) { seRows(ws, true, 'DIVISION NAME'); var h = o.querySelector('.k-ws h3'); if (h) h.textContent = 'Division wise summary'; }
     var pd = o.querySelector('.k-pd table'); if (pd) seRows(pd, true, 'DIVISION NAME');
     var cp = o.querySelector('.k-cap'); if (cp) seCapCard(cp, /PENDING FOR ISSUE|PR RECEIVED|AVERAGE PR PER DAY/);
     [].forEach.call(o.querySelectorAll('.card'), function (c) { c.classList.remove('col'); });
@@ -9261,7 +9271,7 @@ var _mrSumDrawBase = mrSumDraw;
 mrSumDraw = function () {
   _mrSumDrawBase.apply(this, arguments); if (!seIsSE()) return;
   try {
-    var o = $('mrout'), ws = o.querySelector('.k-ws table'); if (ws) seRows(ws, false, 'DIVISION NAME');
+    var o = $('mrout'), ws = o.querySelector('.k-ws table'); if (ws) { seRows(ws, true, 'DIVISION NAME'); var hh = o.querySelector('.k-ws h3'); if (hh) hh.textContent = 'Division wise summary'; }
     var cp = o.querySelector('.k-cap'); if (cp) seCapCard(cp, /PR RECEIVED|REPAIR/);
   } catch (e) { if (window.console) console.log('seMrSum', e); }
 };
