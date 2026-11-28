@@ -1894,6 +1894,9 @@ a.pscall{background:#16a34a;color:#fff!important;text-decoration:none;font-weigh
  .sth{font-size:11.5px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.4px;margin:6px 0 4px}
  .strow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 6px}.strow .stn{flex:1 0 100%;font-size:12px;color:#b45309}
  .stin{border:1.5px solid #94a3b8;border-radius:7px;padding:6px 8px;font-size:13.5px;color:#000;background:#fff;min-width:0;flex:1 1 200px}.stin.sm{flex:0 1 120px}.stin.big{flex:2 1 280px}.stin.sel{flex:0 1 190px}
+ .stz{border:1.5px solid #9db4f2;background:#f5f8ff;border-radius:12px;padding:10px 12px;margin:0 0 12px}.stz h4{margin:0 0 6px;color:#1c3d7a;font-size:15px}
+ .zbox{border:1px solid #c7d4f5;background:#fff;border-radius:10px;padding:8px 10px;margin:0 0 8px}.zin{border:1.5px solid #94a3b8;border-radius:7px;padding:6px 8px;font-size:13.5px;color:#000;background:#fff;min-width:0;flex:1 1 240px;font-weight:700}
+ .zcl{display:flex;flex-wrap:wrap;gap:6px 14px}.zc{font-size:13px;color:#000;display:inline-flex;align-items:center;gap:5px;cursor:pointer}.zc.off{color:#94a3b8;cursor:not-allowed}
  .stb{border:0;background:#eef1fb;color:#3b5bdb;border-radius:6px;padding:5px 9px;font-weight:800;cursor:pointer}.stb.x{background:#fee2e2;color:#b91c1c}
 
 /* ---- M&R dashboard ---- */
@@ -3349,7 +3352,33 @@ function buildSummary(raw, p) {
   function live(d) { return divMap[d].some(function (x) { return x; }); }        // a division with no figure at all in this period gets no row of its own (its workshop total still counts it)
   function push(t, label, keys, wsn, cls) { var nm = keys.map(function (k) { return divLbl[k]; }).filter(function (x, i, a) { return a.indexOf(x) === i; }); rowsD.push({ t: t, cls: cls || '', label: label, keys: nm, ws: wsn, v: sumV(keys) }); rowsC.push({ t: t, label: label, keys: nm, ws: wsn, c: sumC(keys) }); }
   var WORD = ['AZAMGARH', 'MAU', 'BALLIA'];
-  WS.slice().sort(function (x, y) { var i = WORD.indexOf(x), j = WORD.indexOf(y); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); }).forEach(function (w) {
+  var ZN = structZones(), wsS = WS.slice().sort(function (x, y) { var i = WORD.indexOf(x), j = WORD.indexOf(y); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); });
+  if (ZN.length) {        // zones are made: divisions -> circle total -> zone total (workshop rows are not repeated here; the Workshop wise table is above)
+    var zUsed = {}, zCirc = {}, zKeys = {};
+    wsS.forEach(function (w) { zKeys[w] = allDivs.filter(function (d) { return divWs[d] === w; }).sort(function (a, b) { return natural(divLbl[a], divLbl[b]); }); });
+    var circSec = function (w, c) {       // the divisions of one circle (a row each, 0 if no PR) and then the circle total
+      var all = [];
+      c.divs.forEach(function (dn) {
+        var ks = zKeys[w].filter(function (d) { return nk(divLbl[d]) === nk(dn); });
+        ks.forEach(function (d) { zUsed[d] = 1; assigned[d] = 1; });
+        push('d', dn, ks, w, ''); all = all.concat(ks);
+      });
+      push('d', c.name, all, w, 'e');
+      return all;
+    };
+    ZN.forEach(function (zn) {
+      var zk = [], zw = {}, any = false;
+      zn.cl.forEach(function (cn) {
+        structCircleAt(cn.name, wsS).forEach(function (x) { zk = zk.concat(circSec(x.ws, x.c)); zw[x.ws] = 1; zCirc[x.ws + '|' + nk(x.c.name)] = 1; any = true; });
+      });
+      if (any) { var wl = Object.keys(zw); push('w', zn.name, zk, wl.length === 1 ? wl[0] : undefined, ''); rowsD[rowsD.length - 1].zn = 1; }
+    });
+    wsS.forEach(function (w) {         // circles that are in no zone, and divisions found in the data but not in the structure: still shown
+      structCircles(w).forEach(function (c) { if (!zCirc[w + '|' + nk(c.name)]) circSec(w, c); });
+      zKeys[w].forEach(function (d) { if (!zUsed[d]) { if (live(d)) push('d', divLbl[d], [d], w); assigned[d] = 1; } });
+    });
+  }
+  else wsS.forEach(function (w) {
     var keys = allDivs.filter(function (d) { return divWs[d] === w; }).sort(function (a, b) { return natural(divLbl[a], divLbl[b]); }), used = {};
     var prevKs = [];
     structDivOrd(w, DIVORD).forEach(function (f) {       // the fixed divisions always get a row (0 if no PR), in the fixed order
@@ -3460,6 +3489,7 @@ function ageRange(s, b) {      // PR date range (DD.MM.YYYY) of an age bucket
   var to = parseD(s.to), x = function (n) { var d = new Date(to); d.setDate(d.getDate() - n); return fmt(d); };
   return b === 0 ? [x(0), x(0)] : b === 1 ? [x(1), x(1)] : b === 2 ? [x(4), x(2)] : ['', x(5)];
 }
+function zSpec(r, o) { o.divs = r.keys; if (r.ws) o.ws = r.ws; return o; }      // a zone row: the divisions of its circles (and the workshop, when the zone sits in one workshop)
 function renderSummary(s, quiet) {
   var multi = s.ws.length > 1, h = '';
   h += '<div class="card k-ws"><h3>Workshop wise summary</h3><div class="wrap tbl11d"><table>' + head11('WORKSHOP NAME', s) + '<tbody>';
@@ -3467,7 +3497,7 @@ function renderSummary(s, quiet) {
   if (multi) h += '<tr class="t"><td class="l">TOTAL</td>' + cells11(s.top.total, S({}), 'TOTAL') + '</tr>';
   h += '</tbody></table></div></div>';
   h += '<div class="card k-div' + (DIVOPEN ? '' : ' col') + '"><h3 title="Click to open / close">Division wise summary</h3><div class="wrap tbl11d"><table>' + head11('DIVISION', s) + '<tbody>';
-  s.div.rows.forEach(function (r) { h += '<tr class="' + r.t + (r.cls ? ' ' + r.cls : '') + '"><td class="l">' + (r.v[6] > 0 ? LK(esc(r.label), S(r.t === 'o' ? { metric: 6, divs: r.keys } : r.t === 'w' ? { metric: 6, ws: r.ws } : { metric: 6, divs: r.keys, ws: r.ws }), r.label + ' - ' + H11[6]) : esc(r.label)) + '</td>' + cells11(r.v, S(r.t === 'o' ? { divs: r.keys } : r.t === 'w' ? { ws: r.ws } : { divs: r.keys, ws: r.ws }), r.label) + '</tr>'; });
+  s.div.rows.forEach(function (r) { h += '<tr class="' + r.t + (r.cls ? ' ' + r.cls : '') + '"><td class="l">' + (r.v[6] > 0 ? LK(esc(r.label), S(r.t === 'o' ? { metric: 6, divs: r.keys } : r.zn ? zSpec(r, { metric: 6 }) : r.t === 'w' ? { metric: 6, ws: r.ws } : { metric: 6, divs: r.keys, ws: r.ws }), r.label + ' - ' + H11[6]) : esc(r.label)) + '</td>' + cells11(r.v, S(r.t === 'o' ? { divs: r.keys } : r.zn ? zSpec(r, {}) : r.t === 'w' ? { ws: r.ws } : { divs: r.keys, ws: r.ws }), r.label) + '</tr>'; });
   if (multi) h += '<tr class="t"><td class="l">TOTAL</td>' + cells11(s.div.total, S({}), 'TOTAL') + '</tr>';
   h += '</tbody></table></div></div>';
   // pending for issue - age wise
@@ -4621,6 +4651,28 @@ function cmpBuild(raw, yc, yp) {
     var a = cmpInst(key, yc), b = cmpInst(key, yp); r.ic = a || 0; r.ip = b || 0; r.vc = a; r.vp = b;
     return r;
   }
+  var ZN = CSEL ? [] : structZones();        // zones are made (and no single workshop is chosen): divisions -> circle total -> zone total
+  if (ZN.length) {
+    var wsl = CMPW(), usedC = {}, usedK = {}, gz = mk('z', 'TOTAL'), gany = false;
+    var circ = function (w, c, into) {
+      var ps = mk('s', c.cs || c.name);
+      c.divs.forEach(function (d) { var k = nk(d); usedK[w + '|' + k] = 1; var r = divRow(w, d, k); rows.push(r); addInto(ps, r); });
+      usedC[w + '|' + nk(c.name)] = 1; rows.push(ps); addInto(into, ps);
+    };
+    ZN.forEach(function (zn) {
+      var zs = mk('z', zn.name), any = false;
+      zn.cl.forEach(function (cn) { structCircleAt(cn.name, wsl).forEach(function (x) { circ(x.ws, x.c, zs); any = true; }); });
+      if (any) { rows.push(zs); addInto(gz, zs); }
+    });
+    var restAny = false;
+    wsl.forEach(function (w) {          // circles that are in no zone, and divisions found in the numbers but not in the structure
+      structCircles(w).forEach(function (c) { if (!usedC[w + '|' + nk(c.name)]) { circ(w, c, gz); restAny = true; } });
+      var seen = {}; (idx.c[w] ? Object.keys(idx.c[w]) : []).concat(idx.p[w] ? Object.keys(idx.p[w]) : []).forEach(function (k) { seen[k] = 1; });
+      Object.keys(seen).sort().forEach(function (k) { if (!usedK[w + '|' + k]) { var r = divRow(w, ((idx.c[w] || {})[k] || (idx.p[w] || {})[k]).name, k); rows.push(r); addInto(gz, r); restAny = true; } });
+    });
+    if (ZN.length > 1 || restAny) rows.push(gz);        // one zone and nothing outside it: the zone row is already the total
+    return rows;
+  }
   CMPW().forEach(function (ws) {
     var g = structCmpGroup(ws, CGROUPS);
     var used = {}, seen = {}; (idx.c[ws] ? Object.keys(idx.c[ws]) : []).concat(idx.p[ws] ? Object.keys(idx.p[ws]) : []).forEach(function (k) { seen[k] = 1; });
@@ -5486,7 +5538,11 @@ function wcShow(code, err, info) {
  * Needs step 37 SQL.  The Comparison tab and the Division wise table of the Summary follow it: same circles, same order, short names. */
 var STRUCT = [], STRUCT_OK = false;
 function structLoad() {
-  return rpc('struct_json').then(function (r) { STRUCT = r || []; STRUCT_OK = true; }).catch(function () { STRUCT = []; STRUCT_OK = false; });
+  return rpc('struct_json').then(function (r) { STRUCT = (r || []).map(zDecode); STRUCT_OK = true; }).catch(function () { STRUCT = []; STRUCT_OK = false; });
+}
+function zDecode(r) {          // the zone of a circle is kept inside its short-name field:  short~Z~zone~zoneOrder~circleOrder   (so no new SQL is needed)
+  var cs = String(r.cs || ''), i = cs.indexOf('~Z~'); if (i < 0) return r;
+  var q = cs.slice(i + 3).split('~'); r.cs = cs.slice(0, i); r.zone = q[0] || null; r.zsort = +q[1] || 0; r.zc = +q[2] || 0; return r;
 }
 function structShort(t) {
   var k = nk(t); if (!k || !STRUCT.length) return '';
@@ -5514,9 +5570,27 @@ function structDivOrd(w, hard) {
   cs.forEach(function (c) { c.divs.forEach(function (d) { out.push([d]); }); if (cs.length > 1) out.push([c.name, 1, c.divs.length]); });
   return out;
 }
+/* ZONES (step 121): the Admin writes zones at the top of the Structure and ticks the circles of each zone.  The Division wise summary and the
+ * Comparison then show: divisions -> circle total -> ... -> zone total.  Zone names come inside STRUCT (fields zone, zsort, zc). */
+function structZones() {            // [{name, cl:[{name}]}] in the Admin's order; [] when no zone is made
+  var m = {}, out = [];
+  STRUCT.forEach(function (r) {
+    if (!r.zone) return;
+    var z = m[r.zone]; if (!z) { z = m[r.zone] = { name: r.zone, zs: r.zsort || 0, cl: [], seen: {} }; out.push(z); }
+    var k = nk(r.circle); if (!z.seen[k]) { z.seen[k] = 1; z.cl.push({ name: r.circle, o: r.zc || 0 }); }
+  });
+  out.sort(function (a, b) { return a.zs - b.zs; });
+  out.forEach(function (z) { z.cl.sort(function (a, b) { return a.o - b.o; }); });
+  return out;
+}
+function structCircleAt(name, wsl) {        // the circle called `name` in each of the workshops of wsl -> [{ws, c}]
+  var k = nk(name), out = [];
+  wsl.forEach(function (w) { structCircles(w).forEach(function (c) { if (nk(c.name) === k) out.push({ ws: w, c: c }); }); });
+  return out;
+}
 
 /* ---------- the Admin screen ---------- */
-var ST = {}, STW = [], STDIRTY = false, STID = 0;
+var ST = {}, STW = [], STDIRTY = false, STID = 0, ZS = [];      // ZS = the zones: [{id, name, ids:[circle ids]}]
 function stList() { return ME && ME.role === 'admin' ? WSL.slice().sort() : Object.keys(WSDIV).sort(); }
 function stBuild() {
   ST = {}; STW = stList();
@@ -5526,6 +5600,12 @@ function stBuild() {
       var c = idx[r.circle]; if (!c) { c = idx[r.circle] = { id: ++STID, name: r.circle, cs: r.cs || '' }; s.circles.push(c); }
       s.divs.push({ cid: c.id, name: r.div, short: r.short || '', old: r.div });
     });
+  });
+  ZS = [];
+  structZones().forEach(function (z) {            // the zones saved before: the circles are found by name (a circle with the same name in two workshops counts for both)
+    var o = { id: ++STID, name: z.name, ids: [] };
+    z.cl.forEach(function (cn) { STW.forEach(function (w) { ST[w].circles.forEach(function (c) { if (nk(c.name) === nk(cn.name) && o.ids.indexOf(c.id) < 0) o.ids.push(c.id); }); }); });
+    ZS.push(o);
   });
 }
 
@@ -5773,6 +5853,7 @@ function stDraw() {
   if (!STW.length) { b.innerHTML = '<div class="muted">Add a workshop first (Workshops).</div>'; return; }
   if (!STRUCT_OK) { b.innerHTML = '<div class="msg err">The Structure is not switched on yet: the owner must run setup.sql again in Supabase (SQL Editor).</div>'; return; }
   var h = '<div class="muted" style="font-size:12.5px;margin:0 0 8px">Make your Circles, then put every Division in a Circle. The order here is the order in the Comparison tab and in the Division wise table. Write the <b>division name exactly as it is in your PRs</b> (if you change it here, it is changed in all PRs too). The <b>short name</b> is what is shown on the screen. Tip: tap <b>Fill from my data</b> to bring the divisions that are already in your PRs.</div><div id="stmsg"></div>';
+  h += stZoneHtml();
   STW.forEach(function (w, wi) {
     var s = ST[w];
     h += '<div class="stw" data-w="' + wi + '"><h4>' + esc(w) + '</h4>' +
@@ -5794,8 +5875,26 @@ function stDraw() {
     '<div class="muted" style="font-size:12px;margin-top:4px">A circle with no division is not saved. Workshops that have no circle keep showing their divisions in the order of the names.</div>';
   b.innerHTML = h;
 }
+function stZoneHtml() {         // the Zones box (top of the Structure): write the zones, tick the circles of each zone
+  var all = [];
+  STW.forEach(function (wn) { ST[wn].circles.forEach(function (c) { if (sp(c.name)) all.push({ id: c.id, name: sp(c.name), ws: wn }); }); });
+  var h = '<div class="stz"><h4>Zones</h4><div class="muted" style="font-size:12.5px;margin:0 0 8px">Write your Zone, then tick the Circles of that Zone (the Circles you made below). In the Division wise summary and in the Comparison every Circle shows the total after its divisions, and the Zone shows the total of its Circles. A Circle can be in one Zone only. A Zone with no Circle is not saved.</div>';
+  if (!ZS.length) h += '<div class="muted" style="font-size:12px;margin-bottom:6px">No zone yet.</div>';
+  ZS.forEach(function (z, zi) {
+    h += '<div class="zbox" data-zi="' + zi + '"><div class="strow"><input class="zin" data-f="zname" placeholder="Zone name (example: AZAMGARH ZONE)" value="' + esc(z.name) + '">' +
+      '<button class="stb" type="button" data-za="zup" title="Move up">&uarr;</button><button class="stb" type="button" data-za="zdn" title="Move down">&darr;</button><button class="stb x" type="button" data-za="zdel" title="Remove this zone">&#10005;</button></div><div class="zcl">';
+    if (!all.length) h += '<span class="muted" style="font-size:12px">Make a Circle below first.</span>';
+    all.forEach(function (c) {
+      var on = z.ids.indexOf(c.id) >= 0, other = !on && ZS.some(function (o) { return o !== z && o.ids.indexOf(c.id) >= 0; });
+      h += '<label class="zc' + (other ? ' off' : '') + '"><input type="checkbox" data-zc="' + c.id + '"' + (on ? ' checked' : '') + (other ? ' disabled' : '') + '> ' + esc(c.name) + (STW.length > 1 ? ' <span class="muted">(' + esc(c.ws) + ')</span>' : '') + '</label>';
+    });
+    h += '</div></div>';
+  });
+  return h + '<button class="btn sec sm" data-za="zadd" type="button">+ Add zone</button></div>';
+}
 function stMove(arr, i, d) { var j = i + d; if (j < 0 || j >= arr.length) return; var t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
 document.addEventListener('input', function (e) {
+  var z = e.target; if (z && z.classList && z.classList.contains('zin')) { ZS[+z.closest('.zbox').dataset.zi].name = z.value; STDIRTY = true; var zs = $('stst'); if (zs) zs.textContent = 'Not saved yet.'; return; }
   var i = e.target; if (!i.classList || !i.classList.contains('stin')) return;
   var w = ST[STW[+i.closest('.stw').dataset.w]], f = i.dataset.f; STDIRTY = true; var st = $('stst'); if (st) st.textContent = 'Not saved yet.';
   if (f === 'cname' || f === 'cs') { var c = w.circles[+i.closest('.strow').dataset.ci]; if (f === 'cname') c.name = i.value; else c.cs = i.value; }
@@ -5807,15 +5906,29 @@ document.addEventListener('change', function (e) {
   if (f === 'dcid') { w.divs[+i.closest('.strow').dataset.di].cid = +i.value; STDIRTY = true; stDraw(); }
   else if (f === 'cname' || f === 'dname') stDraw();                       // the circle list in the division rows and the "Was:" note are drawn again
 });
+document.addEventListener('change', function (e) {
+  var c = e.target; if (!c || !c.dataset || c.dataset.zc == null) return;
+  var z = ZS[+c.closest('.zbox').dataset.zi], id = +c.dataset.zc, k = z.ids.indexOf(id);
+  if (c.checked && k < 0) z.ids.push(id); else if (!c.checked && k >= 0) z.ids.splice(k, 1);
+  STDIRTY = true; stDraw();
+});
 document.addEventListener('click', function (e) {
   var t = e.target; if (!t || !t.closest) return;
+  var zb = t.closest('#stbox [data-za]');
+  if (zb) {
+    var za = zb.dataset.za, zi = zb.closest('.zbox') ? +zb.closest('.zbox').dataset.zi : -1; STDIRTY = true;
+    if (za === 'zadd') ZS.push({ id: ++STID, name: '', ids: [] });
+    else if (za === 'zup') stMove(ZS, zi, -1); else if (za === 'zdn') stMove(ZS, zi, 1);
+    else if (za === 'zdel') ZS.splice(zi, 1);
+    return stDraw();
+  }
   var bt = t.closest('#stbox [data-a]'), sv = t.closest('#stsave');
   if (bt) {
     var wb = bt.closest('.stw'), wn = STW[+wb.dataset.w], w = ST[wn], a = bt.dataset.a, row = bt.closest('.strow'), ci = row ? +row.dataset.ci : -1, di = row ? +row.dataset.di : -1;
     STDIRTY = true;
     if (a === 'cadd') w.circles.push({ id: ++STID, name: '', cs: '' });
     else if (a === 'cup') stMove(w.circles, ci, -1); else if (a === 'cdn') stMove(w.circles, ci, 1);
-    else if (a === 'cdel') { var c = w.circles[ci]; if (w.divs.some(function (d) { return d.cid === c.id; })) { STDIRTY = false; return stMsg('First move or remove the divisions of this circle.', 'err'); } w.circles.splice(ci, 1); }
+    else if (a === 'cdel') { var c = w.circles[ci]; if (w.divs.some(function (d) { return d.cid === c.id; })) { STDIRTY = false; return stMsg('First move or remove the divisions of this circle.', 'err'); } w.circles.splice(ci, 1); ZS.forEach(function (z) { var q = z.ids.indexOf(c.id); if (q >= 0) z.ids.splice(q, 1); }); }
     else if (a === 'dadd') { if (!w.circles.length) w.circles.push({ id: ++STID, name: '', cs: '' }); w.divs.push({ cid: w.circles[w.circles.length - 1].id, name: '', short: '', old: '' }); }
     else if (a === 'dup') stMove(w.divs, di, -1); else if (a === 'ddn') stMove(w.divs, di, 1);
     else if (a === 'ddel') w.divs.splice(di, 1);
@@ -5833,13 +5946,26 @@ document.addEventListener('click', function (e) {
     return stDraw();
   }
   if (sv) {
-    var rows = [], bad = '';
+    var rows = [], bad = '', zmap = {}, zcount = 0;          // zmap: circle -> its zone. The zone is kept inside the circle's short-name field (no new SQL / table needed)
+    ZS.forEach(function (z, zi) {
+      var nm = sp(z.name).replace(/~/g, '-'), names = [];
+      STW.forEach(function (wn) { ST[wn].circles.forEach(function (c) { if (z.ids.indexOf(c.id) >= 0 && sp(c.name) && ST[wn].divs.some(function (d) { return d.cid === c.id && d.name.trim(); }) && names.indexOf(sp(c.name)) < 0) names.push(sp(c.name)); }); });      // circles in the order of the Structure
+      if (names.length && !nm) bad = bad || 'Give a name to every zone that has circles.';
+      if (!names.length) return;
+      zcount++;
+      names.forEach(function (cn, k) { if (zmap[nk(cn)]) bad = bad || 'The circle "' + cn + '" is in two zones.'; zmap[nk(cn)] = { z: nm, zs: zi + 1, zc: k + 1 }; });
+    });
     STW.forEach(function (wn) {
       var w = ST[wn];
       w.circles.forEach(function (c, ci) {
         var ds = w.divs.filter(function (d) { return d.cid === c.id && d.name.trim(); });
         if (ds.length && !c.name.trim()) bad = 'Give a name to every circle that has divisions (' + wn + ').';
-        ds.forEach(function (d, k) { rows.push({ ws: wn, circle: sp(c.name), cs: c.cs.trim(), csort: ci + 1, div: sp(d.name), short: d.short.trim(), sort: k + 1, old: d.old || '' }); });
+        var zi = zmap[nk(c.name)], cs = c.cs.trim().replace(/~/g, '-');
+        if (zi && ds.length) {
+          cs = cs + '~Z~' + zi.z + '~' + zi.zs + '~' + zi.zc;
+          if (cs.length > 40) bad = bad || 'The zone name "' + zi.z + '" and the short name of the circle "' + c.name + '" are too long together (at most 40 letters in all). Make the zone name or the short name shorter.';
+        }
+        ds.forEach(function (d, k) { rows.push({ ws: wn, circle: sp(c.name), cs: cs, csort: ci + 1, div: sp(d.name), short: d.short.trim(), sort: k + 1, old: d.old || '' }); });
       });
     });
     if (bad) return stMsg(bad, 'err');
@@ -5847,7 +5973,7 @@ document.addEventListener('click', function (e) {
     rpc('struct_save', { p_ws: STW, p_rows: rows }).then(function (r) {
       sv.disabled = false; return structLoad().then(function () {
         if (typeof cclear === 'function') cclear(); SKEY = ''; SUM = null; CMP = null; stBuild(); STDIRTY = false; stDraw();
-        stMsg('Saved ✓ ' + r.saved + ' division(s)' + (r.renamed_prs ? ', ' + r.renamed_prs + ' PR(s) renamed' : '') + '. The Comparison and the Summary now follow this order.', 'ok');
+        stMsg('Saved ✓ ' + r.saved + ' division(s)' + (zcount ? ', ' + zcount + ' zone(s)' : '') + (r.renamed_prs ? ', ' + r.renamed_prs + ' PR(s) renamed' : '') + '. The Comparison and the Summary now follow this order.', 'ok');
       });
     }).catch(function (x) { sv.disabled = false; stMsg(esc(x.message), 'err'); });
   }
